@@ -1,0 +1,281 @@
+# Phase P0 — Suivi des Indicateurs
+
+**Objectif :** poser les fondations de traçabilité et de calcul unifié, sans hub UI ni tables d’analyse (P1/P2).
+
+**Périmètre :** migration incrémentale uniquement — **pas** de `migrate:fresh`.
+
+> Vous êtes en **mode Ask** : je ne peux pas modifier les fichiers. Passez en **mode Agent** avec *« Implémente la phase P0 Suivi des Indicateurs »* pour l’application.
+
+---
+
+## Problèmes P0 à corriger
+
+| # | Problème | Impact audit |
+|---|----------|--------------|
+| 1 | `updateOrCreate` sur `mesures` **écrase** la valeur sans conserver l’ancienne | §4 Historique — non conforme |
+| 2 | `Mesure` **sans** `Auditable` | § Sécurité — pas de journal sur modifications |
+| 3 | Calculs KPI/tendances **dispersés** (`MesureService`, `TableauBordService`, `ReportingService`) | §3 Calcul — risque d’incohérence |
+| 4 | Resaisie sur période validée non gérée explicitement | §2 Validation — perte d’information |
+
+---
+
+## Livrable 1 — Table `historique_mesures`
+
+**Migration :** `database/migrations/2026_06_14_000001_historique_mesures_p0.php`
+
+```php
+Schema::create('historique_mesures', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('mesure_id')->constrained('mesures')->cascadeOnDelete();
+    $table->foreignId('indicateur_id')->constrained('indicateurs')->cascadeOnDelete();
+    $table->string('periode', 20);
+    $table->string('action', 40); // saisie, modification, verification, validation, correction
+    $table->decimal('valeur_avant', 18, 4)->nullable();
+    $table->decimal('valeur_apres', 18, 4)->nullable();
+    $table->string('statut_avant', 20)->nullable();
+    $table->string('statut_apres', 20)->nullable();
+    $table->decimal('taux_avant', 7, 2)->nullable();
+    $table->decimal('taux_apres', 7, 2)->nullable();
+    $table->text('commentaire')->nullable();
+    $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+    $table->timestamp('created_at')->useCurrent();
+
+    $table->index(['indicateur_id', 'periode'], 'hist_mes_ind_per_idx');
+    $table->index(['mesure_id', 'created_at'], 'hist_mes_mes_date_idx');
+});
+```
+
+**Modèle :** `app/Models/HistoriqueMesure.php`  
+**Relation sur `Mesure` :** `historiques(): HasMany`
+
+---
+
+## Livrable 2 — Refactor `MesureService::enregistrer()`
+
+Remplacer l’écrasement silencieux par une logique historisée :
+
+```php
+public function enregistrer(Indicateur $indicateur, array $data, ?int $userId = null): Mesure
+{
+    $userId ??= auth()->id();
+    $calc = $this->calculerTauxEtFeu($indicateur, (float) $data['valeur_realisee']);
+
+    $existante = $indicateur->mesures()->where('periode', $data['periode'])->first();
+
+    if ($existante?->statut === 'validee') {
+        abort(422, 'Mesure validée : créez une correction via le workflow dédié.');
+    }
+
+    $payload = [
+        'valeur_realisee' => $data['valeur_realisee'],
+        'taux_atteinte' => $calc['taux_atteinte'],
+        'feu' => $calc['feu'],
+        'commentaire' => $data['commentaire'] ?? null,
+        'statut' => 'saisie',
+        'saisi_par' => $userId,
+    ];
+
+    if ($existante) {
+        $this->historiser($existante, 'modification', $userId);
+        $existante->update($payload);
+        return $existante->fresh();
+    }
+
+    $mesure = $indicateur->mesures()->create($payload + ['periode' => $data['periode']]);
+    $this->historiser($mesure, 'saisie', $userId, null, $mesure);
+
+    return $mesure;
+}
+```
+
+**Historiser aussi** dans `verifier()` et `valider()` :
+
+| Action | Code `action` |
+|--------|----------------|
+| Vérification | `verification` |
+| Validation | `validation` |
+
+**Méthode privée `historiser()`** : persiste une ligne dans `historique_mesures` + appelle `AuditLogger::enregistrer()`.
+
+---
+
+## Livrable 3 — `Auditable` sur `Mesure` (et optionnel `Indicateur`)
+
+```php
+// app/Models/Mesure.php
+use App\Models\Concerns\Auditable;
+
+class Mesure extends Model
+{
+    use Auditable;
+    // ...
+}
+```
+
+**Complément migration** (colonnes traçabilité validation) :
+
+```sql
+ALTER TABLE mesures ADD verifie_par BIGINT NULL, verifie_le TIMESTAMP NULL;
+ALTER TABLE mesures ADD valide_par BIGINT NULL, valide_le TIMESTAMP NULL;
+ALTER TABLE mesures ADD version INT UNSIGNED DEFAULT 1;
+```
+
+À chaque modification : `$mesure->increment('version')`.
+
+**Policy renforcée :** mesure `validee` → modification interdite (déjà le cas si `statut !== 'saisie'`).
+
+---
+
+## Livrable 4 — Service central `IndicateurPerformanceService`
+
+**Fichier :** `app/Services/Rbm/IndicateurPerformanceService.php`
+
+Source unique des calculs KPI — **à consommer** par `MesureService`, `TableauBordService`, `ReportingService`.
+
+### 4.1 Déplacer `calculerTauxEtFeu()`
+
+```php
+final class IndicateurPerformanceService
+{
+    public function calculerTauxEtFeu(Indicateur $indicateur, float $valeurRealisee): array
+    {
+        // logique actuelle de MesureService (identique)
+    }
+
+    public function ecartCible(Indicateur $indicateur, float $valeurRealisee): float
+    {
+        $cible = (float) ($indicateur->valeur_cible ?? 0);
+        return round($valeurRealisee - $cible, 4);
+    }
+
+    public function tendance(Indicateur $indicateur, string $periodeCourante): ?array
+    {
+        $mesures = $indicateur->mesures()
+            ->where('statut', 'validee')
+            ->orderBy('periode')
+            ->get(['periode', 'valeur_realisee', 'taux_atteinte']);
+
+        $courante = $mesures->firstWhere('periode', $periodeCourante);
+        $precedente = $mesures->where('periode', '<', $periodeCourante)->last();
+
+        if (! $courante || ! $precedente) {
+            return null;
+        }
+
+        return [
+            'periode_precedente' => $precedente->periode,
+            'valeur_precedente' => (float) $precedente->valeur_realisee,
+            'valeur_courante' => (float) $courante->valeur_realisee,
+            'variation_abs' => round((float) $courante->valeur_realisee - (float) $precedente->valeur_realisee, 4),
+            'variation_pct' => (float) $precedente->valeur_realisee > 0
+                ? round(((float) $courante->valeur_realisee / (float) $precedente->valeur_realisee - 1) * 100, 1)
+                : null,
+        ];
+    }
+
+    public function syntheseIndicateur(Indicateur $indicateur): array
+    {
+        $derniere = $indicateur->mesures()
+            ->where('statut', 'validee')
+            ->orderByDesc('periode')
+            ->first();
+
+        return [
+            'code' => $indicateur->code,
+            'libelle' => $indicateur->libelle,
+            'cible' => (float) ($indicateur->valeur_cible ?? 0),
+            'derniere_periode' => $derniere?->periode,
+            'valeur_realisee' => (float) ($derniere?->valeur_realisee ?? 0),
+            'taux_atteinte' => (float) ($derniere?->taux_atteinte ?? 0),
+            'feu' => $derniere?->feu,
+            'tendance' => $derniere ? $this->tendance($indicateur, $derniere->periode) : null,
+        ];
+    }
+
+    public function feuxGlobaux(?int $exerciceId = null): array
+    {
+        // reprendre logique TableauBordService::feuxIndicateurs()
+    }
+}
+```
+
+### 4.2 Refactors à faire
+
+| Fichier | Changement |
+|---------|------------|
+| `MesureService` | Délègue calcul à `IndicateurPerformanceService` |
+| `TableauBordService::feuxIndicateurs()` | Délègue à `feuxGlobaux()` |
+| `ReportingService` (rbm_gar) | Utilise `syntheseIndicateur()` si pertinent |
+
+---
+
+## Livrable 5 — Affichage minimal (optionnel P0)
+
+Dans `resources/views/indicateurs/index.blade.php`, sous chaque mesure validée :
+
+- badge **tendance** (↑ / ↓ / —) si `tendance()` retourne des données ;
+- lien **« Historique »** listant `historique_mesures` (partial `_historique_mesures.blade.php`).
+
+Pas de hub complet — réservé P1.
+
+---
+
+## Livrable 6 — Tests P0
+
+**Fichier :** `tests/Feature/SuiviIndicateursP0Test.php`
+
+| Test | Scénario | Assertion |
+|------|----------|-----------|
+| `test_historise_modification_mesure` | Saisie T1=80 puis resaisie T1=90 | 2 lignes `historique_mesures`, mesure=90 |
+| `test_refuse_modification_mesure_validee` | Mesure validée → POST update | HTTP 422 |
+| `test_historise_validation` | verify + valider | actions `verification`, `validation` en historique |
+| `test_auditable_mesure` | Modification mesure | entrée `journaux_audit` |
+| `test_tendance_periodes` | T1=50, T2=75 validées | `variation_abs`=25 |
+| `test_calcul_unifie_mesure_et_performance` | Même indicateur/valeur | `MesureService` = `IndicateurPerformanceService` taux/feu |
+
+**Mettre à jour :** `RbmPhase2Test` si le flux de validation change (ex. reset statut à `saisie` sur modification).
+
+**Commande :**
+
+```bash
+php artisan migrate
+php artisan test --filter=SuiviIndicateursP0Test,RbmPhase2Test
+```
+
+---
+
+## Fichiers impactés (checklist)
+
+| Fichier | Action |
+|---------|--------|
+| `migrations/..._historique_mesures_p0.php` | **Créer** |
+| `migrations/..._mesures_tracabilite_p0.php` | **Créer** (verifie/valide/version) |
+| `app/Models/HistoriqueMesure.php` | **Créer** |
+| `app/Services/Rbm/IndicateurPerformanceService.php` | **Créer** |
+| `app/Services/Rbm/MesureService.php` | Refactor |
+| `app/Models/Mesure.php` | `Auditable` + relations |
+| `app/Http/Controllers/Rbm/MesureController.php` | Historiser sur update |
+| `app/Services/TableauBordService.php` | Délégation feux |
+| `tests/Feature/SuiviIndicateursP0Test.php` | **Créer** |
+
+**Hors P0 :** hub UI, `performances_indicateurs`, import CSV, permissions `indicateurs.*`, `SuiviIndicateursSeeder`.
+
+---
+
+## Critères d’acceptation P0
+
+- [ ] Resaisie même période → ancienne valeur conservée dans `historique_mesures`
+- [ ] Mesure validée → non modifiable sans workflow correction (P1 peut ajouter « correction »)
+- [ ] Chaque verify/validate → ligne historique + audit trail
+- [ ] `Mesure` journalisée via `Auditable`
+- [ ] `IndicateurPerformanceService` = source unique taux/feu/tendance
+- [ ] `RbmPhase2Test` + `SuiviIndicateursP0Test` verts
+- [ ] Aucune régression `RbmPhaseE3Test`, `SuiviS1Test`
+
+---
+
+## Effort estimé
+
+| Tâche | Durée |
+|-------|-------|
+| Migration 

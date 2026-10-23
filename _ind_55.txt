@@ -1,0 +1,230 @@
+# Rapport d'audit — Module Suivi des Indicateurs  
+**Application :** BUDGET-PAP-SUIVI-CEEAC  
+**Date :** 13 juin 2026  
+**Méthode :** analyse statique (migrations, modèles, services, routes, vues, tests, seeders)
+
+---
+
+## 1. Niveau global de conformité
+
+| Périmètre | Score | Commentaire |
+|-----------|-------|-------------|
+| **Conformité stricte au cahier des charges** (module autonome, tables dédiées, permissions `indicateurs.*`) | **~42 %** | Pas de module nommé « Suivi des Indicateurs » |
+| **Conformité fonctionnelle réelle** (RBM/GAR + mesures + campagnes suivi + reporting) | **~74 %** | Dispositif opérationnel mais **distribué** |
+| **Score global pondéré** | **~58 %** | Bon socle GAR/RBM, lacunes sur historisation, KPI persistés et module unifié |
+
+**Constat architectural :** le suivi des indicateurs n'est **pas un module isolé**. Il repose sur **trois piliers** :
+
+```text
+RBM/GAR (indicateurs + mesures IOV)
+        +
+Suivi Physique (collectes par campagne / activité)
+        +
+Plan Stratégique (indicateurs_strategiques)
+        ↓
+Reporting (rbm_gar, cockpit, feux dashboard)
+```
+
+Le seeder `SuiviIndicateursSeeder` **n'existe pas** dans le dépôt.
+
+---
+
+## 2. Éléments conformes
+
+### Référentiel RBM/GAR
+
+| Élément | Implémentation |
+|---------|----------------|
+| Chaîne Pilier → … → Tâche → Indicateur | Polymorphisme `indicateurs.rbm_type / rbm_id` |
+| Catalogues | `types_indicateurs`, `unites_mesure`, `sources_verification` |
+| Contraintes type/unité | Migration E3 : FK obligatoires |
+| Sources de vérification | Pivot `indicateur_source_verification` |
+| Navigation hiérarchique | Hub RBM, arbre, matrice, fiches par nœud |
+
+### Collecte et mesure (IOV)
+
+- Saisie manuelle des **mesures** par période (`MesureController` + `MesureService`)
+- Champs : période, valeur réalisée, commentaire, responsable (`saisi_par`), statut
+- Calcul automatique : **taux d'atteinte** et **feu** (vert/orange/rouge) selon cible et seuil
+
+```15:27:app/Services/Rbm/MesureService.php
+    public function calculerTauxEtFeu(Indicateur $indicateur, float $valeurRealisee): array
+    {
+        $cible = (float) ($indicateur->valeur_cible ?? 0);
+        $taux = $cible > 0 ? round(($valeurRealisee / $cible) * 100, 2) : ($valeurRealisee > 0 ? 100.0 : 0.0);
+
+        $seuil = (float) ($indicateur->seuil_alerte ?? 50);
+        $feu = match (true) {
+            $taux >= 75 => 'vert',
+            $taux >= $seuil => 'orange',
+            default => 'rouge',
+        };
+
+        return ['taux_atteinte' => $taux, 'feu' => $feu];
+    }
+```
+
+### Validation
+
+- Workflow mesures : `saisie` → `verifiee` → `validee` (`MesureService`, `MesurePolicy`)
+- Workflow collectes physiques : `saisie` → `verifiee` → `validee` + **rejet** (`CollecteController`)
+- Justificatifs obligatoires configurables (`SuiviS1Test`)
+- Notifications (`MesureVerifieeNotification`, `MesureValideeNotification`)
+
+### Import
+
+- Import Excel contrôlé des indicateurs (`IndicateursImport`) avec rejets tracés
+- Modèle Excel (`ModeleIndicateursExport`)
+- Export catalogue (`IndicateursCatalogueExport`)
+
+### Intégrations
+
+| Intégration | État |
+|-------------|------|
+| **RBM/GAR** | Complète (référentiel + IOV) |
+| **PAP** | Indicateurs sur activités ; collectes liées aux campagnes PAP publié |
+| **Suivi physique** | `collectes` + roll-up produits/sous-produits (`SuiviPhysiqueService`) |
+| **Suivi financier** | Écart phys./fin. ; taux financier depuis lignes budgétaires (`Collecte::recalculer`) |
+| **Plan stratégique** | Table `indicateurs_strategiques` séparée (module Planification) |
+
+### Tableaux de bord et reporting
+
+- Feux indicateurs sur dashboard (`TableauBordService::feuxIndicateurs`)
+- Rapport `rbm_gar` dans `RapportComposer` (IOV + performance activités)
+- Cockpit exécutif avec alertes indicateurs au rouge
+- Hub RBM + synthèse PDF (`/rbm/synthese/{exercice}/pdf`)
+- Audit suivi physique persisté (`audit_suivi_physiques` via `SuiviAuditService`)
+
+### Sécurité (partielle)
+
+- Permissions module `indicateur.*` (RoleSeeder) + `suivi.*` + `suivi_physique.*`
+- `Collecte` : trait `Auditable`
+- Policies : `MesurePolicy`, collecte autorisée par rôle
+- Tests : `RbmPhase2Test`, `RbmPhaseE3Test`, `SuiviS1Test`–`S4Test`, `RbmChaineTest`, etc.
+
+---
+
+## 3. Éléments partiellement conformes
+
+| Élément | État | Écart |
+|---------|------|-------|
+| **Collecte indicateurs** | `mesures` + `collectes` | Pas de table `collectes_indicateurs` ; double modèle (IOV vs activité) |
+| **Validation hiérarchique** | 2–3 statuts enum | Pas de workflow Spatie dédié `workflow_validation_indicateurs` |
+| **Collecte par département** | Via structure activité | Pas de saisie directe « par département » |
+| **Collecte par programme/projet** | Via chaîne RBM / stratégie | Pas de collecte analytique programme dédiée |
+| **Import CSV** | Exports CSV suivi | Import indicateurs **Excel uniquement** |
+| **Collecte automatique** | Sync tâches → collecte ; sync budget → taux fin. | Pas de moteur ETL générique |
+| **Indicateurs qualitatifs** | Enum type + texte | Mesures **numériques** uniquement |
+| **Historique** | `rbm_historiques` (archivage nœuds) ; `Auditable` sur collectes | Pas d'historique versionné des **mesures** |
+| **Évolution performances** | Mesures multi-périodes ; alertes | Pas de module tendances N/N-1 dédié |
+| **KPI institutionnels** | Calcul runtime (feux, taux) | Pas de table `kpis` persistée |
+| **Permissions auditées** | `indicateur.voir/creer/valider…` | Nommage différent de `indicateurs.*` ; pas de `indicateurs.collect` |
+| **Fiches indicateurs** | Vue `indicateurs/index` | Pas de fiche PDF individuelle standardisée |
+
+---
+
+## 4. Éléments absents
+
+### Tables demandées — absentes ou substituées
+
+| Table attendue | Statut | Substitut |
+|----------------|--------|-----------|
+| `collectes_indicateurs` | Absente | `mesures` |
+| `collecte_details` | Absente | Ligne = mesure ou collecte |
+| `collecte_imports` | Absente | Compteurs dans `IndicateursImport` |
+| `validation_indicateurs` | Absente | Colonne `statut` sur mesures/collectes |
+| `workflow_validation_indicateurs` | Absente | Actions contrôleur + policies |
+| `historique_indicateurs` | Absente | Soft delete + `rbm_historiques` |
+| `historique_collectes` | Absente | `Auditable` sur `collectes` |
+| `historique_validations` | Absente | — |
+| `kpis` | Absente | Calcul runtime |
+| `performances_indicateurs` | Absente | `RealisationProduit`, services PAP |
+| `evolution_indicateurs` | Absente | — |
+| `analyses_performance` | Absente | `SuiviAuditService`, alertes |
+| `audit_indicateurs` | Absente | `audit_suivi_physiques` (physique seulement) |
+
+### Tables présentes (conformes)
+
+- `indicateurs`, `types_indicateurs`, `unites_mesure`, `sources_verification`
+- `mesures` (collecte IOV)
+- `collectes` (collecte activité / suivi physique)
+- `campagnes_suivi`
+
+### Fonctionnalités absentes
+
+- Module/menu **« Suivi des Indicateurs »** unifié
+- Validation **statistique** automatisée
+- Formules de calcul **configurables** (moteur de règles)
+- Rapports dédiés : évolution, tendances, écarts indicateurs (hors `rbm_gar`)
+- Tableaux de bord **départementaux KPI** autonomes
+- Seeder `SuiviIndicateursSeeder`
+- Courbes d'évolution **pluriannuelles** indicateurs (hors duplication inter-exercices RBM E8)
+
+---
+
+## 5. Incohérences détectées
+
+### 5.1 Double modèle de collecte non unifié
+
+| Modèle | Granularité | Usage |
+|--------|-------------|-------|
+| `mesures` | Indicateur IOV / période | RBM/GAR |
+| `collectes` | Activité / campagne | Suivi physique trimestriel |
+
+Les deux coexistent sans couche de **réconciliation** explicite dans un hub unique.
+
+### 5.2 Écrasement des mesures sans historisation
+
+`MesureService::enregistrer()` utilise `updateOrCreate(['periode' => …])` : une resaisie sur la même période **remplace** la valeur sans conserver l'ancienne version.
+
+### 5.3 Mesures non auditées
+
+Le modèle `Mesure` **n'utilise pas** le trait `Auditable` (contrairement à `Collecte`). Une mesure validée ne peut plus être modifiée (policy), mais les étapes intermédiaires ne sont pas journalisées dans `journaux_audit`.
+
+### 5.4 Évolution cockpit ≠ évolution indicateurs
+
+Le cockpit reporting trace l'**évolution des paiements** mensuels, pas l'évolution des indicateurs :
+
+```356:363:app/Services/Reporting/ReportingService.php
+        // Évolution mensuelle des décaissements (paiements validés)...
+        $evolution = collect(range(1, 12))->map(fn ($m) => [
+            'mois' => $m,
+            'montant' => (float) $paiements->filter(...)->sum('montant'),
+        ]);
+```
+
+### 5.5 Permissions : convention divergente
+
+| Attendu | Réel |
+|---------|------|
+| `indicateurs.view` | `indicateur.voir` |
+| `indicateurs.collect` | `indicateur.creer` + `suivi.creer` |
+| `indicateurs.validate` | `indicateur.valider` + `suivi.valider` |
+| `indicateurs.admin` | `rbm.admin` (partiel) |
+
+### 5.6 Indicateurs stratégiques vs RBM
+
+Deux registres parallèles (`indicateurs` et `indicateurs_strategiques`) sans consolidation automatique dans un répertoire unique.
+
+---
+
+## 6. Risques qualité des données
+
+| Risque | Gravité | Description |
+|--------|---------|-------------|
+| **Perte d'historique mesures** | Élevée | Resaisie même période = écrasement |
+| **Double saisie IOV / collecte** | Moyenne | Risque d'incohérence phys./fin. vs mesures IOV |
+| **Collecte sans justificatif** | Moyenne | Configurable ; contournable si désactivé |
+| **Feux calculés sur cible nulle** | Faible | Taux = 100 % si réalisé > 0 sans cible |
+| **Pas de validation statistique** | Moyenne | Outliers non détectés automatiquement |
+
+---
+
+## 7. Risques de pilotage
+
+| Risque | Gravité | Description |
+|--------|---------|-------------|
+| **Vision fragmentée** | Élevée | RBM, Suivi, Stratégie = 3 entrées menus |
+| **KPI non persistés** | Moyenne | Impossible de comparer snapshots de clôture |
+| **Pas de tendances N/N-1** | Moyenne | Pilotage pluriannuel limité |
+| **Alertes indicateurs partielles** | Faible | Feux rouges en cockpit mais pas de workflow

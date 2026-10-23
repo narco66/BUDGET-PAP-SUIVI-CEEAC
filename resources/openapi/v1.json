@@ -1,0 +1,69 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "BUDGET-PAP-SUIVI-CEEAC — API REST v1",
+    "description": "API institutionnelle CEEAC — interopérabilité D12 (I-P3). Authentification Bearer Sanctum, scopes lecture|suivi|tompro.",
+    "version": "1.0.0",
+    "contact": { "name": "DSI CEEAC", "email": "dsi@ceeac.int" }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "Sanctum" }
+    },
+    "schemas": {
+      "Error": { "type": "object", "properties": { "message": { "type": "string" } } }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "tags": [
+    { "name": "auth", "description": "Authentification jetons" },
+    { "name": "donnees", "description": "Référentiels et données budgétaires" },
+    { "name": "budget", "description": "Budget institutionnel" },
+    { "name": "pap", "description": "Plans d'action prioritaires" },
+    { "name": "recettes", "description": "Recettes et encaissements" },
+    { "name": "ged", "description": "Documents GED (métadonnées)" },
+    { "name": "rbm", "description": "Chaîne RBM/GAR" },
+    { "name": "suivi", "description": "Suivi financier, indicateurs, évaluation" },
+    { "name": "reporting", "description": "Rapports institutionnels" },
+    { "name": "workflow", "description": "Circuits de validation" },
+    { "name": "notifications", "description": "Notifications et alertes" },
+    { "name": "tompro", "description": "Connecteur comptable TOMPRO" }
+  ],
+  "paths": {
+    "/token": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "authToken",
+        "summary": "Émettre un jeton d'accès",
+        "security": []
+      }
+    },
+    "/me": { "get": { "tags": ["auth"], "operationId": "authMe", "summary": "Profil et scopes du jeton" } },
+    "/logout": { "post": { "tags": ["auth"], "operationId": "authLogout", "summary": "Révoquer le jeton courant" } },
+    "/exercices": { "get": { "tags": ["donnees"], "operationId": "listExercices", "summary": "Liste des exercices" } },
+    "/structures": { "get": { "tags": ["donnees"], "operationId": "listStructures", "summary": "Structures organisationnelles" } },
+    "/lignes-budgetaires": { "get": { "tags": ["donnees"], "operationId": "listLignesBudgetaires", "summary": "Lignes budgétaires" } },
+    "/engagements": { "get": { "tags": ["donnees"], "operationId": "listEngagements", "summary": "Engagements budgétaires" } },
+    "/budgets": { "get": { "tags": ["budget"], "operationId": "listBudgets", "summary": "Enveloppes budgétaires" } },
+    "/budgets/{budget}": { "get": { "tags": ["budget"], "operationId": "showBudget", "summary": "Détail budget" } },
+    "/budgets/{budget}/synthese": { "get": { "tags": ["budget"], "operationId": "budgetSynthese", "summary": "Synthèse d'exécution" } },
+    "/paps": { "get": { "tags": ["pap"], "operationId": "listPaps", "summary": "Plans d'action prioritaires" } },
+    "/paps/{pap}": { "get": { "tags": ["pap"], "operationId": "showPap", "summary": "Détail PAP" } },
+    "/recettes": { "get": { "tags": ["recettes"], "operationId": "listRecettes", "summary": "Recettes prévisionnelles" } },
+    "/recettes/{recette}": { "get": { "tags": ["recettes"], "operationId": "showRecette", "summary": "Détail recette" } },
+    "/recettes/encaissements": { "get": { "tags": ["recettes"], "operationId": "listEncaissements", "summary": "Encaissements" } },
+    "/ged/documents": { "get": { "tags": ["ged"], "operationId": "listGedDocuments", "summary": "Catalogue documents GED" } },
+    "/ged/documents/{uuid}": { "get": { "tags": ["ged"], "operationId": "showGedDocument", "summary": "Métadonnées document GED" } },
+    "/rbm/piliers": { "get": { "tags": ["rbm"], "operationId": "listPiliers", "summary": "Piliers RBM" } },
+    "/rbm/matrice": { "get": { "tags": ["rbm"], "operationId": "rbmMatrice", "summary": "Matrice RBM" } },
+    "/suivi-financier/synthese": { "get": { "tags": ["suivi"], "operationId": "suiviFinancierSynthese", "summary": "Synthèse financière" } },
+    "/suivi-indicateurs/feux": { "get": { "tags": ["suivi"], "operationId": "suiviIndicateursFeux", "summary": "Feux indicateurs" } },
+    "/reporting/rapports": { "get": { "tags": ["reporting"], "operationId": "listRapports", "summary": "Rapports générés" } },
+    "/workflow/circuits": { "get": { "tags": ["workflow"], "operationId": "listWorkflowCircuits", "summary": "Circuits workflow" } },
+    "/notifications": { "get": { "tags": ["notifications"], "operationId": "listNotifications", "summary": "Notifications utilisateur" } },
+    "/tompro/paiements": { "get": { "tags": ["tompro"], "operationId": "tomproPaiements", "summary": "Paiements validés SYSCOHADA" } },
+    "/tompro/encaissements": { "get": { "tags": ["tompro"], "operationId": "tomproEncaissements", "summary": "Encaissements comptabilisés SYSCOHADA" } },
+    "/tompro/synthese": { "get": { "tags": ["tompro"], "operationId": "tomproSynthese", "summary": "Synthèse des exports en attente" } },
+    "/tompro/referentiel": { "get": { "tags": ["tompro"], "operationId": "tomproReferentiel", "summary": "Plan comptable et catalogue API" } }
+  }
+}

@@ -1,0 +1,33 @@
+Les deux P0 sont terminés et validés par les tests.
+
+## P0 — Suivi des Indicateurs
+
+- Migrations appliquées : `historique_mesures` + traçabilité sur `mesures`
+- Historisation à chaque saisie, modification, vérification et validation
+- Blocage des modifications sur mesure validée
+- Calculs KPI unifiés via `IndicateurPerformanceService`
+- Tests : `tests/Feature/SuiviIndicateursP0Test.php` (6 tests)
+
+## P0 — Suivi Financier
+
+- **`SuiviFinancierCalculator`** : source unique (budget alloué = `COALESCE(montant_revise, montant_ouvert)`, 6 taux, restes)
+- Refactor : `TableauBordService`, `ReportingService`, `RapportComposer`
+- Vues enrichies : liquidation, ordonnancement, paiement sur `dashboard.blade.php` et `tableaux/index.blade.php`
+- Tests : `tests/Feature/SuiviFinancierP0Test.php` (3 tests)
+
+## Correction clé
+
+Les taux d’engagement et d’exécution sont désormais calculés sur le **crédit alloué (révisé)**, et non plus uniquement sur `montant_ouvert`. `TableauBordService` et `ReportingService::global()` produisent les mêmes résultats.
+
+## Tests exécutés
+
+**29 tests passés** (116 assertions), dont :
+- `SuiviIndicateursP0Test`
+- `SuiviFinancierP0Test`
+- `RbmPhase2Test`
+- `RestitutionTest`
+- `ReportingModuleTest`
+
+Souhaitez-vous enchaîner sur **P1** (restes/snapshots financier + compléments indicateurs) ou créer le **PV de recette MOA** ?
+
+[REDACTED]
