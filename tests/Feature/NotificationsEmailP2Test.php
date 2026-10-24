@@ -62,7 +62,7 @@ class NotificationsEmailP2Test extends TestCase
 
         parent::setUp();
 
-        config(['notifications.email.queue' => false]);
+        config(['notifications.email.queue' => false, 'mfa.enabled' => false]);
 
         $this->seed([RoleSeeder::class, NotificationsAlertesSeeder::class]);
 
@@ -352,6 +352,36 @@ class NotificationsEmailP2Test extends TestCase
 
         $this->assertSame('Libellé modifié', $tpl->fresh()->libelle);
 
+    }
+
+    public function test_api_templates_interdit_et_maj(): void
+    {
+        $tpl = EmailTemplate::firstOrFail();
+        $chef = $this->user('chef_service');
+        $admin = $this->user('administrateur');
+
+        $this->actingAs($chef)
+            ->getJson(route('api.notifications.templates'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->getJson(route('api.notifications.templates'))
+            ->assertOk()
+            ->assertJsonFragment(['code' => $tpl->code])
+            ->assertJsonMissingPath('data.0.corps_html');
+
+        $this->actingAs($admin)
+            ->putJson(route('api.notifications.templates.update', $tpl), [
+                'libelle' => 'Libellé SPA',
+                'sujet' => $tpl->sujet,
+                'corps_html' => $tpl->corps_html,
+                'corps_texte' => $tpl->corps_texte,
+                'actif' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.libelle', 'Libellé SPA');
+
+        $this->assertSame('Libellé SPA', $tpl->fresh()->libelle);
     }
 
 

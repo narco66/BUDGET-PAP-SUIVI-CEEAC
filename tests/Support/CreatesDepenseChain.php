@@ -11,7 +11,9 @@ use App\Models\Pilier;
 use App\Models\Produit;
 use App\Models\SousProduit;
 use App\Models\Tache;
+use App\Models\Engagement;
 use App\Models\User;
+use App\Services\WorkflowService;
 
 /** Helpers PAP + besoin validé pour les tests chaîne de la dépense. */
 trait CreatesDepenseChain
@@ -82,5 +84,49 @@ trait CreatesDepenseChain
             'priorite' => $priorite,
             'statut' => 'valide',
         ]);
+    }
+
+    protected function viserEngagement(Engagement $engagement): void
+    {
+        $wf = app(WorkflowService::class);
+        $instance = $engagement->fresh()->workflowActif;
+        $wf->valider($instance, $this->user('directeur'));
+        $wf->valider($instance->fresh(), $this->user('controleur_financier'));
+    }
+
+    protected function viserLiquidation(\App\Models\Liquidation $liquidation): void
+    {
+        if (blank($liquidation->service_fait)) {
+            $liquidation->update(['service_fait' => 'Service fait constaté.']);
+        }
+        $wf = app(WorkflowService::class);
+        if (! $liquidation->fresh()->workflowActif) {
+            $wf->demarrer($liquidation, 'LIQUIDATION', $this->user('gestionnaire_budgetaire'));
+        }
+        $instance = $liquidation->fresh()->workflowActif;
+        $wf->valider($instance, $this->user('chef_service'));
+        $wf->valider($instance->fresh(), $this->user('controleur_financier'));
+    }
+
+    protected function viserOrdonnancement(\App\Models\Ordonnancement $ordonnancement): void
+    {
+        $wf = app(WorkflowService::class);
+        $circuit = app(\App\Services\Depense\SeuilOrdonnancementService::class)->circuit($ordonnancement);
+        if (! $ordonnancement->fresh()->workflowActif) {
+            $wf->demarrer($ordonnancement, $circuit, $this->user('gestionnaire_budgetaire'));
+        }
+        $role = $ordonnancement->fresh()->ordonnateur_role ?: 'secretaire_general';
+        $wf->valider($ordonnancement->fresh()->workflowActif, $this->user($role));
+    }
+
+    protected function viserPaiement(\App\Models\Paiement $paiement): void
+    {
+        $wf = app(WorkflowService::class);
+        if (! $paiement->fresh()->workflowActif) {
+            $wf->demarrer($paiement, 'PAIEMENT', $this->user('gestionnaire_budgetaire'));
+        }
+        $instance = $paiement->fresh()->workflowActif;
+        $wf->valider($instance, $this->user('comptable'));
+        $wf->valider($instance->fresh(), $this->user('agent_comptable'));
     }
 }

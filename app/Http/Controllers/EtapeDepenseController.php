@@ -131,7 +131,11 @@ class EtapeDepenseController extends Controller
         $this->authorize('update', $item);
 
         try {
-            $this->workflow->demarrer($item, $config['workflow'], $request->user());
+            $code = $config['workflow'];
+            if ($item instanceof Ordonnancement) {
+                $code = app(\App\Services\Depense\SeuilOrdonnancementService::class)->circuit($item);
+            }
+            $this->workflow->demarrer($item, $code, $request->user());
         } catch (RuntimeException $e) {
             return back()->with('erreur', $e->getMessage());
         }

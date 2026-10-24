@@ -60,14 +60,10 @@ class CompteurMouvementAuditTest extends TestCase
             $user,
         );
         $svc->soumettre($engagement, $this->user('gestionnaire_budgetaire'));
-        app(WorkflowService::class)->valider($engagement->workflowActif, $this->user('controleur_financier'));
+        $this->viserEngagement($engagement);
 
-        $liq = Liquidation::create([
-            'numero' => 'LIQ-AUDIT', 'engagement_id' => $engagement->id,
-            'montant' => 600, 'statut' => 'brouillon',
-        ]);
-        app(WorkflowService::class)->demarrer($liq, 'LIQUIDATION', $this->user('gestionnaire_budgetaire'));
-        app(WorkflowService::class)->valider($liq->workflowActif, $this->user('controleur_financier'));
+        $liq = $engagement->fresh()->liquidations()->first();
+        $this->viserLiquidation($liq);
 
         $rapport = app(CompteurMouvementAuditService::class)->analyser($this->exercice->id);
 

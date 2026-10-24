@@ -58,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: [
             'csp-report',
         ]);
@@ -70,6 +71,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'ability' => Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'ability.or.session' => App\Http\Middleware\EnsureApiAbilityOrSession::class,
             'api.log' => App\Http\Middleware\JournaliserApi::class,
             'api.connected' => App\Http\Middleware\VerifierApplicationConnectee::class,
             'exercice.ouvert' => App\Http\Middleware\EnsureExerciceOuvert::class,
@@ -81,6 +83,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
     })->create();

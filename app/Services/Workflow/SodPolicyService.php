@@ -49,6 +49,10 @@ class SodPolicyService
 
         $this->assertPasDeValidationConsecutive($instance, $user, $etape);
         $this->assertCreateurNeValidePas($instance, $user, $etape);
+
+        $objet = $instance->relationLoaded('objet') ? $instance->objet : $instance->objet()->first();
+        app(\App\Services\Depense\DirecteurBudgetHabilitationService::class)
+            ->assertVisa($user, $etape, $objet);
     }
 
     public function resolveInitiateur(WorkflowInstance $instance): ?int

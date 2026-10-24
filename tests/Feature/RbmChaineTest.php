@@ -25,6 +25,7 @@ class RbmChaineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed(RoleSeeder::class);
         $this->seed(RbmReferentielSeeder::class);
         $this->exercice = Exercice::create(['annee' => 2026, 'libelle' => 'Ex 2026', 'statut' => 'ouvert']);

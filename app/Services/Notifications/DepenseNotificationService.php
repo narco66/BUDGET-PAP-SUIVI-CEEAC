@@ -50,7 +50,7 @@ class DepenseNotificationService
 
 
 
-        $this->dispatcher->envoyer(
+        $this->envoyerSansAnnuler(
 
             $destinataires,
 
@@ -92,7 +92,7 @@ class DepenseNotificationService
 
 
 
-        $this->dispatcher->envoyer(
+        $this->envoyerSansAnnuler(
 
             $destinataires,
 
@@ -136,7 +136,7 @@ class DepenseNotificationService
 
 
 
-        $this->dispatcher->envoyer(
+        $this->envoyerSansAnnuler(
 
             $destinataires,
 
@@ -161,6 +161,53 @@ class DepenseNotificationService
     }
 
 
+
+    /**
+     * Une panne de notification ne doit pas annuler une décision financière déjà persistée.
+     *
+     * @param  Collection<int, User>  $destinataires
+     * @param  array<string, scalar|null>  $variables
+     */
+    private function envoyerSansAnnuler(
+        Collection $destinataires,
+        string $type,
+        string $titre,
+        string $message,
+        string $url,
+        string $module,
+        string $criticite,
+        array $variables,
+        array $canaux,
+    ): void {
+        try {
+            $this->dispatcher->envoyer(
+                $destinataires,
+                $type,
+                $titre,
+                $message,
+                $url,
+                $module,
+                $criticite,
+                variables: $variables,
+                canaux: $canaux,
+            );
+        } catch (\Throwable $e) {
+            report($e);
+            try {
+                \App\Models\NotificationLog::create([
+                    'type_code' => $type,
+                    'module' => $module,
+                    'canal' => 'reprise',
+                    'titre' => $titre,
+                    'message' => \Illuminate\Support\Str::limit($e->getMessage(), 500, ''),
+                    'url' => $url,
+                    'statut' => 'echec_reprise',
+                    'metadata' => ['variables' => $variables],
+                ]);
+            } catch (\Throwable) {
+            }
+        }
+    }
 
     /** @return list<string> */
 

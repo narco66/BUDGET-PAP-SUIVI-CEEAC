@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\EngagementResource;
 use App\Http\Resources\GouvernanceResource;
 use App\Http\Resources\LigneBudgetaireResource;
 use App\Http\Resources\StructureResource;
-use App\Models\Engagement;
 use App\Models\Exercice;
 use App\Models\LigneBudgetaire;
 use App\Models\Structure;
@@ -38,16 +36,6 @@ class DonneesApiController extends Controller
             LigneBudgetaire::with('rubrique', 'structure')
                 ->when($request->filled('exercice'), fn ($q) => $q->where('exercice_id', $request->exercice))
                 ->orderBy('code')->paginate(50)
-        );
-    }
-
-    public function engagements(Request $request): AnonymousResourceCollection
-    {
-        return EngagementResource::collection(
-            Engagement::with('imputations.ligneBudgetaire')
-                ->when($request->filled('exercice'), fn ($q) => $q->where('exercice_id', $request->exercice))
-                ->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->statut))
-                ->latest()->paginate(50)
         );
     }
 

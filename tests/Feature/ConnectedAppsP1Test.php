@@ -24,6 +24,7 @@ class ConnectedAppsP1Test extends TestCase
     {
         parent::setUp();
         $this->seed([RoleSeeder::class, InteroperabiliteApiPermissionsSeeder::class]);
+        config(['mfa.enabled' => false]);
     }
 
     private function admin(): User
@@ -190,6 +191,95 @@ class ConnectedAppsP1Test extends TestCase
         $this->actingAs($admin)->get(route('admin.interoperabilite.journal', [
             'connected_app_id' => $app->id,
         ]))->assertOk()->assertSee('APP_TEST');
+    }
+
+    public function test_api_hub_interdit_et_stats(): void
+    {
+        $this->creerApp();
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = $this->admin();
+
+        $this->actingAs($chef)
+            ->getJson(route('api.interoperabilite.hub'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->getJson(route('api.interoperabilite.hub'))
+            ->assertOk()
+            ->assertJsonPath('stats.apps_total', 1)
+            ->assertJsonPath('stats.apps_actives', 1)
+            ->assertJsonPath('peut_admin', true)
+            ->assertJsonMissingPath('client_secret_hash')
+            ->assertJsonMissingPath('plainTextToken');
+    }
+
+    public function test_api_apps_crud_secret_une_fois(): void
+    {
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = $this->admin();
+
+        $this->actingAs($chef)
+            ->getJson(route('api.interoperabilite.apps'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->postJson(route('api.interoperabilite.apps.store'), [
+                'code' => 'SPA_APP',
+                'libelle' => 'Application SPA',
+                'type' => 'interne',
+                'scopes_autorises' => ['lecture'],
+                'statut' => 'actif',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.code', 'SPA_APP')
+            ->assertJsonMissingPath('data.client_secret');
+
+        $app = ConnectedApp::query()->where('code', 'SPA_APP')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->postJson(route('api.interoperabilite.apps.clients.store', $app), ['libelle' => 'Prod'])
+            ->assertCreated()
+            ->assertJsonStructure(['client_id', 'client_secret']);
+
+        $this->actingAs($admin)
+            ->getJson(route('api.interoperabilite.apps.show', $app))
+            ->assertOk()
+            ->assertJsonPath('data.clients.0.libelle', 'Prod')
+            ->assertJsonMissingPath('data.clients.0.client_secret')
+            ->assertJsonMissingPath('data.clients.0.client_secret_hash');
+    }
+
+    public function test_api_journal_interdit_et_filtre(): void
+    {
+        $app = $this->creerApp();
+        ApiLog::query()->create([
+            'methode' => 'GET',
+            'chemin' => 'api/v1/exercices',
+            'statut' => 200,
+            'statut_metier' => 'succes',
+            'connected_app_id' => $app->id,
+            'duree_ms' => 12,
+            'ip' => '127.0.0.1',
+            'user_agent' => 'PHPUnit',
+            'request_hash' => 'hash-secret',
+            'created_at' => now(),
+        ]);
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = $this->admin();
+
+        $this->actingAs($chef)
+            ->getJson(route('api.interoperabilite.journal'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->getJson(route('api.interoperabilite.journal', ['connected_app_id' => $app->id]))
+            ->assertOk()
+            ->assertJsonPath('data.0.chemin', 'api/v1/exercices')
+            ->assertJsonPath('data.0.app', 'APP_TEST')
+            ->assertJsonPath('data.0.ip', '127.0.0.1')
+            ->assertJsonMissingPath('data.0.user_agent')
+            ->assertJsonMissingPath('data.0.request_hash')
+            ->assertJsonMissingPath('data.0.token_nom');
     }
 
     public function test_journal_refuse_sans_permission_monitor(): void

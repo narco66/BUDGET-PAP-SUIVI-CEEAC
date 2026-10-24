@@ -19,12 +19,18 @@ class Liquidation extends Model implements PilotableParWorkflow, ConcernantStruc
 
     protected $fillable = [
         'numero', 'engagement_id', 'montant', 'date_liquidation', 'service_fait',
+        'numero_tranche', 'numero_facture', 'date_facture', 'fournisseur',
+        'montant_brut', 'montant_retenues', 'montant_net',
         'statut', 'cree_par', 'valide_par', 'valide_le', 'compteurs_appliques',
     ];
 
     protected $casts = [
         'montant' => 'decimal:2',
+        'montant_brut' => 'decimal:2',
+        'montant_retenues' => 'decimal:2',
+        'montant_net' => 'decimal:2',
         'date_liquidation' => 'date',
+        'date_facture' => 'date',
         'valide_le' => 'datetime',
         'compteurs_appliques' => 'boolean',
     ];

@@ -162,6 +162,13 @@ class WorkflowService
                 throw new RuntimeException("Aucune étape en attente pour votre rôle.");
             }
 
+            $objetPrealable = $instance->objet;
+            if ($decision === 'valide'
+                && $objetPrealable instanceof \App\Models\Liquidation
+                && $etape->role === 'controleur_financier') {
+                app(\App\Services\Depense\ServiceFaitService::class)->assertCertifie($objetPrealable);
+            }
+
             $etape->update([
                 'statut' => $decision,
                 'acteur_id' => $user->id,
@@ -274,6 +281,11 @@ class WorkflowService
         ]);
         $instance->update(['etape_courante' => $precedente]);
         $this->appliquerEcheanceEtapeCourante($instance->fresh(['workflow', 'etapes']));
+
+        $objet = $instance->objet;
+        if ($objet && method_exists($objet, 'auWorkflowRenvoye')) {
+            $objet->auWorkflowRenvoye();
+        }
     }
 
     private function appliquerEcheanceEtapeCourante(WorkflowInstance $instance, ?Workflow $workflow = null): void

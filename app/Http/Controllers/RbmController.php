@@ -3,20 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Exercice;
-use App\Models\LigneBudgetaire;
-use App\Models\Structure;
 use App\Models\User;
 use App\Rbm\Niveaux;
+use App\Services\Pap\PapReferentielService;
+use App\Services\Rbm\RbmNoeudService;
 use App\Services\Rbm\RbmReferentielService;
 use App\Services\AccessScopeService;
-use App\Services\Budget\RbmBudgetSyncService;
-use App\Services\Pap\PapReferentielService;
 use App\Support\RbmAuthorization;
 use App\Support\RbmStatutFiltre;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -24,7 +20,7 @@ class RbmController extends Controller
 {
     public function __construct(
         private readonly RbmReferentielService $referentiel,
-        private readonly RbmBudgetSyncService $rbmBudgetSync,
+        private readonly RbmNoeudService $noeuds,
         private readonly PapReferentielService $papReferentiel,
         private readonly AccessScopeService $scopes,
     ) {
@@ -59,39 +55,18 @@ class RbmController extends Controller
             'noeud' => null,
             'parentId' => $parentId,
             'exerciceId' => $exerciceId,
-            'options' => $this->options($exerciceId),
+            'options' => $this->noeuds->options($niveau, $request->user(), $exerciceId ?: null),
         ]);
     }
 
     public function store(Request $request, string $niveau): RedirectResponse
     {
         abort_unless(RbmAuthorization::peut($request->user(), $niveau, 'creer'), 403);
-        if ($redirect = $this->verrouPap($request)) {
-            return $redirect;
-        }
         $config = $this->config($niveau);
-
-        $data = $this->valider($request, $config, null);
-        $parentId = $request->integer('parent');
-        if ($config['parent_cle'] && $parentId <= 0) {
-            return back()->withInput()->with('erreur', 'Le parent est obligatoire pour créer un '.$config['label'].'.');
-        }
-        if ($config['parent_cle'] && $this->referentiel->codeDoublon($niveau, $parentId, $data['code'] ?? '')) {
-            return back()->withInput()->with('erreur', 'Un élément avec le même code existe déjà à ce niveau.');
-        }
-        if ($config['parent_cle'] && $this->referentiel->libelleDoublon($niveau, $parentId, $data['intitule'] ?? '')) {
-            return back()->withInput()->with('erreur', 'Un élément avec le même intitulé existe déjà à ce niveau.');
-        }
-        $data = $this->appliquerParent($request, $config, $data);
-        $data = $this->normaliser($config, $data);
-        if ($redirect = $this->validerPerimetreStructure($request, $config, $data)) {
-            return $redirect;
-        }
-
-        $noeud = $config['model']::create($data);
-        $this->referentiel->historiser($noeud, 'create', null, $noeud->getAttributes());
-        if ($niveau === 'activite' && $noeud instanceof \App\Models\Activite) {
-            $this->rbmBudgetSync->synchroniserActivite($noeud);
+        try {
+            $this->noeuds->creer($niveau, $request);
+        } catch (RuntimeException $e) {
+            return back()->withInput()->with('erreur', $e->getMessage());
         }
 
         return redirect()
@@ -103,8 +78,8 @@ class RbmController extends Controller
     {
         abort_unless(RbmAuthorization::peut($request->user(), $niveau, 'modifier'), 403);
         $config = $this->config($niveau);
-        $noeud = $config['model']::findOrFail($id);
-        $this->assertNoeudDansPerimetre($request->user(), $niveau, $noeud);
+        $noeud = $this->noeuds->trouver($niveau, $id);
+        $this->noeuds->assertNoeudDansPerimetre($request->user(), $niveau, $noeud);
 
         return view('rbm.form', [
             'config' => $config,
@@ -112,30 +87,18 @@ class RbmController extends Controller
             'noeud' => $noeud,
             'parentId' => $noeud->{$config['parent_cle']},
             'exerciceId' => $request->integer('exercice'),
-            'options' => $this->options($request->integer('exercice')),
+            'options' => $this->noeuds->options($niveau, $request->user(), $request->integer('exercice') ?: null),
         ]);
     }
 
     public function update(Request $request, string $niveau, int $id): RedirectResponse
     {
         abort_unless(RbmAuthorization::peut($request->user(), $niveau, 'modifier'), 403);
-        if ($redirect = $this->verrouPap($request)) {
-            return $redirect;
-        }
         $config = $this->config($niveau);
-        $noeud = $config['model']::findOrFail($id);
-        $this->assertNoeudDansPerimetre($request->user(), $niveau, $noeud);
-
-        $data = $this->valider($request, $config, $noeud->id);
-        $data = $this->normaliser($config, $data);
-        if ($redirect = $this->validerPerimetreStructure($request, $config, $data)) {
-            return $redirect;
-        }
-        $avant = $noeud->getAttributes();
-        $noeud->update($data);
-        $this->referentiel->historiser($noeud, 'update', $avant, $noeud->fresh()->getAttributes());
-        if ($niveau === 'activite' && $noeud instanceof \App\Models\Activite) {
-            $this->rbmBudgetSync->synchroniserActivite($noeud->fresh());
+        try {
+            $this->noeuds->modifier($niveau, $id, $request);
+        } catch (RuntimeException $e) {
+            return back()->withInput()->with('erreur', $e->getMessage());
         }
 
         return redirect()
@@ -146,12 +109,16 @@ class RbmController extends Controller
     public function destroy(Request $request, string $niveau, int $id): RedirectResponse
     {
         abort_unless(RbmAuthorization::peut($request->user(), $niveau, 'supprimer'), 403);
-        if ($redirect = $this->verrouPap($request)) {
-            return $redirect;
+        if ($request->integer('exercice') > 0) {
+            try {
+                $this->papReferentiel->assertExerciceModifiable($request->integer('exercice'));
+            } catch (RuntimeException $e) {
+                return back()->with('erreur', $e->getMessage());
+            }
         }
         $config = $this->config($niveau);
         $noeud = $config['model']::findOrFail($id);
-        $this->assertNoeudDansPerimetre($request->user(), $niveau, $noeud);
+        $this->noeuds->assertNoeudDansPerimetre($request->user(), $niveau, $noeud);
 
         if ($config['relation_enfants'] && $noeud->{$config['relation_enfants']}()->exists()) {
             return back()->with('erreur', 'Impossible : cet élément a des sous-éléments rattachés.');
@@ -191,131 +158,11 @@ class RbmController extends Controller
         return back()->with('succes', $config['label'].' restauré(e).');
     }
 
-    // --- Helpers ---
-
-    /** Bloque les mutations RBM si le PAP de l'exercice est verrouillé. */
-    private function verrouPap(Request $request): ?RedirectResponse
-    {
-        $exerciceId = $request->integer('exercice');
-        if ($exerciceId <= 0) {
-            return null;
-        }
-
-        try {
-            $this->papReferentiel->assertExerciceModifiable($exerciceId);
-        } catch (RuntimeException $e) {
-            return back()->withInput()->with('erreur', $e->getMessage());
-        }
-
-        return null;
-    }
-
     private function config(string $niveau): array
     {
         abort_unless(Niveaux::existe($niveau), 404);
 
         return Niveaux::get($niveau);
-    }
-
-    /** Construit et applique les règles de validation à partir du registre. */
-    private function valider(Request $request, array $config, ?int $ignoreId): array
-    {
-        $regles = [];
-        foreach ($config['champs'] as $champ => $meta) {
-            $regles[$champ] = $this->reglesChamp($champ, $meta, $config, $request, $ignoreId);
-        }
-
-        return Validator::make($request->all(), array_filter($regles))->validate();
-    }
-
-    private function reglesChamp(string $champ, array $meta, array $config, Request $request, ?int $ignoreId): array
-    {
-        return match ($meta['type']) {
-            'text' => $this->reglesTexte($champ, $meta, $config, $request, $ignoreId),
-            'textarea' => ['nullable', 'string'],
-            'number' => ['nullable', 'integer', 'min:0'],
-            'decimal' => ['nullable', 'numeric', 'min:0'],
-            'date' => ['nullable', 'date'],
-            'select' => $this->reglesSelect($meta),
-            'trimestres' => ['nullable', 'array'],
-            default => ['nullable'],
-        };
-    }
-
-    private function reglesTexte(string $champ, array $meta, array $config, Request $request, ?int $ignoreId): array
-    {
-        $regles = [($meta['requis'] ?? false) ? 'required' : 'nullable', 'string', 'max:'.($meta['max'] ?? 255)];
-
-        if (! empty($meta['code_unique'])) {
-            $rule = Rule::unique($config['table'], $champ)
-                ->where($config['parent_cle'], $request->integer('parent'));
-            if ($ignoreId) {
-                $rule->ignore($ignoreId);
-            }
-            $regles[] = $rule;
-        }
-
-        return $regles;
-    }
-
-    private function reglesSelect(array $meta): array
-    {
-        return match ($meta['source']) {
-            'structures' => ['nullable', 'exists:structures,id'],
-            'users' => ['nullable', 'exists:users,id'],
-            'lignes' => ['nullable', 'exists:lignes_budgetaires,id'],
-            'statuts_tache' => ['nullable', Rule::in(['a_faire', 'en_cours', 'termine', 'bloque'])],
-            default => ['nullable'],
-        };
-    }
-
-    /** Rattache l'élément à son parent (sauf à la création où le parent vient de la requête). */
-    private function appliquerParent(Request $request, array $config, array $data): array
-    {
-        $data[$config['parent_cle']] = $request->integer('parent');
-
-        // Une activité est rattachée au sous-produit ; on renseigne aussi produit_id (dénormalisation utile).
-        if ($config['niveau'] === 'activite') {
-            $sp = \App\Models\SousProduit::find($request->integer('parent'));
-            $data['produit_id'] = $sp?->produit_id;
-        }
-
-        return $data;
-    }
-
-    /** Transforme les champs spéciaux (trimestres → booléens, montant_total = somme). */
-    private function normaliser(array $config, array $data): array
-    {
-        if (array_key_exists('trimestres', $config['champs'])) {
-            $coches = (array) ($data['trimestres'] ?? []);
-            foreach ([1, 2, 3, 4] as $t) {
-                $data["trim_$t"] = in_array((string) $t, array_map('strval', $coches), true);
-            }
-            unset($data['trimestres']);
-        }
-
-        if ($config['niveau'] === 'activite') {
-            $data['montant_total'] = (float) ($data['montant_ceeac'] ?? 0) + (float) ($data['montant_ptf'] ?? 0);
-        }
-
-        return $data;
-    }
-
-    /** Options des listes déroulantes. */
-    private function options(?int $exerciceId): array
-    {
-        $user = auth()->user();
-
-        return [
-            'structures' => $this->scopes
-                ->filtrerReferentielStructures(Structure::actif()->orderBy('libelle'), $user)
-                ->get(['id', 'code', 'libelle']),
-            'users' => User::where('actif', true)->orderBy('name')->get(['id', 'name']),
-            'lignes' => LigneBudgetaire::when($exerciceId, fn ($q) => $q->where('exercice_id', $exerciceId))
-                ->when(! $this->scopes->estGlobal($user), fn ($q) => $this->scopes->filtrerStructures($q, $user))
-                ->orderBy('code')->get(['id', 'code', 'intitule']),
-            'statuts_tache' => ['a_faire' => 'À faire', 'en_cours' => 'En cours', 'termine' => 'Terminé', 'bloque' => 'Bloqué'],
-        ];
     }
 
     private function filtrerArbreParPerimetre(Exercice $exercice, User $user): void
@@ -343,33 +190,5 @@ class RbmController extends Controller
                 }
             }
         }
-    }
-
-    private function assertNoeudDansPerimetre(User $user, string $niveau, object $noeud): void
-    {
-        if (! in_array($niveau, ['produit', 'activite'], true)) {
-            return;
-        }
-
-        if ($this->scopes->dansPerimetre($user, $noeud->structure_id ?? null)) {
-            return;
-        }
-
-        abort(403, 'Élément hors de votre périmètre institutionnel.');
-    }
-
-    /** @param  array<string, mixed>  $data */
-    private function validerPerimetreStructure(Request $request, array $config, array $data): ?RedirectResponse
-    {
-        if (! in_array($config['niveau'], ['produit', 'activite'], true)) {
-            return null;
-        }
-
-        $structureId = $data['structure_id'] ?? null;
-        if ($structureId && ! $this->scopes->dansPerimetre($request->user(), (int) $structureId)) {
-            return back()->withInput()->with('erreur', 'Structure hors de votre périmètre institutionnel.');
-        }
-
-        return null;
     }
 }

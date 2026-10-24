@@ -1,0 +1,203 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/connexion',
+      name: 'connexion',
+      component: () => import('@/views/LoginView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/connexion/mfa',
+      name: 'mfa',
+      component: () => import('@/views/MfaView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/',
+      component: () => import('@/layouts/AppLayout.vue'),
+      children: [
+        { path: '', redirect: '/tableau-bord' },
+        { path: 'tableau-bord', name: 'tableau-bord', component: () => import('@/views/TableauBordView.vue') },
+        { path: 'exercices', name: 'exercices', component: () => import('@/views/ExercicesView.vue') },
+        { path: 'exercices/nouveau', name: 'exercice-nouveau', component: () => import('@/views/ExerciceFormView.vue') },
+        { path: 'exercices/:id/edit', name: 'exercice-edit', component: () => import('@/views/ExerciceFormView.vue') },
+        { path: 'exercices/:id', name: 'exercice-detail', component: () => import('@/views/ExerciceShowView.vue') },
+        { path: 'structures', name: 'structures', component: () => import('@/views/StructuresView.vue') },
+        { path: 'structures/nouveau', name: 'structure-nouveau', component: () => import('@/views/StructureFormView.vue') },
+        { path: 'structures/:id/edit', name: 'structure-edit', component: () => import('@/views/StructureFormView.vue') },
+        { path: 'structures/:id', name: 'structure-detail', component: () => import('@/views/StructureShowView.vue') },
+        { path: 'structure-budget', name: 'structure-budget', component: () => import('@/views/StructureBudgetView.vue') },
+        { path: 'structure-budget/import-export', name: 'structure-budget-import-export', component: () => import('@/views/StructureBudgetImportView.vue') },
+        { path: 'structure-budget/lignes/:id', name: 'structure-budget-ligne', component: () => import('@/views/StructureBudgetLigneView.vue') },
+        { path: 'depense', name: 'depense-cockpit', component: () => import('@/views/DepenseCockpitView.vue') },
+        { path: 'verification/:type/:id', name: 'depense-verification', component: () => import('@/views/DepenseVerificationView.vue') },
+        { path: 'besoins', name: 'besoins', component: () => import('@/views/BesoinsView.vue') },
+        { path: 'besoins/consolidation', name: 'besoins-consolidation', component: () => import('@/views/BesoinsConsolidationView.vue') },
+        { path: 'besoins/nouveau', name: 'besoin-nouveau', component: () => import('@/views/BesoinNouveauView.vue') },
+        { path: 'dossiers/:type/:id', name: 'depense-dossier', component: () => import('@/views/DepenseDossierView.vue') },
+        { path: 'besoins/:id/edit', name: 'besoin-edit', component: () => import('@/views/BesoinNouveauView.vue') },
+        { path: 'besoins/:id', name: 'besoin-detail', component: () => import('@/views/BesoinShowView.vue') },
+        { path: 'engagements', name: 'engagements', component: () => import('@/views/EngagementsView.vue') },
+        { path: 'engagements/nouveau', name: 'engagement-nouveau', component: () => import('@/views/EngagementNouveauView.vue') },
+        { path: 'engagements/:id', name: 'engagement-detail', component: () => import('@/views/EngagementShowView.vue') },
+        { path: 'liquidations', name: 'liquidations', component: () => import('@/views/DepenseEtapeListView.vue'), meta: { etape: 'liquidation' } },
+        { path: 'liquidations/nouveau', name: 'liquidation-nouveau', component: () => import('@/views/DepenseEtapeNouveauView.vue'), meta: { etape: 'liquidation' } },
+        { path: 'liquidations/:id', name: 'liquidation-detail', component: () => import('@/views/DepenseEtapeShowView.vue'), meta: { etape: 'liquidation' } },
+        { path: 'ordonnancements', name: 'ordonnancements', component: () => import('@/views/DepenseEtapeListView.vue'), meta: { etape: 'ordonnancement' } },
+        { path: 'ordonnancements/nouveau', name: 'ordonnancement-nouveau', component: () => import('@/views/DepenseEtapeNouveauView.vue'), meta: { etape: 'ordonnancement' } },
+        { path: 'ordonnancements/:id', name: 'ordonnancement-detail', component: () => import('@/views/DepenseEtapeShowView.vue'), meta: { etape: 'ordonnancement' } },
+        { path: 'paiements', name: 'paiements', component: () => import('@/views/DepenseEtapeListView.vue'), meta: { etape: 'paiement' } },
+        { path: 'paiements/nouveau', name: 'paiement-nouveau', component: () => import('@/views/DepenseEtapeNouveauView.vue'), meta: { etape: 'paiement' } },
+        { path: 'paiements/:id', name: 'paiement-detail', component: () => import('@/views/DepenseEtapeShowView.vue'), meta: { etape: 'paiement' } },
+        { path: 'marches', name: 'marches', component: () => import('@/views/MarchesView.vue') },
+        { path: 'marches/nouveau', name: 'marche-nouveau', component: () => import('@/views/MarcheFormView.vue') },
+        { path: 'marches/:id/edit', name: 'marche-edit', component: () => import('@/views/MarcheFormView.vue') },
+        { path: 'marches/:id', name: 'marche-detail', component: () => import('@/views/MarcheShowView.vue') },
+        { path: 'contrats', name: 'contrats', component: () => import('@/views/ContratsView.vue') },
+        { path: 'contrats/nouveau', name: 'contrat-nouveau', component: () => import('@/views/ContratFormView.vue') },
+        { path: 'contrats/:id/edit', name: 'contrat-edit', component: () => import('@/views/ContratFormView.vue') },
+        { path: 'contrats/:id', name: 'contrat-detail', component: () => import('@/views/ContratShowView.vue') },
+        { path: 'suivi-evaluation', name: 'suivi-evaluation', component: () => import('@/views/SuiviEvaluationView.vue') },
+        { path: 'suivi', name: 'campagnes-suivi', component: () => import('@/views/CampagnesSuiviView.vue') },
+        { path: 'suivi/nouveau', name: 'campagne-suivi-nouveau', component: () => import('@/views/CampagneSuiviFormView.vue') },
+        { path: 'suivi/:id', name: 'campagne-suivi-detail', component: () => import('@/views/CampagneSuiviShowView.vue') },
+        { path: 'recommandations', name: 'recommandations', component: () => import('@/views/RecommandationsView.vue') },
+        { path: 'recommandations/nouveau', name: 'recommandation-nouveau', component: () => import('@/views/RecommandationFormView.vue') },
+        { path: 'recommandations/:id/edit', name: 'recommandation-edit', component: () => import('@/views/RecommandationFormView.vue') },
+        { path: 'recommandations/:id', name: 'recommandation-detail', component: () => import('@/views/RecommandationShowView.vue') },
+        { path: 'formations', name: 'formations', component: () => import('@/views/FormationsView.vue') },
+        { path: 'formations/nouveau', name: 'formation-nouveau', component: () => import('@/views/FormationFormView.vue') },
+        { path: 'formations/:id/edit', name: 'formation-edit', component: () => import('@/views/FormationFormView.vue') },
+        { path: 'formations/:id', name: 'formation-detail', component: () => import('@/views/FormationShowView.vue') },
+        { path: 'immobilisations', name: 'immobilisations', component: () => import('@/views/ImmobilisationsView.vue') },
+        { path: 'immobilisations/nouveau', name: 'immobilisation-nouveau', component: () => import('@/views/ImmobilisationFormView.vue') },
+        { path: 'immobilisations/:id/edit', name: 'immobilisation-edit', component: () => import('@/views/ImmobilisationFormView.vue') },
+        { path: 'immobilisations/:id', name: 'immobilisation-detail', component: () => import('@/views/ImmobilisationShowView.vue') },
+        { path: 'rapprochements', name: 'rapprochements', component: () => import('@/views/RapprochementsView.vue') },
+        { path: 'rapprochements/:id', name: 'rapprochement-detail', component: () => import('@/views/RapprochementShowView.vue') },
+        { path: 'suivi-financier', name: 'suivi-financier', component: () => import('@/views/SuiviFinancierView.vue') },
+        { path: 'suivi-financier/anomalies', name: 'suivi-financier-anomalies', component: () => import('@/views/SuiviFinancierAnomaliesView.vue') },
+        { path: 'credits', name: 'credits', component: () => import('@/views/CreditsView.vue') },
+        { path: 'credits/nouveau', name: 'credit-nouveau', component: () => import('@/views/CreditFormView.vue') },
+        { path: 'credits/:id', name: 'credit-detail', component: () => import('@/views/CreditFormView.vue') },
+        { path: 'budgets', name: 'budgets', component: () => import('@/views/BudgetsView.vue') },
+        { path: 'budgets/nouveau', name: 'budget-nouveau', component: () => import('@/views/BudgetNouveauView.vue') },
+        { path: 'budgets/:id/preparations', name: 'budget-preparations', component: () => import('@/views/BudgetPreparationsView.vue') },
+        { path: 'budgets/:id/simulations', name: 'budget-simulations', component: () => import('@/views/BudgetSimulationsView.vue') },
+        { path: 'budgets/:id/revisions', name: 'budget-revisions', component: () => import('@/views/BudgetRevisionsView.vue') },
+        { path: 'budgets/:id/rapport', name: 'budget-rapport', component: () => import('@/views/BudgetRapportView.vue') },
+        { path: 'budgets/:id', name: 'budget-detail', component: () => import('@/views/BudgetShowView.vue') },
+        { path: 'paps', name: 'paps', component: () => import('@/views/PapsView.vue') },
+        { path: 'paps/nouveau', name: 'pap-nouveau', component: () => import('@/views/PapNouveauView.vue') },
+        { path: 'paps/pilotage', name: 'pap-pilotage', component: () => import('@/views/PapPilotageView.vue') },
+        { path: 'paps/:id', name: 'pap-detail', component: () => import('@/views/PapShowView.vue') },
+        { path: 'rbm', name: 'rbm', component: () => import('@/views/RbmView.vue') },
+        { path: 'rbm/niveaux/:niveau/nouveau', name: 'rbm-noeud-nouveau', component: () => import('@/views/RbmNoeudView.vue') },
+        { path: 'rbm/niveaux/:niveau/:id', name: 'rbm-noeud', component: () => import('@/views/RbmNoeudView.vue') },
+        { path: 'ged', name: 'ged', component: () => import('@/views/GedView.vue') },
+        { path: 'ged/depot', name: 'ged-depot', component: () => import('@/views/GedDepotView.vue') },
+        { path: 'ged/signatures', name: 'ged-signatures', component: () => import('@/views/GedSignaturesView.vue') },
+        { path: 'ged/documents', name: 'ged-documents', component: () => import('@/views/GedDocumentsView.vue') },
+        { path: 'ged/documents/:uuid', name: 'ged-document-detail', component: () => import('@/views/GedDocumentShowView.vue') },
+        { path: 'ged/recherche', name: 'ged-recherche', component: () => import('@/views/GedRechercheView.vue') },
+        { path: 'ged/classement', name: 'ged-classement', component: () => import('@/views/GedClassementView.vue') },
+        { path: 'ged/categories', name: 'ged-categories', component: () => import('@/views/GedReferentielView.vue'), meta: { referentiel: 'categories' } },
+        { path: 'ged/types', name: 'ged-types', component: () => import('@/views/GedReferentielView.vue'), meta: { referentiel: 'types' } },
+        { path: 'ged/dossiers', name: 'ged-dossiers', component: () => import('@/views/GedReferentielView.vue'), meta: { referentiel: 'dossiers' } },
+        { path: 'ged/versions', name: 'ged-versions', component: () => import('@/views/GedVersionsView.vue') },
+        { path: 'ged/workflows', name: 'ged-workflows', component: () => import('@/views/GedWorkflowsView.vue') },
+        { path: 'ged/partages', name: 'ged-partages', component: () => import('@/views/GedVuesDocumentsView.vue'), meta: { vue: 'partages' } },
+        { path: 'ged/confidentiels', name: 'ged-confidentiels', component: () => import('@/views/GedVuesDocumentsView.vue'), meta: { vue: 'confidentiels' } },
+        { path: 'ged/expires', name: 'ged-expires', component: () => import('@/views/GedVuesDocumentsView.vue'), meta: { vue: 'expires' } },
+        { path: 'ged/archives', name: 'ged-archives', component: () => import('@/views/GedVuesDocumentsView.vue'), meta: { vue: 'archives' } },
+        { path: 'ged/conservation', name: 'ged-conservation', component: () => import('@/views/GedConservationView.vue') },
+        { path: 'ged/journal', name: 'ged-journal', component: () => import('@/views/GedJournalView.vue') },
+        { path: 'ged/parametres', name: 'ged-parametres', component: () => import('@/views/GedParametresView.vue') },
+        { path: 'ged/wiki', name: 'ged-wiki', component: () => import('@/views/GedWikiView.vue') },
+        { path: 'ged/wiki/nouveau', name: 'ged-wiki-nouveau', component: () => import('@/views/GedWikiFormView.vue') },
+        { path: 'ged/wiki/:id/edit', name: 'ged-wiki-edit', component: () => import('@/views/GedWikiFormView.vue') },
+        { path: 'ged/wiki/:id', name: 'ged-wiki-detail', component: () => import('@/views/GedWikiShowView.vue') },
+        { path: 'reporting', name: 'reporting', component: () => import('@/views/ReportingView.vue') },
+        { path: 'reporting/cockpit', name: 'reporting-cockpit', component: () => import('@/views/ReportingCockpitView.vue') },
+        { path: 'reporting/planification', name: 'reporting-planification', component: () => import('@/views/ReportingPlanificationView.vue') },
+        { path: 'reporting/modeles', name: 'reporting-modeles', component: () => import('@/views/ReportingModelesView.vue') },
+        { path: 'reporting/modeles/nouveau', name: 'reporting-modele-nouveau', component: () => import('@/views/ReportingModeleFormView.vue') },
+        { path: 'reporting/modeles/:id/edit', name: 'reporting-modele-edit', component: () => import('@/views/ReportingModeleFormView.vue') },
+        { path: 'reporting/modeles/:id', name: 'reporting-modele-detail', component: () => import('@/views/ReportingModeleShowView.vue') },
+        { path: 'reporting/rapports', name: 'reporting-rapports', component: () => import('@/views/ReportingRapportsView.vue') },
+        { path: 'reporting/rapports/:id', name: 'reporting-rapport-detail', component: () => import('@/views/ReportingRapportShowView.vue') },
+        { path: 'workflow', name: 'workflow', component: () => import('@/views/WorkflowView.vue') },
+        { path: 'workflow/audit', name: 'workflow-audit', component: () => import('@/views/WorkflowAuditView.vue') },
+        { path: 'workflow/corbeille', name: 'workflow-corbeille', component: () => import('@/views/WorkflowCorbeilleView.vue') },
+        { path: 'workflow/circuits', name: 'workflow-circuits', component: () => import('@/views/WorkflowCircuitsView.vue') },
+        { path: 'workflow/circuits/nouveau', name: 'workflow-circuit-nouveau', component: () => import('@/views/WorkflowCircuitFormView.vue') },
+        { path: 'workflow/circuits/:id', name: 'workflow-circuit-detail', component: () => import('@/views/WorkflowCircuitFormView.vue') },
+        { path: 'workflow/instances/:id', name: 'workflow-instance-detail', component: () => import('@/views/WorkflowInstanceShowView.vue') },
+        { path: 'notifications', name: 'notifications', component: () => import('@/views/NotificationsView.vue') },
+        { path: 'notifications/alertes', name: 'notifications-alertes', component: () => import('@/views/AlertesView.vue') },
+        { path: 'notifications/preferences', name: 'notifications-preferences', component: () => import('@/views/NotificationsPreferencesView.vue') },
+        { path: 'notifications/templates', name: 'notifications-templates', component: () => import('@/views/NotificationsTemplatesView.vue') },
+        { path: 'notifications/templates/:id', name: 'notifications-template-edit', component: () => import('@/views/NotificationsTemplateFormView.vue') },
+        { path: 'interoperabilite', name: 'interoperabilite', component: () => import('@/views/InteropHubView.vue') },
+        { path: 'interoperabilite/apps', name: 'interop-apps', component: () => import('@/views/InteropAppsView.vue') },
+        { path: 'interoperabilite/apps/nouveau', name: 'interop-app-nouveau', component: () => import('@/views/InteropAppFormView.vue') },
+        { path: 'interoperabilite/apps/:id/edit', name: 'interop-app-edit', component: () => import('@/views/InteropAppFormView.vue') },
+        { path: 'interoperabilite/apps/:id', name: 'interop-app-detail', component: () => import('@/views/InteropAppShowView.vue') },
+        { path: 'interoperabilite/journal', name: 'interop-journal', component: () => import('@/views/InteropJournalView.vue') },
+        { path: 'interoperabilite/monitoring', name: 'interop-monitoring', component: () => import('@/views/InteropMonitoringView.vue') },
+        { path: 'interoperabilite/webhooks', name: 'interop-webhooks', component: () => import('@/views/InteropWebhooksView.vue') },
+        { path: 'interoperabilite/webhooks/nouveau', name: 'interop-webhook-nouveau', component: () => import('@/views/InteropWebhookFormView.vue') },
+        { path: 'interoperabilite/webhooks/:id/edit', name: 'interop-webhook-edit', component: () => import('@/views/InteropWebhookFormView.vue') },
+        { path: 'interoperabilite/webhooks/:id', name: 'interop-webhook-detail', component: () => import('@/views/InteropWebhookShowView.vue') },
+        { path: 'recettes', name: 'recettes', component: () => import('@/views/RecettesView.vue') },
+        { path: 'recettes/etats', name: 'recettes-etats', component: () => import('@/views/RecettesEtatsView.vue') },
+        { path: 'recettes/:id', name: 'recette-detail', component: () => import('@/views/RecetteShowView.vue') },
+        { path: 'encaissements', name: 'encaissements', component: () => import('@/views/EncaissementsView.vue') },
+        { path: 'encaissements/nouveau', name: 'encaissement-nouveau', component: () => import('@/views/EncaissementNouveauView.vue') },
+        { path: 'encaissements/:id', name: 'encaissement-detail', component: () => import('@/views/EncaissementShowView.vue') },
+        { path: 'appels-fonds', name: 'appels-fonds', component: () => import('@/views/AppelsFondsView.vue') },
+        { path: 'appels-fonds/nouveau', name: 'appel-fonds-nouveau', component: () => import('@/views/AppelFondsNouveauView.vue') },
+        { path: 'appels-fonds/:id', name: 'appel-fonds-detail', component: () => import('@/views/AppelFondsShowView.vue') },
+        { path: 'plans-apurement/:id', name: 'plan-apurement-detail', component: () => import('@/views/PlanApurementShowView.vue') },
+        { path: 'utilisateurs', name: 'utilisateurs', component: () => import('@/views/UtilisateursView.vue') },
+        { path: 'utilisateurs/nouveau', name: 'utilisateur-nouveau', component: () => import('@/views/UtilisateurFormView.vue') },
+        { path: 'utilisateurs/:id/edit', name: 'utilisateur-edit', component: () => import('@/views/UtilisateurFormView.vue') },
+        { path: 'utilisateurs/:id', name: 'utilisateur-detail', component: () => import('@/views/UtilisateurShowView.vue') },
+        { path: 'securite/mfa', name: 'mfa-setup', component: () => import('@/views/MfaSetupView.vue') },
+      ],
+    },
+  ],
+})
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  if (!auth.pret) {
+    try {
+      await auth.hydrater()
+    } catch {
+      auth.pret = true
+    }
+  }
+
+  if (to.meta.public) {
+    if (auth.authentifie && to.name === 'connexion') {
+      return { name: 'tableau-bord' }
+    }
+    if (to.name === 'mfa' && !auth.doitMfa && !auth.authentifie) {
+      return { name: 'connexion' }
+    }
+    return true
+  }
+
+  if (!auth.authentifie) {
+    return { name: 'connexion', query: { redirect: to.fullPath } }
+  }
+
+  return true
+})
+
+export default router

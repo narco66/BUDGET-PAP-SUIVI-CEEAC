@@ -98,7 +98,7 @@ class DepenseD4Test extends TestCase
         ]);
 
         $this->workflow->demarrer($pay, 'PAIEMENT', $user);
-        $this->workflow->valider($pay->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($pay);
 
         $this->assertEqualsWithDelta(6559.57, (float) $ligne->fresh()->montant_paye, 0.05);
     }
@@ -126,7 +126,7 @@ class DepenseD4Test extends TestCase
         ]);
 
         $this->workflow->demarrer($pay, 'PAIEMENT', $user);
-        $this->workflow->valider($pay->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($pay);
 
         $ecritures = EcritureComptable::where('paiement_id', $pay->id)->get();
         $this->assertNotEmpty($ecritures);
@@ -157,7 +157,7 @@ class DepenseD4Test extends TestCase
         ]);
 
         $this->workflow->demarrer($pay, 'PAIEMENT', $user);
-        $this->workflow->valider($pay->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($pay);
 
         Sanctum::actingAs($user, ['tompro']);
         $response = $this->getJson(route('api.tompro.paiements'));

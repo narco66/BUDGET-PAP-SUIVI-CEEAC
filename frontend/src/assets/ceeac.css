@@ -1,0 +1,96 @@
+:root {
+  --ceeac: #0a4a8f;
+  --ceeac-dark: #073564;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  background: #f4f6f9;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.sidebar {
+  flex: 0 0 260px;
+  width: 260px;
+  min-width: 260px;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  background: var(--ceeac-dark);
+}
+
+.contenu-principal {
+  min-width: 0;
+}
+
+.sidebar a,
+.sidebar .nav-link {
+  color: #cdd9e8;
+  text-decoration: none;
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  display: block;
+}
+
+.sidebar a.active,
+.sidebar a:hover,
+.sidebar .nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar .nav-link:focus-visible {
+  outline: 2px solid #8fd3ff;
+  outline-offset: 2px;
+}
+
+.topbar {
+  background: var(--ceeac);
+}
+
+.btn-ceeac {
+  background: var(--ceeac);
+  border-color: var(--ceeac);
+  color: #fff;
+}
+
+.btn-ceeac:hover,
+.btn-ceeac:focus {
+  background: var(--ceeac-dark);
+  border-color: var(--ceeac-dark);
+  color: #fff;
+}
+
+.auth-shell {
+  background: linear-gradient(135deg, var(--ceeac-dark), var(--ceeac));
+  min-height: 100vh;
+}
+
+.kpi .valeur {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ceeac);
+}
+
+.stat-card {
+  border-left: 4px solid var(--ceeac);
+}
+
+@media (max-width: 991.98px) {
+  .sidebar {
+    position: fixed;
+    z-index: 1040;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar.ouverte {
+    transform: translateX(0);
+  }
+}

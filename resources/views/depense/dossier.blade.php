@@ -11,6 +11,11 @@ $etC = ['en_attente'=>'secondary','valide'=>'success','rejete'=>'danger','renvoy
         <h4 class="fw-bold mb-1"><i class="bi bi-folder2-open me-1"></i>Dossier dépense unifié</h4>
         @if($besoin)<span class="text-muted">Besoin <code>{{ $besoin->numero }}</code></span>@endif
         @if($engagement)<span class="text-muted ms-2">Engagement <code>{{ $engagement->numero }}</code></span>@endif
+        @if(!empty($cloture['soldee']))
+            <span class="badge bg-success ms-2">Chaîne soldée</span>
+        @elseif(!empty($cloture))
+            <span class="badge bg-light text-dark border ms-2">Reliquat LIQ {{ $cloture['restant_a_liquider'] }} · PAY {{ $cloture['restant_a_payer'] }}</span>
+        @endif
     </div>
     @if($tache)
         <span class="badge bg-light text-dark border">Tâche {{ $tache->code }} · {{ \Illuminate\Support\Str::limit($tache->intitule, 40) }}</span>

@@ -72,4 +72,32 @@ class ImmobilisationsTest extends TestCase
         $this->actingAs($lecteur)->get(route('immobilisations.index'))->assertOk();
         $this->actingAs($lecteur)->get(route('immobilisations.create'))->assertForbidden();
     }
+
+    public function test_api_session_immobilisations(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('api.immobilisations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'designation' => 'Serveur API SPA',
+                'categorie' => 'informatique',
+                'date_acquisition' => '2026-01-15',
+                'valeur_acquisition' => '1500000.00',
+                'duree_amortissement_ans' => 3,
+                'statut' => 'en_service',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('immobilisation.valeur_acquisition', '1500000.00');
+
+        $this->actingAs(User::firstWhere('email', 'lecteur@ceeac.test'))
+            ->postJson(route('api.immobilisations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'designation' => 'Interdit',
+                'categorie' => 'mobilier',
+                'date_acquisition' => '2026-01-15',
+                'valeur_acquisition' => '1.00',
+                'duree_amortissement_ans' => 5,
+                'statut' => 'en_service',
+            ])
+            ->assertForbidden();
+    }
 }

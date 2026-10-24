@@ -131,8 +131,7 @@ class TomproExtendedTest extends TestCase
             'numero' => 'PAY-TP-F', 'ordonnancement_id' => $ord->id, 'montant' => 200,
             'montant_xaf' => 200, 'mode_paiement' => 'virement', 'statut' => 'brouillon', 'cree_par' => $user->id,
         ]);
-        $this->workflow->demarrer($pay, 'PAIEMENT', $user);
-        $this->workflow->valider($pay->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($pay);
 
         Sanctum::actingAs($user, ['tompro']);
 

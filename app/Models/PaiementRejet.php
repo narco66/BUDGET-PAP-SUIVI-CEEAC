@@ -10,11 +10,12 @@ class PaiementRejet extends Model
     protected $table = 'paiement_rejets';
 
     protected $fillable = [
-        'paiement_id', 'motif', 'observation', 'rejete_par', 'rejete_le',
+        'paiement_id', 'type', 'motif', 'observation', 'preuve', 'contrepassation_appliquee', 'rejete_par', 'rejete_le',
     ];
 
     protected $casts = [
         'rejete_le' => 'datetime',
+        'contrepassation_appliquee' => 'boolean',
     ];
 
     public function paiement(): BelongsTo

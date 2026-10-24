@@ -96,8 +96,7 @@ class DepenseD3Test extends TestCase
         [$engagement, , , $pay] = $this->chaineComplete(600);
         $pay->update(['statut' => 'brouillon', 'compteurs_appliques' => false]);
 
-        $this->workflow->demarrer($pay, 'PAIEMENT', $this->user('gestionnaire_budgetaire'));
-        $this->workflow->valider($pay->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($pay);
 
         $this->assertTrue(PaiementDetail::where('paiement_id', $pay->id)->exists());
         $this->assertEqualsWithDelta(600.0, (float) PaiementDetail::where('paiement_id', $pay->id)->sum('montant'), 0.05);

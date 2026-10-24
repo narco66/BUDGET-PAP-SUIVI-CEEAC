@@ -27,6 +27,7 @@ class WorkflowP1Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed([RoleSeeder::class, NotificationsAlertesPermissionsSeeder::class, WorkflowPermissionsSeeder::class, WorkflowSeeder::class]);
     }
 

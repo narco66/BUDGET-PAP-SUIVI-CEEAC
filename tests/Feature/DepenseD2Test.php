@@ -348,9 +348,7 @@ class DepenseD2Test extends TestCase
 
 
 
-        $this->workflow->demarrer($paiement, 'PAIEMENT', $user);
-
-        $this->workflow->valider($paiement->fresh()->workflowActif, $this->user('comptable'));
+        $this->viserPaiement($paiement);
 
 
 

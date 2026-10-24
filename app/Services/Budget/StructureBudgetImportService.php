@@ -3,6 +3,7 @@
 namespace App\Services\Budget;
 
 use App\Imports\StructureBudgetLignesImport;
+use App\Support\Montant;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
@@ -43,6 +44,35 @@ class StructureBudgetImportService
             'colonnes_detectees' => $colonnesDetectees,
             'colonnes_manquantes' => $colonnesManquantes,
             'apercu' => $rows->take(10),
+        ];
+    }
+
+    /**
+     * @param  array{total:int, valides:int, rejets:array, colonnes_detectees:array, colonnes_manquantes:array, apercu:Collection}  $apercu
+     * @return array<string, mixed>
+     */
+    public function serialiserApercu(array $apercu, string $fichier): array
+    {
+        $lignes = collect($apercu['apercu'])->map(function ($row) {
+            $data = is_array($row) ? $row : (array) $row;
+            if (array_key_exists('montant_ouvert', $data)) {
+                $data['montant_ouvert'] = Montant::api($data['montant_ouvert']);
+            }
+
+            return $data;
+        })->values()->all();
+
+        $manquantes = $apercu['colonnes_manquantes'];
+
+        return [
+            'fichier' => $fichier,
+            'total' => $apercu['total'],
+            'valides' => $apercu['valides'],
+            'rejets' => $apercu['rejets'],
+            'colonnes_detectees' => $apercu['colonnes_detectees'],
+            'colonnes_manquantes' => $manquantes,
+            'apercu' => $lignes,
+            'peut_confirmer' => $apercu['valides'] > 0 && $manquantes === [],
         ];
     }
 

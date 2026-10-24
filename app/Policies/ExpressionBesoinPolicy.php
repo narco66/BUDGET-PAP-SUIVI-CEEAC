@@ -34,7 +34,10 @@ class ExpressionBesoinPolicy
 
     public function delete(User $user, ExpressionBesoin $b): bool
     {
-        return $user->can('besoin.supprimer') && $b->estModifiable() && $this->dansPerimetre($user, $b);
+        return $user->can('besoin.supprimer')
+            && $b->estModifiable()
+            && $this->dansPerimetre($user, $b)
+            && $b->engagements()->doesntExist();
     }
 
     public function agir(User $user, ExpressionBesoin $b): bool

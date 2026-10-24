@@ -35,16 +35,15 @@ abstract class EtapeDepensePolicy
 
     public function agir(User $user, Model $item): bool
     {
-        if (! $user->can($this->permissionPrefix().'.valider') && ! $user->can('depenses.admin')) {
+        $instance = $item->workflowActif;
+        if (! $instance) {
             return false;
         }
 
         if ($user->can('depenses.admin')) {
-            return (bool) $item->workflowActif;
+            return true;
         }
 
-        $instance = $item->workflowActif;
-
-        return $instance && app(WorkflowService::class)->peutAgir($instance, $user);
+        return app(WorkflowService::class)->peutAgir($instance, $user);
     }
 }

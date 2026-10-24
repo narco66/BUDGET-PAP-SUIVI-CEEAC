@@ -6,6 +6,7 @@ use App\Models\Engagement;
 use App\Models\Exercice;
 use App\Models\ExpressionBesoin;
 use App\Models\User;
+use App\Models\LigneBudgetaire;
 use App\Models\Liquidation;
 use App\Services\Budget\ExerciceService;
 use App\Support\AuditLogger;
@@ -34,6 +35,7 @@ class EngagementService
 
         $this->exercices->assertExerciceOuvert((int) $data['exercice_id']);
         $this->assertBesoinRequis($data, $user);
+        $this->assertBesoinNonDejaEngage($data);
 
         $besoin = isset($data['expression_besoin_id'])
             ? ExpressionBesoin::find($data['expression_besoin_id'])
@@ -88,13 +90,50 @@ class EngagementService
             throw new RuntimeException('Le besoin doit être validé avant engagement.');
         }
 
-        if (! $besoin->activite_id) {
-            throw new RuntimeException('Le besoin doit être rattaché à une activité PAP.');
+        if ($besoin->estPap() && ! $besoin->activite_id) {
+            throw new RuntimeException('Le besoin PAP doit être rattaché à une activité programmée.');
         }
 
         if (! $besoin->ligne_budgetaire_id) {
             throw new RuntimeException('Le besoin doit être rattaché à une ligne budgétaire.');
         }
+    }
+
+    /** @param array<string,mixed> $data */
+    private function assertBesoinNonDejaEngage(array $data): void
+    {
+        $besoinId = $data['expression_besoin_id'] ?? null;
+        if (! $besoinId) {
+            return;
+        }
+
+        if (Engagement::query()->where('expression_besoin_id', $besoinId)->exists()) {
+            throw new RuntimeException('Un engagement existe déjà pour ce besoin.');
+        }
+    }
+
+    public function creerDepuisBesoinApprouve(ExpressionBesoin $besoin, User $user): Engagement
+    {
+        $existant = Engagement::query()->where('expression_besoin_id', $besoin->id)->first();
+        if ($existant) {
+            return $existant;
+        }
+
+        return $this->creer(
+            [
+                'exercice_id' => $besoin->exercice_id,
+                'expression_besoin_id' => $besoin->id,
+                'activite_id' => $besoin->activite_id,
+                'tache_id' => $besoin->tache_id,
+                'type' => 'simple',
+                'objet' => $besoin->objet,
+            ],
+            [[
+                'ligne_budgetaire_id' => (int) $besoin->ligne_budgetaire_id,
+                'montant' => (float) $besoin->montant_estime,
+            ]],
+            $user,
+        );
     }
 
     /**
@@ -109,8 +148,12 @@ class EngagementService
 
         $this->exercices->assertExerciceOuvert($engagement->exercice_id);
 
-        // Séparation des fonctions : le créateur ne vise pas ; le contrôle est porté par le rôle de l'étape.
-        $engagement->reserverCredits();                 // contrôle + réservation atomique (tout ou rien)
+        try {
+            $engagement->reserverCredits();
+        } catch (RuntimeException $e) {
+            $this->enregistrerInsuffisance($engagement);
+            throw $e;
+        }
         app(\App\Services\Depense\CertificatEngagementService::class)
             ->enregistrer($engagement, 'reservation', $user);
         $this->workflow->demarrer($engagement, 'ENGAGEMENT', $user);
@@ -121,15 +164,76 @@ class EngagementService
         AuditLogger::enregistrer('engagement_soumis', $engagement, null, ['montant' => (float) $engagement->montant_total]);
     }
 
+    private function enregistrerInsuffisance(Engagement $engagement): void
+    {
+        $engagement->load('imputations.ligneBudgetaire');
+        foreach ($engagement->imputations as $imp) {
+            $ligne = $imp->ligneBudgetaire;
+            if ($ligne && ! $ligne->peutEngager((float) $imp->montant)) {
+                app(\App\Services\Depense\InsuffisanceCreditService::class)
+                    ->constater($engagement, $ligne, (float) $imp->montant);
+
+                return;
+            }
+        }
+    }
+
     /** Annule un engagement et libère les crédits éventuellement réservés. */
     public function annuler(Engagement $engagement, User $user): void
     {
-        if ($engagement->liquidations()->whereNotIn('statut', ['rejete'])->exists()) {
-            throw new RuntimeException('Annulation impossible : des liquidations existent sur cet engagement.');
+        if ($engagement->liquidations()->whereNotIn('statut', ['rejete', 'annule', 'brouillon'])->exists()) {
+            throw new RuntimeException('Annulation impossible : des liquidations visées existent. Dégager uniquement le reliquat non liquidé.');
         }
 
+        $engagement->liquidations()->where('statut', 'brouillon')->update(['statut' => 'annule']);
         $engagement->libererCredits();
         $engagement->update(['statut' => 'annule']);
         AuditLogger::enregistrer('engagement_annule', $engagement);
+    }
+
+    /** Réduit l’engagement visé sans descendre sous le montant déjà liquidé. */
+    public function degager(Engagement $engagement, float $montant, User $user): void
+    {
+        if ($montant <= 0) {
+            throw new RuntimeException('Le montant à dégager doit être strictement positif.');
+        }
+        if (! in_array($engagement->statut, ['vise', 'soumis'], true)) {
+            throw new RuntimeException('Seuls les engagements soumis ou visés peuvent être dégagés partiellement.');
+        }
+
+        $liquide = (float) $engagement->liquidations()->where('statut', 'valide')->sum('montant');
+        $plafond = round((float) $engagement->montant_total - $liquide, 2);
+        if ($montant > $plafond + 0.01) {
+            throw new RuntimeException(
+                'Dégagement plafonné au reliquat non liquidé ('.number_format($plafond, 0, ',', ' ').' XAF).'
+            );
+        }
+
+        DB::transaction(function () use ($engagement, $montant) {
+            $reste = $montant;
+            foreach ($engagement->imputations()->orderByDesc('id')->get() as $imp) {
+                $prise = min((float) $imp->montant, $reste);
+                if ($prise <= 0) {
+                    continue;
+                }
+                if ($engagement->credits_reserves) {
+                    LigneBudgetaire::whereKey($imp->ligne_budgetaire_id)->decrement('montant_engage', $prise);
+                }
+                $nouveau = round((float) $imp->montant - $prise, 2);
+                if ($nouveau <= 0.005) {
+                    $imp->delete();
+                } else {
+                    $imp->update(['montant' => $nouveau]);
+                }
+                $reste = round($reste - $prise, 2);
+            }
+
+            $engagement->update([
+                'montant_total' => round((float) $engagement->montant_total - $montant, 2),
+            ]);
+        });
+
+        AuditLogger::enregistrer('engagement_degage', $engagement, null, ['montant' => $montant, 'par' => $user->id]);
+        app(\App\Services\Depense\ChaineClotureService::class)->reouvrirSiNecessaire($engagement->fresh());
     }
 }

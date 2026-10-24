@@ -22,6 +22,7 @@ class FormationsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed(SafeDatabaseSeeder::class);
         $this->exercice = Exercice::firstWhere('annee', 2026);
         $this->admin = User::firstWhere('email', 'administrateur@ceeac.test');
@@ -68,5 +69,35 @@ class FormationsTest extends TestCase
         $lecteur = User::firstWhere('email', 'lecteur@ceeac.test');
         $this->actingAs($lecteur)->get(route('formations.index'))->assertOk();
         $this->actingAs($lecteur)->get(route('formations.create'))->assertForbidden();
+    }
+
+    public function test_api_session_formations(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('api.formations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'intitule' => 'Atelier API SPA',
+                'type' => 'atelier',
+                'nb_participants' => 10,
+                'nb_hommes' => 6,
+                'nb_femmes' => 4,
+                'cout' => '3000000.00',
+                'statut' => 'realise',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('formation.cout', '3000000.00');
+
+        $this->actingAs(User::firstWhere('email', 'lecteur@ceeac.test'))
+            ->postJson(route('api.formations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'intitule' => 'Interdit',
+                'type' => 'atelier',
+                'nb_participants' => 1,
+                'nb_hommes' => 1,
+                'nb_femmes' => 0,
+                'cout' => '1.00',
+                'statut' => 'planifie',
+            ])
+            ->assertForbidden();
     }
 }

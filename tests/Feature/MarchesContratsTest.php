@@ -24,6 +24,7 @@ class MarchesContratsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed(SafeDatabaseSeeder::class);
         $this->exercice = Exercice::firstWhere('annee', 2026);
         $this->admin = User::firstWhere('email', 'administrateur@ceeac.test');
@@ -98,5 +99,65 @@ class MarchesContratsTest extends TestCase
         // Le lecteur voit mais ne peut pas créer
         $this->actingAs($lecteur)->get(route('marches.index'))->assertOk();
         $this->actingAs($lecteur)->get(route('marches.create'))->assertForbidden();
+    }
+
+    public function test_api_session_marches_et_contrats(): void
+    {
+        $liste = $this->actingAs($this->admin)
+            ->getJson(route('api.marches.index', ['exercice' => $this->exercice->id]))
+            ->assertOk();
+        $this->assertIsString($liste->json('data.0.montant_estime'));
+
+        $creation = $this->actingAs($this->admin)->postJson(route('api.marches.store'), [
+            'exercice_id' => $this->exercice->id,
+            'objet' => 'Marché API SPA',
+            'type_marche' => 'services',
+            'mode_passation' => 'consultation',
+            'montant_estime' => '5000000.00',
+            'statut' => 'planifie',
+        ])->assertCreated();
+        $this->assertSame('5000000.00', $creation->json('marche.montant_estime'));
+        $marcheId = $creation->json('marche.id');
+
+        $this->actingAs($this->admin)
+            ->getJson(route('api.marches.show', $marcheId))
+            ->assertOk()
+            ->assertJsonPath('data.montant_estime', '5000000.00');
+
+        $contrat = $this->actingAs($this->admin)->postJson(route('api.contrats.store'), [
+            'exercice_id' => $this->exercice->id,
+            'marche_id' => $marcheId,
+            'objet' => 'Contrat API SPA',
+            'titulaire' => 'Société Y',
+            'type_contrat' => 'marche',
+            'montant' => '4800000.00',
+            'statut' => 'signe',
+        ])->assertCreated();
+        $this->assertSame('4800000.00', $contrat->json('contrat.montant'));
+
+        $lecteur = User::firstWhere('email', 'lecteur@ceeac.test');
+        $this->actingAs($lecteur)
+            ->getJson(route('api.marches.index'))
+            ->assertOk();
+        $this->actingAs($lecteur)
+            ->postJson(route('api.marches.store'), [
+                'exercice_id' => $this->exercice->id,
+                'objet' => 'Interdit',
+                'type_marche' => 'services',
+                'mode_passation' => 'consultation',
+                'montant_estime' => '1.00',
+                'statut' => 'planifie',
+            ])
+            ->assertForbidden();
+        $this->actingAs($lecteur)
+            ->postJson(route('api.contrats.store'), [
+                'exercice_id' => $this->exercice->id,
+                'objet' => 'Interdit',
+                'titulaire' => 'X',
+                'type_contrat' => 'marche',
+                'montant' => '1.00',
+                'statut' => 'projet',
+            ])
+            ->assertForbidden();
     }
 }

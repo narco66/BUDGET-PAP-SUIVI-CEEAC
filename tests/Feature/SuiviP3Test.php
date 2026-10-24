@@ -70,7 +70,11 @@ class SuiviP3Test extends TestCase
 
         $this->getJson(route('api.suivi-financier.synthese', ['exercice' => $this->exercice->id]))
             ->assertOk()
-            ->assertJsonStructure(['data' => ['exercice_id', 'budget']]);
+            ->assertJsonStructure(['data' => ['exercice_id', 'budget', 'anomalies_total']]);
+
+        $this->getJson(route('api.suivi-financier.anomalies', ['exercice' => $this->exercice->id]))
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['exercice_id', 'audit']]);
     }
 
     public function test_api_synthese_accessible_scope_suivi(): void

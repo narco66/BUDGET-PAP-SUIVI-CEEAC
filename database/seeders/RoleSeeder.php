@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * Permissions (module × action, avec métadonnées pour la matrice) + 13 rôles par défaut
+ * Permissions (module × action, avec métadonnées pour la matrice) + 14 rôles par défaut
  * typés (système/métier) et protégés (rôles sensibles non supprimables / non auto-attribuables).
  */
 class RoleSeeder extends Seeder
@@ -87,6 +87,7 @@ class RoleSeeder extends Seeder
             'gestionnaire_budgetaire' => [['*.voir', 'engagement.creer', 'engagement.modifier', 'liquidation.creer', 'ordonnancement.creer', 'paiement.creer', 'ligne_budgetaire.modifier', 'ligne_budgetaire.creer', 'ligne_budgetaire.importer', 'budget.creer', 'budget.modifier', 'budget.exporter', 'budget.consolider', 'source_financement.creer', 'source_financement.modifier', 'partenaire_financier.creer', 'partenaire_financier.modifier', 'convention_financement.creer', 'convention_financement.modifier', 'marche.creer', 'marche.modifier', 'marche.supprimer', 'contrat.creer', 'contrat.modifier', 'contrat.supprimer', 'nomenclature.creer', 'nomenclature.modifier', 'nomenclature.supprimer', 'nomenclature.exporter', 'nomenclature.importer', 'structure_budget.creer', 'structure_budget.modifier', 'structure_budget.exporter', 'structure_budget.importer', 'immobilisation.creer', 'immobilisation.modifier', 'incident.creer'], 'metier', false, 'Gestionnaire budgétaire'],
             'controleur_financier' => [['*.voir', 'pap.valider', 'budget.valider', 'budget.arbitrer', 'budget.consolider', 'engagement.valider', 'engagement.rejeter', 'liquidation.valider', 'liquidation.rejeter'], 'metier', true, 'Contrôleur financier'],
             'comptable' => [['*.voir', 'paiement.creer', 'paiement.valider', 'immobilisation.creer', 'immobilisation.modifier'], 'metier', true, 'Comptable'],
+            'agent_comptable' => [['*.voir', 'paiement.voir', 'paiement.valider', 'paiement.creer'], 'metier', true, 'Agent comptable'],
             'auditeur' => [['*.voir', 'audit.voir', 'audit.creer', 'audit.modifier', 'audit.valider', 'audit.exporter', 'audit.consulter_journal', 'structure_budget.consulter_journal', 'recommandation.creer', 'recommandation.modifier', 'risques.creer', 'risques.modifier', 'risques.supprimer', 'risques.valider', 'risques.exporter', 'controle_interne.creer', 'controle_interne.modifier', 'controle_interne.valider', 'conformite.creer', 'conformite.modifier', 'conformite.valider', 'incident.creer', 'incident.modifier', 'incident.valider'], 'metier', true, 'Auditeur'],
             'point_focal' => [['besoin.voir', 'besoin.creer', 'suivi.creer', 'indicateur.creer'], 'metier', false, 'Point focal'],
             'lecteur' => [['*.voir'], 'metier', false, 'Lecteur (consultation)'],

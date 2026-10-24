@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Engagement;
 use App\Models\ExpressionBesoin;
 use App\Models\PieceJustificative;
+use App\Services\Reporting\QrCodeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfInstance;
 use Illuminate\Database\Eloquent\Model;
@@ -17,21 +18,21 @@ class DocumentPdf
     {
         $e->load('imputations.ligneBudgetaire.rubrique', 'imputations.ligneBudgetaire.structure', 'createur', 'controleur', 'exercice');
 
-        return Pdf::loadView('pdf.engagement', ['engagement' => $e]);
+        return Pdf::loadView('pdf.engagement', array_merge(['engagement' => $e], $this->qr('engagement', $e)));
     }
 
     public function certificatReservation(Engagement $e): PdfInstance
     {
         $e->load('imputations.ligneBudgetaire', 'controleur', 'createur', 'exercice');
 
-        return Pdf::loadView('pdf.certificat_reservation', ['engagement' => $e]);
+        return Pdf::loadView('pdf.certificat_reservation', array_merge(['engagement' => $e], $this->qr('engagement', $e)));
     }
 
     public function besoin(ExpressionBesoin $b): PdfInstance
     {
         $b->load('structure', 'demandeur', 'activite', 'exercice');
 
-        return Pdf::loadView('pdf.besoin', ['besoin' => $b]);
+        return Pdf::loadView('pdf.besoin', array_merge(['besoin' => $b], $this->qr('besoin', $b)));
     }
 
     /** Document d'une étape aval (liquidation / ordonnancement / paiement). */
@@ -40,9 +41,9 @@ class DocumentPdf
         $engagement = $etape->engagementRacine()
             ->load('imputations.ligneBudgetaire.rubrique', 'imputations.ligneBudgetaire.structure', 'exercice');
 
-        return Pdf::loadView('pdf.etape_depense', [
+        return Pdf::loadView('pdf.etape_depense', array_merge([
             'etape' => $etape, 'config' => $config, 'engagement' => $engagement,
-        ]);
+        ], $this->qr($config['permission'] ?? 'etape', $etape)));
     }
 
     /**
@@ -64,5 +65,26 @@ class DocumentPdf
             'categorie' => 'document_genere',
             'televerse_par' => $userId,
         ]);
+    }
+
+    public static function urlVerification(string $type, Model $objet): string
+    {
+        $spa = rtrim((string) config('spa.app_url', ''), '/');
+        if ($spa !== '') {
+            return $spa.'/verification/'.$type.'/'.$objet->getKey();
+        }
+
+        return route('depense.verifier', ['type' => $type, 'id' => $objet->getKey()]);
+    }
+
+    /** @return array{qr_data_uri:?string,qr_url:string} */
+    private function qr(string $type, Model $objet): array
+    {
+        $url = self::urlVerification($type, $objet);
+
+        return [
+            'qr_data_uri' => app(QrCodeService::class)->dataUri($url),
+            'qr_url' => $url,
+        ];
     }
 }

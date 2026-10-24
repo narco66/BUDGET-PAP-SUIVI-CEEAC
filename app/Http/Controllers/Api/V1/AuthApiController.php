@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Requests\Api\ApiTokenRequest;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Services\AccessScopeService;
+use App\Services\Api\ProfilApiService;
 use App\Services\Interop\ConnectedAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthApiController extends Controller
 {
-    public function __construct(private readonly ConnectedAppService $connectedApps) {}
+    public function __construct(
+        private readonly ConnectedAppService $connectedApps,
+        private readonly ProfilApiService $profil,
+    ) {}
 
     /** Émet un jeton d'accès personnel avec scopes (EF-D12-02, enrichi I-P1). */
     public function token(ApiTokenRequest $request): JsonResponse
@@ -67,24 +70,15 @@ class AuthApiController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user()->load('structure');
-
-        return response()->json([
-            'id' => $user->id,
-            'nom' => $user->name,
-            'email' => $user->email,
-            'structure_id' => $user->structure_id,
-            'structure_code' => $user->structure?->code,
-            'structures_autorisees' => app(AccessScopeService::class)->structuresAutorisees($user)->values(),
-            'roles' => $user->getRoleNames(),
-            'abilities' => $user->currentAccessToken()->abilities ?? [],
-            'connected_app_id' => $user->currentAccessToken()->connected_app_id,
-        ]);
+        return response()->json($this->profil->pour($request));
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()?->currentAccessToken();
+        if ($token && method_exists($token, 'delete')) {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Jeton révoqué.']);
     }

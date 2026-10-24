@@ -157,6 +157,20 @@ class EngagementController extends Controller
         return back()->with('succes', 'Engagement annulé, crédits libérés.');
     }
 
+    public function degager(Request $request, Engagement $engagement): RedirectResponse
+    {
+        $this->authorize('annuler', $engagement);
+        $data = $request->validate(['montant' => ['required', 'numeric', 'min:0.01']]);
+
+        try {
+            $this->engagements->degager($engagement, (float) $data['montant'], $request->user());
+        } catch (RuntimeException $e) {
+            return back()->with('erreur', $e->getMessage());
+        }
+
+        return back()->with('succes', 'Reliquat non liquidé dégagé.');
+    }
+
     public function pdf(Engagement $engagement, DocumentPdf $pdf): Response
     {
         $this->authorize('view', $engagement);

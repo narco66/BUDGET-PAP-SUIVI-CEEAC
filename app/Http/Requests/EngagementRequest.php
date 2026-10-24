@@ -18,9 +18,7 @@ class EngagementRequest extends FormRequest
 
     public function rules(): array
     {
-        $besoinRules = $this->user()?->can('depenses.admin')
-            ? ['nullable', 'exists:expressions_besoin,id']
-            : ['required', 'exists:expressions_besoin,id'];
+        $besoinRules = ['required', 'exists:expressions_besoin,id'];
 
         return [
             'exercice_id' => ['required', 'exists:exercices,id'],
@@ -71,16 +69,16 @@ class EngagementRequest extends FormRequest
                 return;
             }
 
-            if (! $this->user()?->can('depenses.admin') && ! in_array($besoin->statut, ['valide', 'converti'], true)) {
+            if (! in_array($besoin->statut, ['valide', 'converti'], true)) {
                 $v->errors()->add('expression_besoin_id', 'Le besoin doit être validé avant engagement.');
             }
 
-            if (! $besoin->activite_id) {
-                $v->errors()->add('expression_besoin_id', 'Le besoin doit être rattaché à une activité PAP.');
+            if ($besoin->estPap() && ! $besoin->activite_id) {
+                $v->errors()->add('expression_besoin_id', 'Le besoin PAP doit être rattaché à une activité.');
             }
 
-            if (! $besoin->ligne_budgetaire_id) {
-                $v->errors()->add('expression_besoin_id', 'Le besoin doit être rattaché à une ligne budgétaire.');
+            if (! $besoin->estPap() && ! $besoin->ligne_budgetaire_id) {
+                $v->errors()->add('expression_besoin_id', 'Le besoin hors PAP doit être rattaché à une ligne budgétaire.');
             }
 
             if ((int) $besoin->exercice_id !== $exerciceId) {
@@ -113,7 +111,7 @@ class EngagementRequest extends FormRequest
             return true;
         }
 
-        if ((int) $ligne->activite_id === (int) $besoin->activite_id) {
+        if ($besoin->activite_id && (int) $ligne->activite_id === (int) $besoin->activite_id) {
             return true;
         }
 

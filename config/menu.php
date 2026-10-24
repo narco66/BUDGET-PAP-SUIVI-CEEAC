@@ -81,6 +81,7 @@ return [
         ['type' => 'group', 'label' => 'Chaine de la depense', 'icon' => 'bi-receipt', 'permissions' => ['besoin.voir', 'engagement.voir', 'liquidation.voir', 'ordonnancement.voir', 'paiement.voir'], 'children' => [
             ['type' => 'link', 'label' => 'Cockpit de la depense', 'icon' => 'bi-speedometer2', 'route' => 'depense.cockpit', 'active' => 'depense.cockpit', 'permission' => 'engagement.voir'],
             ['type' => 'link', 'label' => 'Expressions du besoin', 'icon' => 'bi-clipboard-plus', 'route' => 'besoins.index', 'active' => 'besoins.*', 'permission' => 'besoin.voir'],
+            ['type' => 'link', 'label' => 'Consolidation des besoins', 'icon' => 'bi-collection', 'route' => 'besoins.consolidation', 'active' => 'besoins.consolidation', 'permission' => 'besoin.valider'],
             ['type' => 'link', 'label' => 'Engagements', 'icon' => 'bi-receipt', 'route' => 'engagements.index', 'active' => 'engagements.*', 'permission' => 'engagement.voir'],
             ['type' => 'link', 'label' => 'Liquidations', 'icon' => 'bi-receipt-cutoff', 'route' => 'depense.index', 'route_params' => ['liquidation'], 'permission' => 'liquidation.voir', 'active_rules' => ['routes' => ['depense.*'], 'segment' => [2 => 'liquidation']]],
             ['type' => 'link', 'label' => 'Ordonnancements', 'icon' => 'bi-pen', 'route' => 'depense.index', 'route_params' => ['ordonnancement'], 'permission' => 'ordonnancement.voir', 'active_rules' => ['routes' => ['depense.*'], 'segment' => [2 => 'ordonnancement']]],

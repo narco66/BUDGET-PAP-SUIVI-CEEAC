@@ -8,7 +8,18 @@ class PapRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+        if ($user === null) {
+            return false;
+        }
+
+        if ($this->isMethod('post')) {
+            return $user->can('create', \App\Models\Pap::class);
+        }
+
+        $pap = $this->route('pap');
+
+        return $pap instanceof \App\Models\Pap && $user->can('update', $pap);
     }
 
     public function rules(): array

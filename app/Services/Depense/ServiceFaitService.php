@@ -72,6 +72,22 @@ class ServiceFaitService
 
     }
 
+    public function estCertifie(Liquidation $liquidation): bool
+    {
+        if (filled($liquidation->service_fait)) {
+            return true;
+        }
+
+        return $liquidation->servicesFaits()->whereNotNull('constatation')->where('constatation', '!=', '')->exists();
+    }
+
+    public function assertCertifie(Liquidation $liquidation): void
+    {
+        if (! $this->estCertifie($liquidation)) {
+            throw new \RuntimeException('Le visa du Contrôleur financier exige une certification du service fait.');
+        }
+    }
+
 }
 
 

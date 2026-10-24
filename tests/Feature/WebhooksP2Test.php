@@ -25,6 +25,7 @@ class WebhooksP2Test extends TestCase
     {
         parent::setUp();
         $this->seed([RoleSeeder::class, InteroperabiliteApiPermissionsSeeder::class, WebhookEventsSeeder::class]);
+        config(['mfa.enabled' => false]);
     }
 
     private function admin(): User
@@ -158,6 +159,44 @@ class WebhooksP2Test extends TestCase
             'webhook_id' => $wh->id,
             'statut' => 'livre',
         ]);
+    }
+
+    public function test_api_webhooks_interdit_et_sans_secret(): void
+    {
+        Http::fake(['*' => Http::response(['pong' => true], 200)]);
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = $this->admin();
+
+        $this->actingAs($chef)
+            ->getJson(route('api.interoperabilite.webhooks'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->postJson(route('api.interoperabilite.webhooks.store'), [
+                'libelle' => 'Hook SPA',
+                'url' => 'https://partner.test/spa',
+                'methode' => 'POST',
+                'evenement' => 'pap.publie',
+                'secret' => 'ne-pas-relire',
+                'actif' => true,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.libelle', 'Hook SPA')
+            ->assertJsonMissingPath('data.secret');
+
+        $wh = Webhook::query()->where('libelle', 'Hook SPA')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->getJson(route('api.interoperabilite.webhooks.show', $wh))
+            ->assertOk()
+            ->assertJsonMissingPath('data.secret')
+            ->assertJsonMissingPath('livraisons.0.payload');
+
+        $this->actingAs($admin)
+            ->postJson(route('api.interoperabilite.webhooks.tester', $wh))
+            ->assertOk()
+            ->assertJsonPath('succes', true)
+            ->assertJsonMissingPath('livraison.payload');
     }
 
     public function test_signature_hmac(): void

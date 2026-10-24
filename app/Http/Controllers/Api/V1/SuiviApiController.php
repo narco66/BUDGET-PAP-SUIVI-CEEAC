@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exercice;
+use App\Services\Budget\CompteurMouvementAuditService;
 use App\Services\Budget\SituationBudgetaireService;
 use App\Services\Budget\SuiviFinancierService;
 use App\Services\Pap\PapPerformanceService;
 use App\Services\Rbm\IndicateurPerformanceService;
 use App\Services\Suivi\SuiviEvaluationService;
+use Illuminate\Http\JsonResponse;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,10 +32,38 @@ class SuiviApiController extends Controller
         $this->assertFinancier($request);
         $exerciceId = $this->exerciceIdRequis($request);
 
+        $hub = $this->financier->hub($exerciceId);
+
         return new JsonResource([
             'exercice_id' => $exerciceId,
-            'budget' => $this->financier->hub($exerciceId)['budget'],
+            'budget' => $hub['budget'],
+            'par_structure' => $hub['parStructure'],
+            'ecarts' => collect($hub['ecarts'])->take(20)->values(),
+            'par_tache' => collect($hub['parTache'])->values(),
+            'anomalies_total' => $hub['anomalies_total'],
+            'peut_capturer' => $this->peutCapturerSansException($request),
         ]);
+    }
+
+    public function anomaliesFinancieres(Request $request, CompteurMouvementAuditService $audit): JsonResource
+    {
+        $this->assertFinancier($request);
+        $exerciceId = $this->exerciceIdRequis($request);
+
+        return new JsonResource([
+            'exercice_id' => $exerciceId,
+            'audit' => $audit->analyser($exerciceId),
+        ]);
+    }
+
+    public function capturerSituation(Request $request): JsonResponse
+    {
+        $this->assertFinancier($request);
+        abort_unless($this->peutCapturerSansException($request), 403);
+        $exerciceId = $this->exerciceIdRequis($request);
+        $this->situations->capturer($exerciceId, $request->user()->id);
+
+        return response()->json(['message' => 'Situation budgétaire capturée.', 'code' => 'capturee']);
     }
 
     public function ecartsPhysiqueFinancier(Request $request): JsonResource
@@ -118,11 +149,27 @@ class SuiviApiController extends Controller
             'exercice_id' => $exerciceId,
             'scores' => $hub['scores'],
             'niveau' => $hub['niveau'],
+            'feux' => $hub['feux'],
+            'audit' => [
+                'anomalies_total' => $hub['audit']['anomalies_total'] ?? count($hub['audit']['anomalies'] ?? []),
+            ],
             'recommandations' => $hub['recommandations'],
             'formations' => $hub['formations'],
             'missions' => $hub['missions'],
             'plans' => $hub['plans'],
+            'peut_generer' => $this->suiviEvaluation->peutGenerer($request->user()),
         ]);
+    }
+
+    public function genererEvaluation(Request $request): JsonResponse
+    {
+        $this->assertEvaluation($request);
+        abort_unless($this->suiviEvaluation->peutGenerer($request->user()), 403);
+        $exerciceId = $this->exerciceIdRequis($request);
+        $campagneId = $request->filled('campagne') ? $request->integer('campagne') : null;
+        $this->suiviEvaluation->genererEvaluation($exerciceId, $campagneId, $request->user()->id);
+
+        return response()->json(['message' => 'Évaluation périodique générée.', 'code' => 'generee']);
     }
 
     public function evaluationsPeriodiques(Request $request): JsonResource
@@ -195,6 +242,15 @@ class SuiviApiController extends Controller
             || $request->user()->hasPermissionTo('suivi_financier.view', 'web'),
             403
         );
+    }
+
+    private function peutCapturerSansException(Request $request): bool
+    {
+        try {
+            return $this->financier->peutCapturer($request->user());
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
     }
 
     private function tokenAutorise(Request $request): bool

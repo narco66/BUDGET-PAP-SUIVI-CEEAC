@@ -83,18 +83,95 @@ class WorkflowSeeder extends Seeder
             $besoin->etapes()->updateOrCreate(['ordre' => $ordre], ['libelle' => $libelle, 'role' => $role]);
         }
 
+        $roleDrhmg = (string) config('chaine_depense.role_drhmg', 'directeur');
+
+        $besoinPap = Workflow::updateOrCreate(
+            ['code' => 'BESOIN_PAP'],
+            ['libelle' => 'EB PAP — Directeur puis Commissaire', 'type_objet' => 'besoin', 'actif' => true]
+        );
+        foreach ([
+            [1, 'Validation Directeur', 'directeur'],
+            [2, 'Validation Commissaire (département technique)', 'commissaire'],
+        ] as [$ordre, $libelle, $role]) {
+            $besoinPap->etapes()->updateOrCreate(['ordre' => $ordre], ['libelle' => $libelle, 'role' => $role]);
+        }
+
+        $besoinPapAppui = Workflow::updateOrCreate(
+            ['code' => 'BESOIN_PAP_APPUI'],
+            ['libelle' => 'EB PAP — Directeur puis Secrétaire général (directions d’appui)', 'type_objet' => 'besoin', 'actif' => true]
+        );
+        foreach ([
+            [1, 'Validation Directeur', 'directeur'],
+            [2, 'Validation Secrétaire général', 'secretaire_general'],
+        ] as [$ordre, $libelle, $role]) {
+            $besoinPapAppui->etapes()->updateOrCreate(['ordre' => $ordre], ['libelle' => $libelle, 'role' => $role]);
+        }
+
+        $besoinHors = Workflow::updateOrCreate(
+            ['code' => 'BESOIN_HORS_PAP'],
+            ['libelle' => 'EB hors PAP — DRHMG, SG, Ordonnateur (Président)', 'type_objet' => 'besoin', 'actif' => true]
+        );
+        foreach ([
+            [1, 'Validation DRHMG', $roleDrhmg],
+            [2, 'Validation Secrétaire général', 'secretaire_general'],
+            [3, 'Approbation Ordonnateur (Président)', 'president'],
+        ] as [$ordre, $libelle, $role]) {
+            $besoinHors->etapes()->updateOrCreate(['ordre' => $ordre], ['libelle' => $libelle, 'role' => $role]);
+        }
+
         // Circuit Engagement : visa du Contrôleur financier (séparation des fonctions)
         $engagement = Workflow::updateOrCreate(
             ['code' => 'ENGAGEMENT'],
             ['libelle' => "Visa de l'engagement par le contrôleur financier", 'type_objet' => 'engagement', 'actif' => true]
         );
-        $engagement->etapes()->updateOrCreate(['ordre' => 1], ['libelle' => 'Visa Contrôleur financier', 'role' => 'controleur_financier']);
+        $roleDirBudget = (string) config('chaine_depense.role_directeur_budget', 'directeur');
+        $engagement->etapes()->updateOrCreate(['ordre' => 1], [
+            'libelle' => 'Validation Direction du Budget',
+            'role' => $roleDirBudget,
+        ]);
+        $engagement->etapes()->updateOrCreate(['ordre' => 2], [
+            'libelle' => 'Visa Contrôleur financier',
+            'role' => 'controleur_financier',
+        ]);
 
-        // Étapes aval de la dépense (séparation ordonnateur / contrôleur / comptable)
+        $liq = Workflow::updateOrCreate(
+            ['code' => 'LIQUIDATION'],
+            ['libelle' => 'Validation de la Liquidation', 'type_objet' => 'liquidation', 'actif' => true]
+        );
+        $liq->etapes()->updateOrCreate(['ordre' => 1], [
+            'libelle' => 'Certification du service fait (service initiateur)',
+            'role' => 'chef_service',
+        ]);
+        $liq->etapes()->updateOrCreate(['ordre' => 2], [
+            'libelle' => 'Visa Contrôleur financier',
+            'role' => 'controleur_financier',
+        ]);
+
+        $ordPresident = Workflow::updateOrCreate(
+            ['code' => 'ORDONNANCEMENT_PRESIDENT'],
+            ['libelle' => 'Ordonnancement (ordonnateur principal — Président)', 'type_objet' => 'ordonnancement', 'actif' => true]
+        );
+        $ordPresident->etapes()->updateOrCreate(['ordre' => 1], [
+            'libelle' => 'Signature du Président de la Commission',
+            'role' => 'president',
+        ]);
+
+        $roleAgent = (string) config('chaine_depense.role_agent_comptable', 'agent_comptable');
+        $pay = Workflow::updateOrCreate(
+            ['code' => 'PAIEMENT'],
+            ['libelle' => 'Validation du Paiement', 'type_objet' => 'paiement', 'actif' => true]
+        );
+        $pay->etapes()->updateOrCreate(['ordre' => 1], [
+            'libelle' => 'Contrôles comptables',
+            'role' => 'comptable',
+        ]);
+        $pay->etapes()->updateOrCreate(['ordre' => 2], [
+            'libelle' => 'Autorisation de décaissement (Agent comptable)',
+            'role' => $roleAgent,
+        ]);
+
         $circuits = [
-            ['LIQUIDATION', 'Liquidation', 'liquidation', 'Visa Contrôleur financier', 'controleur_financier'],
-            ['ORDONNANCEMENT', 'Ordonnancement', 'ordonnancement', 'Ordonnancement (Ordonnateur)', 'secretaire_general'],
-            ['PAIEMENT', 'Paiement', 'paiement', 'Exécution du paiement (Comptable)', 'comptable'],
+            ['ORDONNANCEMENT', 'Ordonnancement', 'ordonnancement', 'Ordonnancement (Secrétaire général)', 'secretaire_general'],
         ];
         foreach ($circuits as [$code, $libelle, $type, $etapeLib, $role]) {
             $wf = Workflow::updateOrCreate(
@@ -202,8 +279,8 @@ class WorkflowSeeder extends Seeder
     private function definirDelaisParDefaut(): void
     {
         $delais = [
-            'PAP' => 5, 'BUDGET' => 5, 'BESOIN' => 3, 'ENGAGEMENT' => 2,
-            'LIQUIDATION' => 2, 'ORDONNANCEMENT' => 2, 'PAIEMENT' => 2, 'RECETTES' => 3,
+            'PAP' => 5, 'BUDGET' => 5, 'BESOIN' => 3, 'BESOIN_PAP' => 3, 'BESOIN_PAP_APPUI' => 3, 'BESOIN_HORS_PAP' => 3, 'ENGAGEMENT' => 2,
+            'LIQUIDATION' => 2, 'ORDONNANCEMENT' => 2, 'ORDONNANCEMENT_PRESIDENT' => 2, 'PAIEMENT' => 2, 'RECETTES' => 3,
             'RAPPORT' => 5, 'STRATEGIE' => 7, 'COLLECTE' => 3,
         ];
 

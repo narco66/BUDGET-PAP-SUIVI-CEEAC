@@ -54,6 +54,8 @@ class DepenseD5Test extends TestCase
             'gestionnaire' => $this->user('gestionnaire_budgetaire'),
             'sg' => $this->user('secretaire_general'),
             'comptable' => $this->user('comptable'),
+            'agent' => $this->user('agent_comptable'),
+            'chef_visa' => $this->user('chef_service'),
         ];
     }
 
@@ -120,62 +122,86 @@ class DepenseD5Test extends TestCase
         $this->assertNotNull($besoin);
 
         $this->actingAs($u['chef'])->post(route('besoins.soumettre', $besoin))->assertRedirect();
-        $this->actingAs($u['chef'])->post(route('besoins.agir', $besoin), ['decision' => 'valider'])->assertRedirect();
-        $this->actingAs($u['directeur'])->post(route('besoins.agir', $besoin->fresh()), ['decision' => 'valider'])->assertRedirect();
-        $this->actingAs($u['cf'])->post(route('besoins.agir', $besoin->fresh()), ['decision' => 'valider'])->assertRedirect();
+        $this->workflow->valider($besoin->fresh()->workflowActif, $u['chef_visa']);
+        $this->workflow->valider($besoin->fresh()->workflowActif, $u['directeur']);
+        $this->workflow->valider($besoin->fresh()->workflowActif, $u['cf']);
         $this->assertSame('valide', $besoin->fresh()->statut);
 
-        // 2. Engagement
-        $this->actingAs($u['gestionnaire'])->post(route('besoins.convertir', $besoin))->assertRedirect();
-        $this->actingAs($u['gestionnaire'])->post(route('engagements.store'), [
-            'exercice_id' => $this->exercice->id,
-            'expression_besoin_id' => $besoin->id,
-            'type' => 'simple',
-            'objet' => 'Parcours E2E D5',
-            'imputations' => [['ligne_budgetaire_id' => $ligne->id, 'montant' => 750]],
-        ])->assertRedirect();
-
-        $engagement = Engagement::latest('id')->first();
-        $this->actingAs($u['gestionnaire'])->post(route('engagements.soumettre', $engagement))->assertRedirect();
-        $this->actingAs($u['cf'])->post(route('engagements.agir', $engagement->fresh()), [
-            'decision' => 'valider',
-        ])->assertRedirect();
+        $engagement = Engagement::query()->where('expression_besoin_id', $besoin->id)->first();
+        if (! $engagement) {
+            $this->actingAs($u['gestionnaire'])->post(route('besoins.convertir', $besoin))->assertRedirect();
+            $this->actingAs($u['gestionnaire'])->post(route('engagements.store'), [
+                'exercice_id' => $this->exercice->id,
+                'expression_besoin_id' => $besoin->id,
+                'type' => 'simple',
+                'objet' => 'Parcours E2E D5',
+                'imputations' => [['ligne_budgetaire_id' => $ligne->id, 'montant' => 750]],
+            ])->assertRedirect();
+            $engagement = Engagement::latest('id')->first();
+        }
+        if ($engagement->estModifiable()) {
+            $this->actingAs($u['gestionnaire'])->post(route('engagements.soumettre', $engagement))->assertRedirect();
+        }
+        if ($engagement->fresh()->statut !== 'vise') {
+            $this->viserEngagement($engagement);
+        }
         $this->assertSame('vise', $engagement->fresh()->statut);
 
-        // 3. Liquidation
-        $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'liquidation'), [
-            'parent' => $engagement->id,
-            'montant' => 750,
-            'service_fait' => 'Prestation reçue conformément',
-        ])->assertRedirect();
-        $liq = Liquidation::latest('id')->first();
-        $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['liquidation', $liq->id]))->assertRedirect();
-        $this->actingAs($u['cf'])->post(route('depense.agir', ['liquidation', $liq->fresh()->id]), ['decision' => 'valider'])->assertRedirect();
+        $liq = Liquidation::query()->where('engagement_id', $engagement->id)->first();
+        if (! $liq) {
+            $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'liquidation'), [
+                'parent' => $engagement->id,
+                'montant' => 750,
+                'service_fait' => 'Prestation reçue conformément',
+            ])->assertRedirect();
+            $liq = Liquidation::latest('id')->first();
+        } elseif (blank($liq->service_fait)) {
+            $liq->update(['service_fait' => 'Prestation reçue conformément']);
+        }
+        if ($liq->statut === 'brouillon') {
+            $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['liquidation', $liq->id]))->assertRedirect();
+        }
+        if ($liq->fresh()->statut !== 'valide') {
+            $this->viserLiquidation($liq);
+        }
 
-        // 4. Ordonnancement
-        $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'ordonnancement'), [
-            'parent' => $liq->fresh()->id,
-        ])->assertRedirect();
-        $ord = Ordonnancement::latest('id')->first();
-        $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['ordonnancement', $ord->id]))->assertRedirect();
-        $this->actingAs($u['sg'])->post(route('depense.agir', ['ordonnancement', $ord->fresh()->id]), ['decision' => 'valider'])->assertRedirect();
+        $ord = Ordonnancement::query()->where('liquidation_id', $liq->id)->first();
+        if (! $ord) {
+            $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'ordonnancement'), [
+                'parent' => $liq->fresh()->id,
+            ])->assertRedirect();
+            $ord = Ordonnancement::latest('id')->first();
+        }
+        if ($ord->statut === 'brouillon') {
+            $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['ordonnancement', $ord->id]))->assertRedirect();
+        }
+        if ($ord->fresh()->statut !== 'valide') {
+            $this->viserOrdonnancement($ord);
+        }
 
         // 5. Paiement
         $ord = $ord->fresh();
         $this->assertSame('valide', $ord->statut, 'Ordonnancement non validé avant paiement');
 
-        $respPay = $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'paiement'), [
-            'parent' => $ord->id,
-            'mode_paiement' => 'virement',
-            'devise' => 'XAF',
-            'taux_change' => 1,
-            'reference_bancaire' => 'REF-E2E-D5',
-        ]);
-        $respPay->assertRedirect()->assertSessionHasNoErrors();
-        $pay = Paiement::where('ordonnancement_id', $ord->id)->first();
+        $pay = Paiement::query()->where('ordonnancement_id', $ord->id)->first();
+        if (! $pay) {
+            $respPay = $this->actingAs($u['gestionnaire'])->post(route('depense.store', 'paiement'), [
+                'parent' => $ord->id,
+                'mode_paiement' => 'virement',
+                'devise' => 'XAF',
+                'taux_change' => 1,
+                'reference_bancaire' => 'REF-E2E-D5',
+            ]);
+            $respPay->assertRedirect()->assertSessionHasNoErrors();
+            $pay = Paiement::where('ordonnancement_id', $ord->id)->first();
+        }
         $this->assertNotNull($pay, 'Paiement non créé — session: '.json_encode(session()->all()));
-        $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['paiement', $pay->id]))->assertRedirect();
-        $this->actingAs($u['comptable'])->post(route('depense.agir', ['paiement', $pay->fresh()->id]), ['decision' => 'valider'])->assertRedirect();
+        if ($pay->statut === 'brouillon') {
+            $this->actingAs($u['gestionnaire'])->post(route('depense.soumettre', ['paiement', $pay->id]))->assertRedirect();
+        }
+        if ($pay->fresh()->statut !== 'valide') {
+            $this->viserPaiement($pay);
+        }
 
         $pay = $pay->fresh();
         $ligne = $ligne->fresh();

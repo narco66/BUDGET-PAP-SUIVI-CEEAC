@@ -55,6 +55,11 @@ trait ConcerneDepense
         $this->update(['statut' => 'valide', 'valide_le' => now()]);
 
         app(\App\Services\Depense\HistoriqueDepenseService::class)->enregistrer($this, 'etape_validee');
+
+        if ($this instanceof \App\Models\Liquidation) {
+            app(\App\Services\Depense\LiquidationVersOrdonnancementService::class)
+                ->assurerDepuisLiquidationValidee($this->fresh());
+        }
     }
 
     public function auWorkflowRejete(): void

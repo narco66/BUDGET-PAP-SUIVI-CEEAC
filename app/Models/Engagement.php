@@ -22,6 +22,7 @@ class Engagement extends Model implements PilotableParWorkflow, ConcernantStruct
     protected $fillable = [
         'numero', 'exercice_id', 'expression_besoin_id', 'activite_id', 'tache_id', 'type', 'objet', 'beneficiaire',
         'montant_total', 'date_engagement', 'statut', 'cree_par', 'controleur_id', 'vise_le', 'credits_reserves',
+        'diagnostic_credits', 'chaine_cloturee_le',
     ];
 
     protected $casts = [
@@ -29,6 +30,8 @@ class Engagement extends Model implements PilotableParWorkflow, ConcernantStruct
         'date_engagement' => 'date',
         'vise_le' => 'datetime',
         'credits_reserves' => 'boolean',
+        'diagnostic_credits' => 'array',
+        'chaine_cloturee_le' => 'datetime',
     ];
 
     public function exercice(): BelongsTo
@@ -100,7 +103,7 @@ class Engagement extends Model implements PilotableParWorkflow, ConcernantStruct
 
     public function estModifiable(): bool
     {
-        return in_array($this->statut, ['brouillon', 'rejete'], true);
+        return in_array($this->statut, ['brouillon', 'rejete', 'en_attente_arbitrage'], true);
     }
 
     /**
@@ -134,7 +137,7 @@ class Engagement extends Model implements PilotableParWorkflow, ConcernantStruct
                 ]);
             }
 
-            $this->update(['credits_reserves' => true]);
+            $this->update(['credits_reserves' => true, 'diagnostic_credits' => null]);
         });
     }
 
@@ -173,6 +176,8 @@ class Engagement extends Model implements PilotableParWorkflow, ConcernantStruct
         app(\App\Services\Depense\CertificatEngagementService::class)
             ->enregistrer($this, 'engagement');
         app(\App\Services\Depense\HistoriqueDepenseService::class)->enregistrer($this, 'engagement_vise');
+        app(\App\Services\Depense\EngagementVersLiquidationService::class)
+            ->assurerDepuisEngagementVise($this->fresh());
     }
 
     public function auWorkflowRejete(): void

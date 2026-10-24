@@ -46,6 +46,53 @@ class MenuService
         return $this->retirerSectionsVides($brut);
     }
 
+    /**
+     * Menu sidebar enrichi pour le SPA : chemin frontend si le parcours est migré,
+     * sinon lien vers l'interface Blade (coexistence).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function buildSpa(?User $user = null): array
+    {
+        return $this->annoterSpa($this->build($user));
+    }
+
+    /** @param  list<array<string, mixed>>  $items */
+    private function annoterSpa(array $items): array
+    {
+        $carte = config('spa.routes', []);
+        $legacy = rtrim((string) config('spa.legacy_url', config('app.url')), '/');
+
+        return array_map(function (array $item) use ($carte, $legacy) {
+            if (($item['type'] ?? '') === 'group') {
+                $item['children'] = $this->annoterSpa($item['children'] ?? []);
+
+                return $item;
+            }
+
+            if (($item['type'] ?? '') !== 'link') {
+                return $item;
+            }
+
+            $route = $item['route'] ?? null;
+            $params = $item['route_params'] ?? [];
+            $path = null;
+            if (is_string($route)) {
+                $suffixe = is_array($params) && $params !== [] ? (string) array_values($params)[0] : '';
+                if ($suffixe !== '' && isset($carte[$route.'.'.$suffixe])) {
+                    $path = $carte[$route.'.'.$suffixe];
+                } else {
+                    $path = $carte[$route] ?? null;
+                }
+            }
+            $item['path'] = $path;
+            $item['migre'] = $path !== null;
+            $item['href_legacy'] = $item['href'] ?? ($legacy.'/');
+
+            return $item;
+        }, $items);
+    }
+
     private function visiblePour(array $entry, User $user): bool
     {
         if (isset($entry['permission'])) {
@@ -76,6 +123,8 @@ class MenuService
             'type' => 'link',
             'label' => $entry['label'],
             'icon' => $entry['icon'] ?? 'bi-circle',
+            'route' => $entry['route'] ?? null,
+            'route_params' => $params,
             'href' => $href,
             'active' => $this->estActif($entry),
         ];

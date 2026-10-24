@@ -22,6 +22,7 @@ class RecommandationsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed(SafeDatabaseSeeder::class);
         $this->exercice = Exercice::firstWhere('annee', 2026);
         $this->admin = User::firstWhere('email', 'administrateur@ceeac.test');
@@ -66,5 +67,31 @@ class RecommandationsTest extends TestCase
         $lecteur = User::firstWhere('email', 'lecteur@ceeac.test');
         $this->actingAs($lecteur)->get(route('recommandations.index'))->assertOk();
         $this->actingAs($lecteur)->get(route('recommandations.create'))->assertForbidden();
+    }
+
+    public function test_api_session_recommandations(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('api.recommandations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'source' => 'conseil_ministres',
+                'libelle' => 'Reco API SPA',
+                'priorite' => 'haute',
+                'statut' => 'en_cours',
+                'taux_execution' => '25.00',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('recommandation.taux_execution', '25.00');
+
+        $this->actingAs(User::firstWhere('email', 'lecteur@ceeac.test'))
+            ->postJson(route('api.recommandations.store'), [
+                'exercice_id' => $this->exercice->id,
+                'source' => 'autre',
+                'libelle' => 'Interdit',
+                'priorite' => 'basse',
+                'statut' => 'en_attente',
+                'taux_execution' => '0',
+            ])
+            ->assertForbidden();
     }
 }

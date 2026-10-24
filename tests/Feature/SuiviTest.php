@@ -133,4 +133,31 @@ class SuiviTest extends TestCase
             ->assertOk()
             ->assertSee('Consolidation');
     }
+
+    public function test_api_session_campagnes_suivi(): void
+    {
+        config(['mfa.enabled' => false]);
+        $chef = $this->user('chef_service');
+
+        $this->actingAs($chef)
+            ->getJson(route('api.campagnes-suivi.index', ['exercice' => $this->exercice->id]))
+            ->assertOk()
+            ->assertJsonPath('data.0.periode', '2026-T1');
+
+        $this->actingAs($chef)->postJson(route('api.campagnes-suivi.store'), [
+            'exercice_id' => $this->exercice->id,
+            'libelle' => 'T2 API',
+            'type' => 'trimestriel',
+            'periode' => '2026-T2',
+        ])->assertCreated()->assertJsonPath('campagne.periode', '2026-T2');
+
+        $this->actingAs($this->user('lecteur'))
+            ->postJson(route('api.campagnes-suivi.store'), [
+                'exercice_id' => $this->exercice->id,
+                'libelle' => 'Interdit',
+                'type' => 'trimestriel',
+                'periode' => '2026-T9',
+            ])
+            ->assertForbidden();
+    }
 }

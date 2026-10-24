@@ -105,6 +105,8 @@ class DepenseTest extends TestCase
 
         $this->assertEquals(0, (float) $a->fresh()->montant_engage);
         $this->assertFalse($e->fresh()->credits_reserves);
+        $this->assertSame('en_attente_arbitrage', $e->fresh()->statut);
+        $this->assertNotEmpty($e->fresh()->diagnostic_credits);
     }
 
     public function test_reservation_multi_lignes_est_atomique(): void
@@ -133,7 +135,7 @@ class DepenseTest extends TestCase
         $e = $this->creer([['ligne_budgetaire_id' => $a->id, 'montant' => 600]]);
         $this->service->soumettre($e, $this->user('gestionnaire_budgetaire'));
 
-        $this->workflow->valider($e->workflowActif, $this->user('controleur_financier'));
+        $this->viserEngagement($e);
 
         $this->assertSame('vise', $e->fresh()->statut);
         $this->assertEquals(600, (float) $a->fresh()->montant_engage); // crédits maintenus
@@ -145,7 +147,7 @@ class DepenseTest extends TestCase
         $e = $this->creer([['ligne_budgetaire_id' => $a->id, 'montant' => 600]]);
         $this->service->soumettre($e, $this->user('gestionnaire_budgetaire'));
 
-        $this->workflow->rejeter($e->workflowActif, $this->user('controleur_financier'), 'Pièces manquantes.', 'documentaire');
+        $this->workflow->rejeter($e->workflowActif, $this->user('directeur'), 'Pièces manquantes.', 'documentaire');
 
         $this->assertSame('rejete', $e->fresh()->statut);
         $this->assertEquals(0, (float) $a->fresh()->montant_engage); // crédits libérés

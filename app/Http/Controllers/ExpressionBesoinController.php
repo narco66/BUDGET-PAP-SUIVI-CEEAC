@@ -61,6 +61,11 @@ class ExpressionBesoinController extends Controller
     public function store(ExpressionBesoinRequest $request): RedirectResponse
     {
         $this->authorize('create', ExpressionBesoin::class);
+        try {
+            app(\App\Services\Budget\ExerciceService::class)->assertExerciceOuvert((int) $request->exercice_id);
+        } catch (RuntimeException $e) {
+            return back()->with('erreur', $e->getMessage())->withInput();
+        }
         $annee = Exercice::find($request->exercice_id)?->annee ?? (int) date('Y');
 
         $besoin = ExpressionBesoin::create([
@@ -101,6 +106,9 @@ class ExpressionBesoinController extends Controller
     public function destroy(ExpressionBesoin $besoin): RedirectResponse
     {
         $this->authorize('delete', $besoin);
+        if ($besoin->engagements()->exists()) {
+            return back()->with('erreur', 'Annulation de l’EB interdite : un engagement lié existe. Annuler d’abord l’engagement et ses effets.');
+        }
         $besoin->delete();
 
         return redirect()->route('besoins.index')->with('succes', 'Expression du besoin supprimee.');
@@ -111,7 +119,9 @@ class ExpressionBesoinController extends Controller
         $this->authorize('update', $besoin);
 
         try {
-            $this->workflow->demarrer($besoin, 'BESOIN', auth()->user());
+            app(\App\Services\Budget\ExerciceService::class)->assertExerciceOuvert((int) $besoin->exercice_id);
+            $circuit = app(\App\Services\Depense\BesoinCircuitService::class)->code($besoin);
+            $this->workflow->demarrer($besoin, $circuit, auth()->user());
             app(\App\Services\Notifications\DepenseNotificationService::class)
                 ->notifierBesoinSoumis($besoin->fresh());
         } catch (RuntimeException $e) {

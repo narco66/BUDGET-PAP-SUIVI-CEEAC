@@ -98,6 +98,15 @@ class AppServiceProvider extends ServiceProvider
                     ->onlyInput('email'));
         });
 
+        RateLimiter::for('spa-login', function (Request $request) {
+            return Limit::perMinute(10)
+                ->by($request->ip())
+                ->response(fn () => response()->json([
+                    'message' => 'Trop de tentatives de connexion. Réessayez dans une minute.',
+                    'code' => 'too_many_attempts',
+                ], 429));
+        });
+
         RateLimiter::for('api-token', function (Request $request) {
             return Limit::perMinute(config('interoperabilite.rate_limit.token_per_minute', 10))
                 ->by($request->ip())

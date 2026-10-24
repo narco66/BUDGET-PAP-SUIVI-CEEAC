@@ -18,7 +18,7 @@ class Paiement extends Model implements PilotableParWorkflow, ConcernantStructur
 
     protected $fillable = [
         'numero', 'ordonnancement_id', 'ordre_paiement_id', 'rapprochement_bancaire_id', 'montant', 'devise', 'taux_change', 'montant_xaf',
-        'date_paiement', 'mode_paiement', 'reference_bancaire', 'statut', 'cree_par', 'valide_par', 'valide_le', 'compteurs_appliques',
+        'date_paiement', 'mode_paiement', 'reference_bancaire', 'rib', 'rib_modifie_par', 'motif_partiel', 'statut', 'etat_execution', 'cree_par', 'valide_par', 'valide_le', 'compteurs_appliques',
     ];
 
     protected $casts = [
@@ -79,7 +79,11 @@ class Paiement extends Model implements PilotableParWorkflow, ConcernantStructur
     public function auWorkflowValide(): void
     {
         $this->appliquerCompteur();
-        $this->update(['statut' => 'valide', 'valide_le' => now()]);
+        $this->update([
+            'statut' => 'valide',
+            'valide_le' => now(),
+            'etat_execution' => 'execute',
+        ]);
 
         if ($this->ordre_paiement_id) {
             OrdrePaiement::whereKey($this->ordre_paiement_id)
@@ -90,6 +94,7 @@ class Paiement extends Model implements PilotableParWorkflow, ConcernantStructur
         app(\App\Services\Depense\PaiementDetailService::class)->genererDepuisEngagement($this);
         app(\App\Services\Depense\EcritureComptableService::class)->genererPourPaiement($this->fresh());
         app(\App\Services\Depense\HistoriqueDepenseService::class)->enregistrer($this, 'paiement_valide');
+        app(\App\Services\Depense\ChaineClotureService::class)->assurer($this->engagementRacine());
     }
 
     public function auWorkflowRejete(): void

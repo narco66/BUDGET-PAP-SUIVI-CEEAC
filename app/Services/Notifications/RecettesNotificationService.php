@@ -40,7 +40,7 @@ class RecettesNotificationService
 
     {
 
-        $encaissement->loadMissing('exercice');
+        $encaissement->loadMissing('recette.exercice');
 
         $destinataires = $this->validateurs('controleur_financier', 'comptable');
 

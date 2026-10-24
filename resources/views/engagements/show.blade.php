@@ -51,6 +51,13 @@ $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
                 @endcan
                 @can('annuler', $engagement)
                     <form action="{{ route('engagements.annuler', $engagement) }}" method="POST" onsubmit="return confirm('Annuler et libérer les crédits ?')">@csrf<button class="btn btn-sm btn-outline-dark"><i class="bi bi-x-circle me-1"></i>Annuler</button></form>
+                    @if(in_array($engagement->statut, ['vise', 'soumis'], true))
+                    <form action="{{ route('engagements.degager', $engagement) }}" method="POST" class="d-flex gap-1" onsubmit="return confirm('Dégager uniquement le reliquat non liquidé ?')">
+                        @csrf
+                        <input type="number" step="0.01" min="0.01" name="montant" class="form-control form-control-sm" style="width:9rem" required placeholder="Reliquat">
+                        <button class="btn btn-sm btn-outline-secondary">Dégager</button>
+                    </form>
+                    @endif
                 @endcan
                 @if($engagement->statut === 'vise')
                     @can('liquidation.creer')

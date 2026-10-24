@@ -1,24 +1,62 @@
 {
   "openapi": "3.0.3",
+  "servers": [
+    { "url": "/api/v1", "description": "Préfixe versionné (même origine ou reverse-proxy)" }
+  ],
   "info": {
     "title": "BUDGET-PAP-SUIVI-CEEAC — API REST v1",
-    "description": "API institutionnelle CEEAC — interopérabilité D12 (I-P3). Authentification Bearer Sanctum, scopes lecture|suivi|tompro.",
+    "description": "API institutionnelle CEEAC. Deux modes d'authentification : session cookie Sanctum (SPA propriétaire) et jeton Bearer (interopérabilité, scopes lecture|suivi|tompro). Les montants sont des chaînes décimales (point) pour préserver la précision. Dates ISO-8601. Pagination Laravel `{ data, links, meta }`.",
     "version": "1.0.0",
     "contact": { "name": "DSI CEEAC", "email": "dsi@ceeac.int" }
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "Sanctum" }
+      "bearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "Sanctum" },
+      "cookieAuth": { "type": "apiKey", "in": "cookie", "name": "laravel_session" }
     },
     "schemas": {
-      "Error": { "type": "object", "properties": { "message": { "type": "string" } } }
+      "Error": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "code": { "type": "string" },
+          "errors": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+        }
+      },
+      "Montant": { "type": "string", "pattern": "^-?[0-9]+\\.[0-9]{2}$", "example": "1250000.00", "description": "Montant décimal sérialisé en chaîne (XAF)." },
+      "Utilisateur": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "nom": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "structure_id": { "type": "integer", "nullable": true },
+          "structure_code": { "type": "string", "nullable": true },
+          "structures_autorisees": { "type": "array", "items": { "type": "integer" } },
+          "roles": { "type": "array", "items": { "type": "string" } },
+          "permissions": { "type": "array", "items": { "type": "string" } },
+          "est_administrateur": { "type": "boolean" },
+          "abilities": { "type": "array", "items": { "type": "string" } },
+          "mode_auth": { "type": "string", "enum": ["token", "session"] },
+          "doit_changer_mot_de_passe": { "type": "boolean" },
+          "locale": { "type": "string", "example": "fr" },
+          "devise": { "type": "string", "example": "XAF" }
+        }
+      }
     }
   },
-  "security": [{ "bearerAuth": [] }],
+  "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
   "tags": [
-    { "name": "auth", "description": "Authentification jetons" },
+    { "name": "auth", "description": "Authentification jetons et session SPA" },
+    { "name": "navigation", "description": "Menu et tableau de bord SPA" },
     { "name": "donnees", "description": "Référentiels et données budgétaires" },
     { "name": "budget", "description": "Budget institutionnel" },
+    { "name": "structure-budget", "description": "Lignes et workflow structure du budget" },
+    { "name": "besoins", "description": "Expressions du besoin et conversion vers engagement" },
+    { "name": "engagements", "description": "Engagements, réservation de crédits et visa" },
+    { "name": "depense", "description": "Étapes aval : liquidation, ordonnancement, paiement" },
+    { "name": "rapprochement", "description": "Rapprochement bancaire des paiements validés" },
     { "name": "pap", "description": "Plans d'action prioritaires" },
     { "name": "recettes", "description": "Recettes et encaissements" },
     { "name": "ged", "description": "Documents GED (métadonnées)" },
@@ -34,33 +72,345 @@
       "post": {
         "tags": ["auth"],
         "operationId": "authToken",
-        "summary": "Émettre un jeton d'accès",
-        "security": []
+        "summary": "Émettre un jeton d'accès (interop, pas le SPA)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" },
+                  "nom": { "type": "string" },
+                  "abilities": { "type": "array", "items": { "type": "string", "enum": ["lecture", "suivi", "tompro"] } },
+                  "client_id": { "type": "string" },
+                  "client_secret": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Jeton émis" },
+          "422": { "description": "Identifiants invalides" }
+        }
       }
     },
-    "/me": { "get": { "tags": ["auth"], "operationId": "authMe", "summary": "Profil et scopes du jeton" } },
-    "/logout": { "post": { "tags": ["auth"], "operationId": "authLogout", "summary": "Révoquer le jeton courant" } },
-    "/exercices": { "get": { "tags": ["donnees"], "operationId": "listExercices", "summary": "Liste des exercices" } },
-    "/structures": { "get": { "tags": ["donnees"], "operationId": "listStructures", "summary": "Structures organisationnelles" } },
+    "/session/login": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "sessionLogin",
+        "summary": "Connexion SPA (cookie de session + CSRF)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" },
+                  "remember": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "authenticated | mfa_required | password_change_required" },
+          "422": { "description": "Identifiants invalides" },
+          "429": { "description": "IP ou débit limité" }
+        }
+      }
+    },
+    "/session/mfa": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "sessionMfa",
+        "summary": "Valider le second facteur TOTP de la session SPA",
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string" },
+                  "recovery_code": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Session établie" },
+          "401": { "description": "Challenge MFA expiré" },
+          "422": { "description": "Code invalide" }
+        }
+      }
+    },
+    "/session/logout": {
+      "post": {
+        "tags": ["auth"],
+        "operationId": "sessionLogout",
+        "summary": "Déconnexion SPA (invalidation de session)"
+      }
+    },
+    "/me": { "get": { "tags": ["auth"], "operationId": "authMe", "summary": "Profil, rôles, permissions et périmètre" } },
+    "/logout": { "post": { "tags": ["auth"], "operationId": "authLogout", "summary": "Révoquer le jeton Bearer courant" } },
+    "/tableau-bord": {
+      "get": {
+        "tags": ["navigation"],
+        "operationId": "tableauBord",
+        "summary": "Synthèse du tableau de bord institutionnel",
+        "parameters": [
+          { "name": "exercice", "in": "query", "schema": { "type": "string" }, "description": "ID, année ou code d'exercice" }
+        ]
+      }
+    },
+    "/navigation": {
+      "get": {
+        "tags": ["navigation"],
+        "operationId": "navigationMenu",
+        "summary": "Menu filtré par permissions (chemins SPA + liens Blade hérités)"
+      }
+    },
+    "/exercices": { "get": { "tags": ["donnees"], "operationId": "listExercices", "summary": "Liste des exercices (PAT)" } },
+    "/exercices/hub": { "get": { "tags": ["exercice"], "operationId": "hubExercices", "summary": "Liste paginée SPA (statuts, actions)" } },
+    "/exercices/{exercice}": { "get": { "tags": ["exercice"], "operationId": "voirExercice" }, "put": { "tags": ["exercice"], "operationId": "modifierExercice" }, "delete": { "tags": ["exercice"], "operationId": "supprimerExercice" } },
+    "/exercices/{exercice}/ouvrir": { "post": { "tags": ["exercice"], "operationId": "ouvrirExercice" } },
+    "/exercices/{exercice}/cloturer": { "post": { "tags": ["exercice"], "operationId": "cloturerExercice" } },
+    "/exercices/{exercice}/activer": { "post": { "tags": ["exercice"], "operationId": "activerExercice" } },
+    "/session/logout": { "post": { "tags": ["auth"], "operationId": "sessionLogout" } },
+    "/session/mfa": { "post": { "tags": ["auth"], "operationId": "sessionMfa" } },
+    "/session/mfa/setup": { "get": { "tags": ["auth"], "operationId": "mfaSetup" }, "post": { "tags": ["auth"], "operationId": "mfaSetupConfirm" }, "delete": { "tags": ["auth"], "operationId": "mfaDisable" } },
+    "/utilisateurs/hub": { "get": { "tags": ["acces"], "operationId": "hubUtilisateurs" } },
+    "/utilisateurs/options": { "get": { "tags": ["acces"], "operationId": "optionsUtilisateurs" } },
+    "/utilisateurs": { "post": { "tags": ["acces"], "operationId": "creerUtilisateur" } },
+    "/utilisateurs/{utilisateur}": { "get": { "tags": ["acces"], "operationId": "voirUtilisateur" }, "put": { "tags": ["acces"], "operationId": "modifierUtilisateur" }, "delete": { "tags": ["acces"], "operationId": "desactiverUtilisateur" } },
+    "/utilisateurs/{utilisateur}/statut": { "post": { "tags": ["acces"], "operationId": "statutUtilisateur" } },
+    "/utilisateurs/{utilisateur}/reinitialiser": { "post": { "tags": ["acces"], "operationId": "reinitUtilisateur" } },
+    "/utilisateurs/{utilisateur}/perimetres": { "get": { "tags": ["acces"], "operationId": "perimetresUtilisateur" }, "put": { "tags": ["acces"], "operationId": "enregistrerPerimetresUtilisateur" } },
+    "/structures/hub": { "get": { "tags": ["structure"], "operationId": "hubStructures", "summary": "Liste paginée SPA (types, actions, liens Blade export)" } },
+    "/structures/options": { "get": { "tags": ["structure"], "operationId": "optionsStructures", "summary": "Parents et responsables pour le formulaire" } },
+    "/structures/{structure}": { "get": { "tags": ["structure"], "operationId": "voirStructure" }, "put": { "tags": ["structure"], "operationId": "modifierStructure" }, "delete": { "tags": ["structure"], "operationId": "supprimerStructure", "summary": "Soft delete ; 422 si enfants" } },
+    "/structures": { "get": { "tags": ["donnees"], "operationId": "listStructures", "summary": "Structures organisationnelles PAT (périmètre utilisateur)" }, "post": { "tags": ["structure"], "operationId": "creerStructure" } },
     "/lignes-budgetaires": { "get": { "tags": ["donnees"], "operationId": "listLignesBudgetaires", "summary": "Lignes budgétaires" } },
-    "/engagements": { "get": { "tags": ["donnees"], "operationId": "listEngagements", "summary": "Engagements budgétaires" } },
-    "/budgets": { "get": { "tags": ["budget"], "operationId": "listBudgets", "summary": "Enveloppes budgétaires" } },
-    "/budgets/{budget}": { "get": { "tags": ["budget"], "operationId": "showBudget", "summary": "Détail budget" } },
-    "/budgets/{budget}/synthese": { "get": { "tags": ["budget"], "operationId": "budgetSynthese", "summary": "Synthèse d'exécution" } },
-    "/paps": { "get": { "tags": ["pap"], "operationId": "listPaps", "summary": "Plans d'action prioritaires" } },
-    "/paps/{pap}": { "get": { "tags": ["pap"], "operationId": "showPap", "summary": "Détail PAP" } },
-    "/recettes": { "get": { "tags": ["recettes"], "operationId": "listRecettes", "summary": "Recettes prévisionnelles" } },
-    "/recettes/{recette}": { "get": { "tags": ["recettes"], "operationId": "showRecette", "summary": "Détail recette" } },
-    "/recettes/encaissements": { "get": { "tags": ["recettes"], "operationId": "listEncaissements", "summary": "Encaissements" } },
-    "/ged/documents": { "get": { "tags": ["ged"], "operationId": "listGedDocuments", "summary": "Catalogue documents GED" } },
-    "/ged/documents/{uuid}": { "get": { "tags": ["ged"], "operationId": "showGedDocument", "summary": "Métadonnées document GED" } },
+    "/structure-budget/synthese": { "get": { "tags": ["structure-budget"], "operationId": "structureBudgetSynthese", "summary": "Synthèse par exercice (montants en chaîne décimale)" } },
+    "/structure-budget/arbre": { "get": { "tags": ["structure-budget"], "operationId": "structureBudgetArbre", "summary": "Arbre Service → Direction → Département" } },
+    "/structure-budget/lignes": { "get": { "tags": ["structure-budget"], "operationId": "structureBudgetLignes", "summary": "Liste paginée des lignes", "parameters": [{ "name": "exercice", "in": "query", "schema": { "type": "integer" } }, { "name": "q", "in": "query", "schema": { "type": "string" } }, { "name": "statut_validation", "in": "query", "schema": { "type": "string" } }] } },
+    "/structure-budget/lignes/{ligne}": { "get": { "tags": ["structure-budget"], "operationId": "structureBudgetLigne", "summary": "Détail d'une ligne (actions autorisées incluses)" } },
+    "/structure-budget/lignes/{ligne}/soumettre": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetSoumettre", "summary": "Soumettre une ligne (brouillon/rejeté → soumis). En-têtes Idempotency-Key et If-Match recommandés." } },
+    "/structure-budget/lignes/{ligne}/valider": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetValider", "summary": "Valider une ligne soumise" } },
+    "/structure-budget/lignes/{ligne}/rejeter": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetRejeter", "summary": "Rejeter une ligne soumise (motif obligatoire)" } },
+    "/structure-budget/import-export": { "get": { "tags": ["structure-budget"], "operationId": "structureBudgetImportExportHub", "summary": "Hub import/export. Liens Blade xlsx/csv/pdf. Montants en chaînes." } },
+    "/structure-budget/import/apercu": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetImportApercu", "summary": "Prévisualiser un CSV/Excel (multipart). Pas de binaire en JSON." } },
+    "/structure-budget/import/confirmer": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetImportConfirmer", "summary": "Confirmer l’import en session. Idempotency-Key." } },
+    "/structure-budget/import/annuler": { "post": { "tags": ["structure-budget"], "operationId": "structureBudgetImportAnnuler", "summary": "Annuler le fichier temporaire d’import." } },
+    "/besoins": {
+      "get": {
+        "tags": ["besoins"],
+        "operationId": "listBesoins",
+        "summary": "Liste paginée des expressions du besoin (montants en chaîne décimale)",
+        "parameters": [
+          { "name": "exercice", "in": "query", "schema": { "type": "integer" } },
+          { "name": "statut", "in": "query", "schema": { "type": "string" } },
+          { "name": "q", "in": "query", "schema": { "type": "string" } }
+        ]
+      },
+      "post": {
+        "tags": ["besoins"],
+        "operationId": "creerBesoin",
+        "summary": "Créer un besoin brouillon (activité PAP rattachée à une ligne de l'exercice)"
+      }
+    },
+    "/besoins/options": {
+      "get": {
+        "tags": ["besoins"],
+        "operationId": "optionsBesoin",
+        "summary": "Activités PAP et priorités pour le formulaire de création",
+        "parameters": [{ "name": "exercice", "in": "query", "schema": { "type": "integer" } }]
+      }
+    },
+    "/besoins/{besoin}": { "get": { "tags": ["besoins"], "operationId": "showBesoin", "summary": "Détail d'un besoin (actions soumettre/agir/convertir)" } },
+    "/besoins/{besoin}/soumettre": { "post": { "tags": ["besoins"], "operationId": "soumettreBesoin", "summary": "Démarrer le circuit BESOIN. En-têtes Idempotency-Key et If-Match recommandés." } },
+    "/besoins/{besoin}/decisions": { "post": { "tags": ["besoins"], "operationId": "decisionBesoin", "summary": "Valider ou rejeter l'étape courante (decision=valider|rejeter)" } },
+    "/besoins/{besoin}/convertir": { "post": { "tags": ["besoins"], "operationId": "convertirBesoin", "summary": "Marquer un besoin validé comme converti (rejeu si déjà converti)" } },
+    "/engagements": {
+      "get": {
+        "tags": ["engagements"],
+        "operationId": "listEngagements",
+        "summary": "Liste paginée des engagements (montant_total en chaîne décimale)"
+      },
+      "post": {
+        "tags": ["engagements"],
+        "operationId": "creerEngagement",
+        "summary": "Créer un engagement brouillon à partir d'un besoin validé ou converti. Les crédits ne sont pas encore réservés."
+      }
+    },
+    "/engagements/{engagement}": { "get": { "tags": ["engagements"], "operationId": "showEngagement", "summary": "Détail d'un engagement (imputations, actions, crédits réservés)" } },
+    "/engagements/{engagement}/soumettre": { "post": { "tags": ["engagements"], "operationId": "soumettreEngagement", "summary": "Soumettre au visa et réserver les crédits (lockForUpdate). 422 credits_ou_transition si disponible insuffisant." } },
+    "/engagements/{engagement}/decisions": { "post": { "tags": ["engagements"], "operationId": "decisionEngagement", "summary": "Visa ou rejet de l'étape courante" } },
+    "/depense/{type}": {
+      "get": {
+        "tags": ["depense"],
+        "operationId": "listEtapesDepense",
+        "summary": "Liste paginée (type = liquidation|ordonnancement|paiement)",
+        "parameters": [
+          { "name": "type", "in": "path", "required": true, "schema": { "type": "string", "enum": ["liquidation", "ordonnancement", "paiement"] } },
+          { "name": "exercice", "in": "query", "schema": { "type": "integer" } },
+          { "name": "statut", "in": "query", "schema": { "type": "string" } }
+        ]
+      },
+      "post": {
+        "tags": ["depense"],
+        "operationId": "creerEtapeDepense",
+        "summary": "Créer un brouillon. parent = id de l'étape amont (engagement visé / liquidation validée / ordonnancement validé). Dépassement de quota liquidation → 422 credits_ou_transition."
+      }
+    },
+    "/depense/{type}/{id}": { "get": { "tags": ["depense"], "operationId": "showEtapeDepense", "summary": "Détail (montants en chaîne, actions soumettre/agir/creer_enfant)" } },
+    "/depense/{type}/{id}/soumettre": { "post": { "tags": ["depense"], "operationId": "soumettreEtapeDepense", "summary": "Démarrer le circuit (LIQUIDATION / ORDONNANCEMENT / PAIEMENT). Idempotency-Key et If-Match recommandés." } },
+    "/depense/{type}/{id}/decisions": { "post": { "tags": ["depense"], "operationId": "decisionEtapeDepense", "summary": "Valider ou rejeter. La validation applique les compteurs budgétaires (idempotent via compteurs_appliques)." } },
+    "/rapprochements": {
+      "get": { "tags": ["rapprochement"], "operationId": "listRapprochements", "summary": "Sessions de rapprochement (comptable / CF / admin)" },
+      "post": { "tags": ["rapprochement"], "operationId": "creerRapprochement", "summary": "Créer une session brouillon" }
+    },
+    "/rapprochements/{rapprochement}": { "get": { "tags": ["rapprochement"], "operationId": "showRapprochement", "summary": "Détail, lignes et paiements éligibles" } },
+    "/rapprochements/{rapprochement}/importer": { "post": { "tags": ["rapprochement"], "operationId": "importerReleve", "summary": "Importer un relevé (CSV texte ou tableau JSON)" } },
+    "/rapprochements/{rapprochement}/auto": { "post": { "tags": ["rapprochement"], "operationId": "rapprocherAuto", "summary": "Rapprochement automatique montant + référence. Idempotency-Key recommandée." } },
+    "/rapprochements/{rapprochement}/lier": { "post": { "tags": ["rapprochement"], "operationId": "rapprocherManuel", "summary": "Lier une ligne à un paiement validé" } },
+    "/rapprochements/{rapprochement}/cloturer": { "post": { "tags": ["rapprochement"], "operationId": "cloturerRapprochement", "summary": "Clôturer si toutes les lignes sont rapprochées" } },
+    "/budgets": {
+      "get": { "tags": ["budget"], "operationId": "listBudgets", "summary": "Enveloppes budgétaires (montant chaîne, montant_total nombre PAT)" },
+      "post": { "tags": ["budget"], "operationId": "creerBudget", "summary": "Créer une enveloppe brouillon (un budget par exercice)" }
+    },
+    "/budgets/options": { "get": { "tags": ["budget"], "operationId": "optionsBudget", "summary": "Exercices encore sans enveloppe, synthèses montants en chaînes" } },
+    "/budgets/{budget}": {
+      "get": { "tags": ["budget"], "operationId": "showBudget", "summary": "Détail, audit, exécution, liens Blade. If-Match = etag." },
+      "put": { "tags": ["budget"], "operationId": "modifierBudget", "summary": "Mettre à jour l'enveloppe si brouillon / rejeté / révision" }
+    },
+    "/budgets/{budget}/soumettre": { "post": { "tags": ["budget"], "operationId": "soumettreBudget", "summary": "Démarrer le circuit BUDGET. Bloqué si audit (anomalies_total > 0). Idempotency-Key recommandée." } },
+    "/budgets/{budget}/decisions": { "post": { "tags": ["budget"], "operationId": "decisionBudget", "summary": "Valider, rejeter ou renvoyer une étape" } },
+    "/budgets/{budget}/revision": { "post": { "tags": ["budget"], "operationId": "reviserBudget", "summary": "Ouvrir une révision post-adoption" } },
+    "/budgets/{budget}/synthese": { "get": { "tags": ["budget"], "operationId": "budgetSynthese", "summary": "Synthèse d'exécution (montants en chaînes)" } },
+    "/budgets/{budget}/preparations": { "get": { "tags": ["budget"], "operationId": "hubPreparationsBudget", "summary": "Propositions, synthèse et actions B2 (montants en chaînes)" } },
+    "/budgets/{budget}/preparations/initialiser": { "post": { "tags": ["budget"], "operationId": "initialiserPreparationsBudget", "summary": "Créer les propositions depuis les lignes. Idempotency-Key." } },
+    "/budgets/{budget}/preparations/{preparation}": { "put": { "tags": ["budget"], "operationId": "modifierPreparationBudget", "summary": "Mettre à jour demandé / proposé" } },
+    "/budgets/{budget}/preparations/soumettre": { "post": { "tags": ["budget"], "operationId": "soumettrePreparationStructure", "summary": "Soumettre les propositions d'une structure" } },
+    "/budgets/{budget}/preparations/valider": { "post": { "tags": ["budget"], "operationId": "validerPreparationNiveau", "summary": "Valider direction, département ou DPPB" } },
+    "/budgets/{budget}/preparations/arbitrer": { "post": { "tags": ["budget"], "operationId": "arbitrerPreparation", "summary": "Arbitrage DPPB d'une proposition" } },
+    "/budgets/{budget}/preparations/consolider": { "post": { "tags": ["budget"], "operationId": "consoliderPreparations", "summary": "Appliquer les montants arbitré sur les lignes" } },
+    "/budgets/{budget}/simulations": {
+      "get": { "tags": ["budget"], "operationId": "hubSimulationsBudget", "summary": "Scénarios, consolidations, comparaison optionnelle (montants en chaînes)" },
+      "post": { "tags": ["budget"], "operationId": "creerSimulationBudget", "summary": "Créer et calculer un scénario. Idempotency-Key." }
+    },
+    "/budgets/{budget}/simulations/{simulation}/calculer": { "post": { "tags": ["budget"], "operationId": "calculerSimulationBudget", "summary": "Recalculer un scénario" } },
+    "/budgets/{budget}/simulations/{simulation}/retenir": { "post": { "tags": ["budget"], "operationId": "retenirSimulationBudget", "summary": "Retenir le scénario comme référence" } },
+    "/budgets/{budget}/revisions": { "get": { "tags": ["budget"], "operationId": "hubRevisionsBudget", "summary": "Rectificatifs, virements, rapprochement pluriannuel (montants en chaînes)" } },
+    "/budgets/{budget}/revisions/rectificatif": { "post": { "tags": ["budget"], "operationId": "rectificatifBudget", "summary": "Créer et appliquer un rectificatif" } },
+    "/budgets/{budget}/revisions/virement": { "post": { "tags": ["budget"], "operationId": "virementBudget", "summary": "Créer et appliquer un virement de crédits" } },
+    "/budgets/{budget}/revisions/lier-pluri": { "post": { "tags": ["budget"], "operationId": "lierProgrammationBudget", "summary": "Rattacher une programmation pluriannuelle" } },
+    "/budgets/{budget}/rapport": { "get": { "tags": ["budget"], "operationId": "rapportBudget", "summary": "Synthèse cycle B0–B4 (montants en chaînes ; PDF/Excel Blade)" } },
+    "/budget/credits": { "get": { "tags": ["budget"], "operationId": "listeCredits", "summary": "Lignes de crédits, totaux et synthèses (montants en chaînes)" }, "post": { "tags": ["budget"], "operationId": "creerLigneCredit", "summary": "Créer une ligne de crédits" } },
+    "/budget/credits/options": { "get": { "tags": ["budget"], "operationId": "optionsCredits", "summary": "Rubriques, structures, sources, activités" } },
+    "/budget/credits/{ligne}": { "get": { "tags": ["budget"], "operationId": "voirLigneCredit" }, "put": { "tags": ["budget"], "operationId": "modifierLigneCredit" }, "delete": { "tags": ["budget"], "operationId": "supprimerLigneCredit" } },
+    "/paps": {
+      "get": { "tags": ["pap"], "operationId": "listPaps", "summary": "Plans d'action prioritaires (version métier entière, etag ISO pour If-Match, montants hors liste)" },
+      "post": { "tags": ["pap"], "operationId": "creerPap", "summary": "Créer une enveloppe PAP brouillon (un PAP par exercice)" }
+    },
+    "/paps/options": { "get": { "tags": ["pap"], "operationId": "optionsPap", "summary": "Exercices encore sans PAP, structures, responsables" } },
+    "/paps/pilotage": { "get": { "tags": ["pap"], "operationId": "pilotagePap", "summary": "KPI et piliers (montants et taux en chaînes décimales)" } },
+    "/paps/{pap}": {
+      "get": { "tags": ["pap"], "operationId": "showPap", "summary": "Détail, synthèse, audit, actions. If-Match = etag." },
+      "put": { "tags": ["pap"], "operationId": "modifierPap", "summary": "Mettre à jour l'enveloppe si brouillon / rejeté / révision" }
+    },
+    "/paps/{pap}/soumettre": { "post": { "tags": ["pap"], "operationId": "soumettrePap", "summary": "Démarrer le circuit PAP. Bloqué si audit critique (aucune activité). Idempotency-Key recommandée." } },
+    "/paps/{pap}/decisions": { "post": { "tags": ["pap"], "operationId": "decisionPap", "summary": "Valider, rejeter ou renvoyer une étape" } },
+    "/paps/{pap}/revision": { "post": { "tags": ["pap"], "operationId": "reviserPap", "summary": "Ouvrir un PAP publié en révision" } },
+    "/recettes": { "get": { "tags": ["recettes"], "operationId": "listRecettes", "summary": "Recettes (montants en chaînes) + synthèse exercice" } },
+    "/recettes/{recette}": { "get": { "tags": ["recettes"], "operationId": "showRecette", "summary": "Détail recette, encaissements, rubriques" } },
+    "/recettes/{recette}/ventiler": { "post": { "tags": ["recettes"], "operationId": "ventilerRecette", "summary": "Rattacher une rubrique budgétaire" } },
+    "/recettes/etats": { "get": { "tags": ["recettes"], "operationId": "etatsRecettes", "summary": "États (mobilisation, arriérés, encaissements, prévisions, financier). Montants en chaînes. Exports PDF/Excel via Blade." } },
+    "/recettes/encaissements": {
+      "get": { "tags": ["recettes"], "operationId": "listEncaissements", "summary": "Encaissements (montants en chaînes)" },
+      "post": { "tags": ["recettes"], "operationId": "saisirEncaissement", "summary": "Saisir un encaissement (non comptabilisé)" }
+    },
+    "/recettes/encaissements/options": { "get": { "tags": ["recettes"], "operationId": "optionsEncaissement", "summary": "Recettes éligibles et modes de paiement" } },
+    "/recettes/encaissements/{encaissement}": { "get": { "tags": ["recettes"], "operationId": "showEncaissement", "summary": "Détail, workflow, actions. If-Match = etag." } },
+    "/recettes/encaissements/{encaissement}/soumettre": { "post": { "tags": ["recettes"], "operationId": "soumettreEncaissement", "summary": "Circuit RECETTES. Exige justificatif et recette ventilée. Idempotency-Key recommandée." } },
+    "/recettes/encaissements/{encaissement}/decisions": { "post": { "tags": ["recettes"], "operationId": "decisionEncaissement", "summary": "Valider ou rejeter (sans renvoi). La dernière étape comptabilise le réalisé." } },
+    "/recettes/encaissements/{encaissement}/rapprocher": { "post": { "tags": ["recettes"], "operationId": "rapprocherEncaissement", "summary": "Rapprocher un encaissement validé" } },
+    "/recettes/encaissements/{encaissement}/annuler": { "post": { "tags": ["recettes"], "operationId": "annulerEncaissement", "summary": "Annuler un encaissement non rapproché" } },
+    "/appels-fonds": {
+      "get": { "tags": ["recettes"], "operationId": "listAppelsFonds", "summary": "Appels de fonds (montants en chaînes) + agrégat par État" },
+      "post": { "tags": ["recettes"], "operationId": "emettreAppelFonds", "summary": "Émettre un appel (recette.recouvrement)" }
+    },
+    "/appels-fonds/options": { "get": { "tags": ["recettes"], "operationId": "optionsAppelFonds", "summary": "États membres, sources, canaux de relance" } },
+    "/appels-fonds/{appel}": { "get": { "tags": ["recettes"], "operationId": "showAppelFonds", "summary": "Détail, relances, actions. If-Match = etag." } },
+    "/appels-fonds/{appel}/recouvrer": { "post": { "tags": ["recettes"], "operationId": "recouvrerAppelFonds", "summary": "Enregistrer un règlement. Plafond = montant appelé. Idempotency-Key recommandée." } },
+    "/appels-fonds/{appel}/relancer": { "post": { "tags": ["recettes"], "operationId": "relancerAppelFonds", "summary": "Relance de recouvrement (solde > 0)" } },
+    "/appels-fonds/{appel}/annuler": { "post": { "tags": ["recettes"], "operationId": "annulerAppelFonds", "summary": "Annuler un appel sans règlement" } },
+    "/appels-fonds/{appel}/plan-apurement": { "post": { "tags": ["recettes"], "operationId": "etablirPlanApurement", "summary": "Échéancier mensuel sur le solde. Un seul plan actif. Idempotency-Key recommandée." } },
+    "/plans-apurement/{plan}": { "get": { "tags": ["recettes"], "operationId": "showPlanApurement", "summary": "Plan, échéances, actions. If-Match = etag." } },
+    "/plans-apurement/{plan}/annuler": { "post": { "tags": ["recettes"], "operationId": "annulerPlanApurement", "summary": "Annuler un plan sans règlement" } },
+    "/echeances-apurement/{echeance}/regler": { "post": { "tags": ["recettes"], "operationId": "reglerEcheanceApurement", "summary": "Règlement d’échéance, reporté sur l’appel. Plafond = montant prévu." } },
+    "/ged/hub": { "get": { "tags": ["ged"], "operationId": "hubGed", "summary": "Compteurs catalogue GED. Lecture ged.voir. Pas de binaire." } },
+    "/ged/documents": {
+      "get": { "tags": ["ged"], "operationId": "listGedDocuments", "summary": "Catalogue documents GED, filtré par périmètre GedAccessService" },
+      "post": { "tags": ["ged"], "operationId": "deposerGedDocument", "summary": "Dépôt multipart (fichier + métadonnées). ged.creer. Idempotency-Key. Réponse sans chemin_fichier." }
+    },
+    "/ged/documents/options": { "get": { "tags": ["ged"], "operationId": "optionsGedDocuments", "summary": "Catégories, types, dossiers, niveaux, signataires" } },
+    "/ged/documents/{uuid}": { "get": { "tags": ["ged"], "operationId": "showGedDocument", "summary": "Métadonnées document GED. Téléchargement via Blade." } },
+    "/ged/documents/{uuid}/signatures": { "post": { "tags": ["ged"], "operationId": "demanderGedSignature", "summary": "Demander une signature. ged.signer. { signataire_id }" } },
+    "/ged/signatures": { "get": { "tags": ["ged"], "operationId": "listGedSignatures", "summary": "Registre des demandes de signature accessibles" } },
+    "/ged/signatures/{id}/signer": { "post": { "tags": ["ged"], "operationId": "signerGed", "summary": "Signer en tant que signataire désigné. Idempotency-Key." } },
+    "/ged/signatures/{id}/rejeter": { "post": { "tags": ["ged"], "operationId": "rejeterGedSignature", "summary": "Rejeter une demande. motif requis." } },
+    "/rbm/hub": { "get": { "tags": ["rbm"], "operationId": "hubRbm", "summary": "Compteurs chaîne RBM/GAR. Lecture rbm.voir. Montants en chaînes." } },
+    "/rbm/vue": { "get": { "tags": ["rbm"], "operationId": "vueRbm", "summary": "Arbre, matrice, cadre, chaîne, théorie. jeu=arbre|matrice|cadre|chaine|theorie" } },
+    "/rbm/niveaux/{niveau}/options": { "get": { "tags": ["rbm"], "operationId": "optionsRbmNoeud", "summary": "Schéma de champs et listes pour un niveau RBM" } },
+    "/rbm/niveaux/{niveau}": { "post": { "tags": ["rbm"], "operationId": "creerRbmNoeud", "summary": "Créer un nœud (pilier…tâche). rbm.creer. Montants en chaînes. Idempotency-Key." } },
+    "/rbm/niveaux/{niveau}/{id}": {
+      "get": { "tags": ["rbm"], "operationId": "showRbmNoeud", "summary": "Détail d’un nœud. Lecture rbm.voir." },
+      "put": { "tags": ["rbm"], "operationId": "modifierRbmNoeud", "summary": "Modifier un nœud. rbm.modifier. parent obligatoire pour l’unicité du code." }
+    },
     "/rbm/piliers": { "get": { "tags": ["rbm"], "operationId": "listPiliers", "summary": "Piliers RBM" } },
     "/rbm/matrice": { "get": { "tags": ["rbm"], "operationId": "rbmMatrice", "summary": "Matrice RBM" } },
     "/suivi-financier/synthese": { "get": { "tags": ["suivi"], "operationId": "suiviFinancierSynthese", "summary": "Synthèse financière" } },
     "/suivi-indicateurs/feux": { "get": { "tags": ["suivi"], "operationId": "suiviIndicateursFeux", "summary": "Feux indicateurs" } },
-    "/reporting/rapports": { "get": { "tags": ["reporting"], "operationId": "listRapports", "summary": "Rapports générés" } },
-    "/workflow/circuits": { "get": { "tags": ["workflow"], "operationId": "listWorkflowCircuits", "summary": "Circuits workflow" } },
-    "/notifications": { "get": { "tags": ["notifications"], "operationId": "listNotifications", "summary": "Notifications utilisateur" } },
+    "/reporting/hub": { "get": { "tags": ["reporting"], "operationId": "hubReporting", "summary": "Catalogue des types et récents. Lecture reporting.view. Pas de binaire." } },
+    "/reporting/rapports": { "get": { "tags": ["reporting"], "operationId": "listRapports", "summary": "Historique des rapports générés" } },
+    "/reporting/rapports/{id}": { "get": { "tags": ["reporting"], "operationId": "showRapport", "summary": "Métadonnées d’un rapport. Téléchargement via Blade." } },
+    "/workflow/hub": { "get": { "tags": ["workflow"], "operationId": "hubWorkflow", "summary": "KPI circuits, corbeille. Lecture workflow.view. peut_admin si workflow.admin." } },
+    "/workflow/admin/circuits": {
+      "get": { "tags": ["workflow"], "operationId": "adminListWorkflowCircuits", "summary": "Tous les circuits (actifs et inactifs). workflow.admin." },
+      "post": { "tags": ["workflow"], "operationId": "adminCreerWorkflowCircuit", "summary": "Créer un circuit et ses étapes. workflow.create. Idempotency-Key." }
+    },
+    "/workflow/admin/circuits/{id}": {
+      "get": { "tags": ["workflow"], "operationId": "adminShowWorkflowCircuit", "summary": "Détail circuit et étapes. workflow.admin ou workflow.update." },
+      "put": { "tags": ["workflow"], "operationId": "adminModifierWorkflowCircuit", "summary": "Modifier identité et étapes. workflow.update." }
+    },
+    "/workflow/admin/circuits/{id}/toggle": { "post": { "tags": ["workflow"], "operationId": "adminToggleWorkflowCircuit", "summary": "Activer ou désactiver. workflow.update." } },
+    "/workflow/circuits": { "get": { "tags": ["workflow"], "operationId": "listWorkflowCircuits", "summary": "Circuits actifs (PAT lecture). Inchangé." } },
+    "/workflow/instances": { "get": { "tags": ["workflow"], "operationId": "listWorkflowInstances", "summary": "Corbeille de validations" } },
+    "/workflow/instances/{id}": { "get": { "tags": ["workflow"], "operationId": "showWorkflowInstance", "summary": "Instance et étapes. peut_agir." } },
+    "/workflow/instances/{id}/decisions": { "post": { "tags": ["workflow"], "operationId": "deciderWorkflow", "summary": "valider, rejeter ou renvoyer. workflow.validate." } },
+    "/notifications": { "get": { "tags": ["notifications"], "operationId": "listNotifications", "summary": "Boîte in-app. notifications.view. Hors archives par défaut." } },
+    "/notifications/hub": { "get": { "tags": ["notifications"], "operationId": "hubNotifications", "summary": "Compteurs et droits. notifications.view." } },
+    "/notifications/unread-count": { "get": { "tags": ["notifications"], "operationId": "countNotificationsNonLues", "summary": "Nombre de non lues non archivées." } },
+    "/notifications/tout-lu": { "post": { "tags": ["notifications"], "operationId": "toutLuNotifications", "summary": "Marquer toutes les non lues. Idempotency-Key." } },
+    "/notifications/{id}/read": { "post": { "tags": ["notifications"], "operationId": "lireNotification", "summary": "Marquer une notification lue." } },
+    "/notifications/{id}/archiver": { "post": { "tags": ["notifications"], "operationId": "archiverNotification", "summary": "Archiver. notifications.manage." } },
+    "/notifications/preferences": {
+      "get": { "tags": ["notifications"], "operationId": "lirePreferencesNotifications", "summary": "Canaux utilisateur. notifications.manage." },
+      "put": { "tags": ["notifications"], "operationId": "enregistrerPreferencesNotifications", "summary": "Mettre à jour les canaux. notifications.manage." }
+    },
+    "/notifications/alertes": { "get": { "tags": ["notifications"], "operationId": "listAlertes", "summary": "Alertes institutionnelles. alertes.view." } },
+    "/notifications/alertes/{id}/resolve": { "post": { "tags": ["notifications"], "operationId": "resoudreAlerte", "summary": "Clôturer une alerte ouverte. alertes.resolve. 422 si déjà clôturée." } },
     "/tompro/paiements": { "get": { "tags": ["tompro"], "operationId": "tomproPaiements", "summary": "Paiements validés SYSCOHADA" } },
     "/tompro/encaissements": { "get": { "tags": ["tompro"], "operationId": "tomproEncaissements", "summary": "Encaissements comptabilisés SYSCOHADA" } },
     "/tompro/synthese": { "get": { "tags": ["tompro"], "operationId": "tomproSynthese", "summary": "Synthèse des exports en attente" } },

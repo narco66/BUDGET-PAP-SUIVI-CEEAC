@@ -84,7 +84,7 @@ class RapprochementBancaireController extends Controller
             'lignes' => ['required', 'string'],
         ]);
 
-        $lignes = $this->parserCsv($data['lignes']);
+        $lignes = $this->service->parserReleve($data['lignes']);
         if ($lignes === []) {
             return back()->with('erreur', 'Aucune ligne valide à importer.');
         }
@@ -134,39 +134,6 @@ class RapprochementBancaireController extends Controller
         }
 
         return back()->with('succes', 'Session clôturée.');
-    }
-
-    /** @return list<array{date_operation:string,libelle:string,reference_bancaire?:string,montant:float}> */
-    private function parserCsv(string $contenu): array
-    {
-        $lignes = [];
-        foreach (preg_split('/\r\n|\r|\n/', trim($contenu)) as $row) {
-            if ($row === '' || str_starts_with($row, '#')) {
-                continue;
-            }
-            $cols = str_getcsv($row, ';');
-            if (count($cols) < 3) {
-                $cols = str_getcsv($row, ',');
-            }
-            if (count($cols) < 3) {
-                continue;
-            }
-
-            $lignes[] = count($cols) >= 4
-                ? [
-                    'date_operation' => $cols[0],
-                    'libelle' => $cols[1],
-                    'reference_bancaire' => $cols[2] ?: null,
-                    'montant' => (float) str_replace([' ', ','], ['', '.'], $cols[3]),
-                ]
-                : [
-                    'date_operation' => $cols[0],
-                    'libelle' => $cols[1],
-                    'montant' => (float) str_replace([' ', ','], ['', '.'], $cols[2]),
-                ];
-        }
-
-        return $lignes;
     }
 
     private function autoriser(Request $request): void

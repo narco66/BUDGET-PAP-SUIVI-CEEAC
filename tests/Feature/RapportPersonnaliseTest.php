@@ -72,4 +72,31 @@ class RapportPersonnaliseTest extends TestCase
         $this->actingAs($lecteur)->get(route('reporting.modeles.index'))->assertOk();
         $this->actingAs($lecteur)->get(route('reporting.modeles.create'))->assertForbidden();
     }
+
+    public function test_api_session_modeles_personnalises(): void
+    {
+        $this->actingAs($this->admin)
+            ->postJson(route('api.reporting.modeles.store'), [
+                'titre' => 'Export engagements API',
+                'source' => 'engagements',
+                'colonnes' => ['numero', 'objet', 'montant', 'statut'],
+                'partage' => true,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('modele.source', 'engagements');
+
+        $modele = RapportPersonnalise::firstWhere('titre', 'Export engagements API');
+        $this->actingAs($this->admin)
+            ->getJson(route('api.reporting.modeles.show', ['rapportPersonnalise' => $modele, 'exercice' => $this->exercice->id]))
+            ->assertOk()
+            ->assertJsonPath('data.code', $modele->code);
+
+        $this->actingAs(User::firstWhere('email', 'lecteur@ceeac.test'))
+            ->postJson(route('api.reporting.modeles.store'), [
+                'titre' => 'Interdit',
+                'source' => 'engagements',
+                'colonnes' => ['numero'],
+            ])
+            ->assertForbidden();
+    }
 }

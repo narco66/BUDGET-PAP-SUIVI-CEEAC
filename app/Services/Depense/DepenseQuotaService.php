@@ -53,4 +53,39 @@ class DepenseQuotaService
             $liquidation->id
         );
     }
+
+    public function montantPayeOrdonnancement(\App\Models\Ordonnancement $ordonnancement, ?int $ignorePaiementId = null): float
+    {
+        $q = $ordonnancement->paiements()
+            ->whereNotIn('statut', self::EXCLUS)
+            ->where(function ($inner) {
+                $inner->whereNull('etat_execution')
+                    ->orWhere('etat_execution', '!=', 'instrument_rejete');
+            });
+        if ($ignorePaiementId) {
+            $q->where('id', '!=', $ignorePaiementId);
+        }
+
+        return (float) $q->sum('montant');
+    }
+
+    public function montantRestantPaiement(\App\Models\Ordonnancement $ordonnancement, ?int $ignorePaiementId = null): float
+    {
+        return max(0, round((float) $ordonnancement->montant - $this->montantPayeOrdonnancement($ordonnancement, $ignorePaiementId), 2));
+    }
+
+    public function assertPeutPayer(\App\Models\Ordonnancement $ordonnancement, float $montant, ?int $ignorePaiementId = null): void
+    {
+        if ($montant <= 0) {
+            throw new RuntimeException('Le montant de paiement doit être strictement positif.');
+        }
+
+        $restant = $this->montantRestantPaiement($ordonnancement, $ignorePaiementId);
+        if ($montant > $restant + 0.01) {
+            throw new RuntimeException(
+                'Montant de paiement dépassé : reste '.number_format($restant, 0, ',', ' ').
+                ' XAF sur l\'ordonnancement '.$ordonnancement->numero.'.'
+            );
+        }
+    }
 }

@@ -93,6 +93,19 @@ class DepenseExportController extends Controller
         return $this->telechargerJeu('consolide', $request);
     }
 
+    /** @return array<string, array{type: string, titre: string}> */
+    public static function catalogue(): array
+    {
+        return self::ARCHIVES;
+    }
+
+    public function telechargerPourApi(Request $request, string $cle): BinaryFileResponse
+    {
+        abort_unless(array_key_exists($cle, self::ARCHIVES), 404);
+
+        return $this->telechargerJeu($cle, $request);
+    }
+
     public function ecrituresComptables(Request $request): BinaryFileResponse
     {
         return $this->telechargerJeu('ecritures', $request);
@@ -351,6 +364,10 @@ class DepenseExportController extends Controller
 
     private function exercice(Request $request): Exercice
     {
+        if ($request->filled('exercice_id')) {
+            return Exercice::findOrFail($request->integer('exercice_id'));
+        }
+
         $annee = (int) $request->input('exercice', date('Y'));
 
         return Exercice::where('annee', $annee)->firstOrFail();

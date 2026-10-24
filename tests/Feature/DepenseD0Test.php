@@ -140,9 +140,22 @@ class DepenseD0Test extends TestCase
             ->get(route('engagements.create'))
             ->assertForbidden();
 
+        $createCf = $this->actingAs($this->user('controleur_financier'))
+            ->get(route('engagements.create'));
+        $this->assertTrue(in_array($createCf->status(), [200, 302], true), 'Formulaire ENG (Blade ou redirection SPA).');
+
+        [, $ligne] = $this->activiteEtLigne($this->exercice, 'LB-D0-ADM', 1000);
         $this->actingAs($this->user('controleur_financier'))
-            ->get(route('engagements.create'))
-            ->assertOk();
+            ->postJson(route('api.engagements.store'), [
+                'exercice_id' => $this->exercice->id,
+                'type' => 'simple',
+                'objet' => 'Admin sans besoin',
+                'imputations' => [
+                    ['ligne_budgetaire_id' => $ligne->id, 'montant' => 100],
+                ],
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('expression_besoin_id');
     }
 
     public function test_chaine_depense_seeder_charge_sans_erreur(): void

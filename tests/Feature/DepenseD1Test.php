@@ -106,7 +106,7 @@ class DepenseD1Test extends TestCase
             $user,
         );
         $svc->soumettre($engagement, $user);
-        $this->workflow->valider($engagement->fresh()->workflowActif, $this->user('controleur_financier'));
+        $this->viserEngagement($engagement);
 
         $this->assertDatabaseHas('certificats_engagement', [
             'engagement_id' => $engagement->id,
@@ -154,12 +154,12 @@ class DepenseD1Test extends TestCase
             $gest,
         );
         $svc->soumettre($engagement, $gest);
-        $this->workflow->valider($engagement->fresh()->workflowActif, $cf);
+        $this->viserEngagement($engagement);
 
-        $liq = \App\Models\Liquidation::create([
-            'numero' => 'LIQ-D1', 'engagement_id' => $engagement->id, 'montant' => 600, 'statut' => 'brouillon',
-        ]);
+        $liq = $engagement->fresh()->liquidations()->first();
+        $liq->update(['service_fait' => 'Service fait.']);
         $this->workflow->demarrer($liq, 'LIQUIDATION', $gest);
+        $this->workflow->valider($liq->fresh()->workflowActif, $this->user('chef_service'));
 
         $this->assertTrue($cf->can('agir', $liq));
         $this->assertFalse($gest->can('agir', $liq));

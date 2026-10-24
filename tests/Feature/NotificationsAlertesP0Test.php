@@ -17,6 +17,7 @@ use Database\Seeders\RoleSeeder;
 use Database\Seeders\WorkflowPermissionsSeeder;
 use Database\Seeders\WorkflowSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
@@ -30,6 +31,7 @@ class NotificationsAlertesP0Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false, 'notifications.email.queue' => false, 'notifications.sms.provider' => 'log']);
         $this->seed([
             RoleSeeder::class,
             NotificationsAlertesSeeder::class,
@@ -122,6 +124,7 @@ class NotificationsAlertesP0Test extends TestCase
 
     public function test_archivage_notification(): void
     {
+        Mail::fake();
         $user = $this->user('commissaire');
         app(NotificationDispatcher::class)->envoyer(
             $user,

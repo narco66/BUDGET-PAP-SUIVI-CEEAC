@@ -20,6 +20,7 @@ class Ordonnancement extends Model implements PilotableParWorkflow, ConcernantSt
     protected $fillable = [
         'numero', 'liquidation_id', 'montant', 'date_ordonnancement',
         'statut', 'cree_par', 'valide_par', 'valide_le', 'compteurs_appliques',
+        'seuil_xaf', 'seuil_version', 'assiette_seuil', 'ordonnateur_role',
     ];
 
     protected $casts = [
@@ -61,6 +62,8 @@ class Ordonnancement extends Model implements PilotableParWorkflow, ConcernantSt
 
         app(\App\Services\Depense\OrdrePaiementService::class)->emettre($this);
         app(\App\Services\Depense\HistoriqueDepenseService::class)->enregistrer($this, 'etape_validee');
+        app(\App\Services\Depense\OrdonnancementVersPaiementService::class)
+            ->assurerDossierDepuisOrdreSigne($this->fresh());
     }
 
     public function createur(): BelongsTo

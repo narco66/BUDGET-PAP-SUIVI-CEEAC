@@ -30,6 +30,41 @@ class RapprochementBancaireService
         ]);
     }
 
+    /**
+     * @return list<array{date_operation:string,libelle:string,reference_bancaire?:string|null,montant:float}>
+     */
+    public function parserReleve(string $contenu): array
+    {
+        $lignes = [];
+        foreach (preg_split('/\r\n|\r|\n/', trim($contenu)) as $row) {
+            if ($row === '' || str_starts_with($row, '#')) {
+                continue;
+            }
+            $cols = str_getcsv($row, ';');
+            if (count($cols) < 3) {
+                $cols = str_getcsv($row, ',');
+            }
+            if (count($cols) < 3) {
+                continue;
+            }
+
+            $lignes[] = count($cols) >= 4
+                ? [
+                    'date_operation' => $cols[0],
+                    'libelle' => $cols[1],
+                    'reference_bancaire' => $cols[2] ?: null,
+                    'montant' => (float) str_replace([' ', ','], ['', '.'], $cols[3]),
+                ]
+                : [
+                    'date_operation' => $cols[0],
+                    'libelle' => $cols[1],
+                    'montant' => (float) str_replace([' ', ','], ['', '.'], $cols[2]),
+                ];
+        }
+
+        return $lignes;
+    }
+
     /** @param list<array{date_operation:string,libelle:string,reference_bancaire?:string,montant:float}> $lignes */
     public function importerLignes(RapprochementBancaire $rapprochement, array $lignes): int
     {
@@ -126,7 +161,10 @@ class RapprochementBancaireService
     private function lier(RapprochementBancaire $rapprochement, RapprochementLigne $ligne, Paiement $paiement): void
     {
         $ligne->update(['paiement_id' => $paiement->id, 'statut' => 'rapproche']);
-        $paiement->update(['rapprochement_bancaire_id' => $rapprochement->id]);
+        $paiement->update([
+            'rapprochement_bancaire_id' => $rapprochement->id,
+            'etat_execution' => 'rapproche',
+        ]);
 
         app(HistoriqueDepenseService::class)->enregistrer($paiement, 'paiement_rapproche', null, [
             'rapprochement' => $rapprochement->reference,

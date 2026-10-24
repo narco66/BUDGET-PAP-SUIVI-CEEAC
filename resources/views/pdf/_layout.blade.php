@@ -29,6 +29,11 @@
         <div style="font-size:10px;">Commission de la CEEAC &middot; GEST-BUDGET-PAP</div>
         <div class="titre-doc">@yield('titre_doc')</div>
         <div class="numero">N° @yield('numero') &middot; Exercice @yield('exercice')</div>
+        @isset($qr_data_uri)
+            @if($qr_data_uri)
+                <img src="{{ $qr_data_uri }}" alt="QR vérification" style="position:absolute;top:0;right:0;width:64px;height:64px;" />
+            @endif
+        @endisset
     </header>
     <footer>
         Document généré automatiquement le {{ $genere_le ?? now()->format('d/m/Y H:i') }} &middot; Commission de la CEEAC

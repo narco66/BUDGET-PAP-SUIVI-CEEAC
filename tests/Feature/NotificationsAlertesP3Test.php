@@ -60,7 +60,7 @@ class NotificationsAlertesP3Test extends TestCase
 
         parent::setUp();
 
-        config(['notifications.email.queue' => false, 'notifications.sms.provider' => 'log']);
+        config(['mfa.enabled' => false, 'notifications.email.queue' => false, 'notifications.sms.provider' => 'log']);
 
         $this->seed([RoleSeeder::class, NotificationsAlertesSeeder::class]);
 

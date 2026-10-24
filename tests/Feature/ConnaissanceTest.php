@@ -67,4 +67,25 @@ class ConnaissanceTest extends TestCase
         $user = User::factory()->create(['actif' => true, 'statut' => 'actif']);
         $this->actingAs($user)->get(route('ged.connaissances.index'))->assertForbidden();
     }
+
+    public function test_api_session_wiki_et_procedures(): void
+    {
+        $liste = $this->actingAs($this->admin)
+            ->getJson(route('api.ged.connaissances.index'))
+            ->assertOk();
+        $this->assertGreaterThanOrEqual(3, (int) $liste->json('synthese.total'));
+
+        $item = Connaissance::where('reference', 'CON-PROC-001')->first();
+        $this->assertNotNull($item);
+
+        $fiche = $this->actingAs($this->admin)
+            ->getJson(route('api.ged.connaissances.show', $item))
+            ->assertOk()
+            ->assertJsonPath('data.reference', 'CON-PROC-001');
+        $this->assertStringContainsString('Étapes', (string) $fiche->json('data.contenu_html'));
+
+        $this->actingAs(User::factory()->create(['actif' => true, 'statut' => 'actif']))
+            ->getJson(route('api.ged.connaissances.index'))
+            ->assertForbidden();
+    }
 }

@@ -559,6 +559,9 @@ Route::middleware('auth')->group(function () {
     Route::get('depense/export/{cle}/archiver', [DepenseExportController::class, 'archiver'])->name('depense.export.archiver');
     Route::get('depense/dossier/besoin/{besoin}', [\App\Http\Controllers\Depense\DepenseDossierController::class, 'besoin'])->name('depense.dossier.besoin');
     Route::get('depense/dossier/engagement/{engagement}', [\App\Http\Controllers\Depense\DepenseDossierController::class, 'engagement'])->name('depense.dossier.engagement');
+    Route::get('depense/verifier/{type}/{id}', [\App\Http\Controllers\Depense\DepenseDossierController::class, 'verifier'])
+        ->whereIn('type', ['besoin', 'engagement', 'liquidation', 'ordonnancement', 'paiement'])
+        ->name('depense.verifier');
     Route::get('depense/rapprochement', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'index'])->name('depense.rapprochement.index');
     Route::get('depense/rapprochement/create', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'create'])->name('depense.rapprochement.create');
     Route::post('depense/rapprochement', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'store'])->name('depense.rapprochement.store');
@@ -577,6 +580,7 @@ Route::middleware('auth')->group(function () {
     Route::post('engagements/{engagement}/soumettre', [EngagementController::class, 'soumettre'])->name('engagements.soumettre');
     Route::post('engagements/{engagement}/agir', [EngagementController::class, 'agir'])->name('engagements.agir');
     Route::post('engagements/{engagement}/annuler', [EngagementController::class, 'annuler'])->name('engagements.annuler');
+    Route::post('engagements/{engagement}/degager', [EngagementController::class, 'degager'])->name('engagements.degager');
     Route::get('engagements/{engagement}/pdf', [EngagementController::class, 'pdf'])->name('engagements.pdf');
     Route::get('engagements/{engagement}/certificat', [EngagementController::class, 'certificat'])->name('engagements.certificat');
     Route::resource('engagements', EngagementController::class)->only(['index', 'create', 'store', 'show']);

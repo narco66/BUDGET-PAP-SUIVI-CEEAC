@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\ApiLog;
 use App\Support\ApiJournalHelper;
+use App\Support\SanctumContexte;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,11 +18,13 @@ class JournaliserApi
         $response = $next($request);
         $statut = $response->getStatusCode();
 
+        $token = $request->user()?->currentAccessToken();
+
         ApiLog::create([
             'user_id' => $request->user()?->id,
-            'token_nom' => $request->user()?->currentAccessToken()?->name,
+            'token_nom' => SanctumContexte::nomJeton($token),
             'connected_app_id' => $request->attributes->get('connected_app_id')
-                ?? $request->user()?->currentAccessToken()?->connected_app_id,
+                ?? SanctumContexte::connectedAppId($token),
             'methode' => $request->method(),
             'chemin' => substr($request->path(), 0, 500),
             'request_hash' => ApiJournalHelper::hashRequete($request),
