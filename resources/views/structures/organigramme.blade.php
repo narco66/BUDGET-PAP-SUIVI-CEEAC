@@ -75,7 +75,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 (() => {
     const canvas = document.getElementById('orgCanvas');
     const search = document.getElementById('orgSearch');

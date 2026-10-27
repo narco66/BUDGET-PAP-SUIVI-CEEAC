@@ -3,12 +3,14 @@
 @php
     $meta = fn ($n) => \App\Models\Risque::niveauMeta($n);
     $couleurCell = ['critique' => '#dc3545', 'eleve' => '#fd7e14', 'modere' => '#ffc107', 'faible' => '#198754'];
+    // Texte foncé sur les fonds clairs (orange, jaune) : contraste WCAG ≥ 4,5:1.
+    $texteCell = ['critique' => '#fff', 'eleve' => '#212529', 'modere' => '#212529', 'faible' => '#fff'];
 @endphp
 
 @push('styles')<style>
     .heatmap td { width:90px; height:64px; text-align:center; vertical-align:middle; color:#fff; font-weight:600; border:2px solid #fff; }
     .heatmap .axe { background:#fff; color:#333; font-weight:600; }
-    .heatmap .cell-n { font-size:1.25rem; } .heatmap .cell-c { font-size:.7rem; opacity:.85; }
+    .heatmap .cell-n { font-size:1.25rem; } .heatmap .cell-c { font-size:.75rem; }
 </style>@endpush
 
 @section('contenu')
@@ -36,7 +38,7 @@
                         <td class="axe small">P{{ $p }} · {{ \App\Models\Risque::PROBABILITES[$p] }}</td>
                         @for ($i = 1; $i <= 4; $i++)
                             @php $cell = $carto['cellules'][$p][$i]; @endphp
-                            <td style="background:{{ $couleurCell[$cell['niveau']] }}">
+                            <td style="background:{{ $couleurCell[$cell['niveau']] }};color:{{ $texteCell[$cell['niveau']] }}">
                                 <div class="cell-n">{{ $cell['nombre'] }}</div>
                                 <div class="cell-c">crit. {{ $cell['criticite'] }}</div>
                             </td>

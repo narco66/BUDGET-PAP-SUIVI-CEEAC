@@ -246,34 +246,41 @@ class SuiviEvaluationService
     /** @return array<string, int|float|null> */
     private function statsRecommandations(int $exerciceId): array
     {
-        $base = Recommandation::where('exercice_id', $exerciceId);
-        $actives = (clone $base)->where('statut', '!=', 'abandonnee');
-        $total = $actives->count();
+        // Un seul agrégat (mêmes définitions que les comptages séparés : « actives » = statut différent de abandonnee).
+        $r = Recommandation::where('exercice_id', $exerciceId)->toBase()->selectRaw(
+            "sum(case when statut <> 'abandonnee' then 1 else 0 end) as total, "
+            ."sum(case when statut = 'realisee' then 1 else 0 end) as realisees, "
+            ."sum(case when statut = 'en_cours' then 1 else 0 end) as en_cours, "
+            ."avg(case when statut <> 'abandonnee' then taux_execution end) as taux_moyen"
+        )->first();
+        $total = (int) ($r->total ?? 0);
+        $realisees = (int) ($r->realisees ?? 0);
 
         return [
             'total' => $total,
-            'realisees' => (clone $base)->where('statut', 'realisee')->count(),
-            'en_cours' => (clone $base)->where('statut', 'en_cours')->count(),
-            'taux_execution_moyen' => round((float) ($actives->avg('taux_execution') ?? 0), 1),
-            'taux_realisees' => SuiviEvaluationCalculator::taux(
-                (clone $base)->where('statut', 'realisee')->count(),
-                max(1, $total),
-            ),
+            'realisees' => $realisees,
+            'en_cours' => (int) ($r->en_cours ?? 0),
+            'taux_execution_moyen' => round((float) ($r->taux_moyen ?? 0), 1),
+            'taux_realisees' => SuiviEvaluationCalculator::taux($realisees, max(1, $total)),
         ];
     }
 
     /** @return array<string, int|float|null> */
     private function statsFormations(int $exerciceId): array
     {
-        $base = Formation::where('exercice_id', $exerciceId);
-        $total = $base->count();
-        $realisees = (clone $base)->where('statut', 'realise');
+        $r = Formation::where('exercice_id', $exerciceId)->toBase()->selectRaw(
+            'count(*) as total, '
+            ."sum(case when statut = 'realise' then 1 else 0 end) as realisees, "
+            ."avg(case when statut = 'realise' then niveau_satisfaction end) as satisfaction"
+        )->first();
+        $total = (int) ($r->total ?? 0);
+        $realisees = (int) ($r->realisees ?? 0);
 
         return [
             'total' => $total,
-            'realisees' => $realisees->count(),
-            'taux_realisation' => SuiviEvaluationCalculator::taux($realisees->count(), max(1, $total)),
-            'satisfaction_moyenne' => $realisees->whereNotNull('niveau_satisfaction')->avg('niveau_satisfaction'),
+            'realisees' => $realisees,
+            'taux_realisation' => SuiviEvaluationCalculator::taux($realisees, max(1, $total)),
+            'satisfaction_moyenne' => $r->satisfaction !== null ? (float) $r->satisfaction : null,
         ];
     }
 

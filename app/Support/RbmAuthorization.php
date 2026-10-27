@@ -29,11 +29,28 @@ class RbmAuthorization
 
     public static function peut(User $user, string $niveau, string $action): bool
     {
+        // Mémorisé le temps de la requête : l'arbre RBM évalue ce droit pour chaque nœud et chaque action
+        // (~8 ms par évaluation, soit ~19 s pour un arbre de 580 nœuds).
+        $memo = app()->bound('rbm.autorisations') ? app('rbm.autorisations') : null;
+        $cle = $user->getKey().'|'.$niveau.'|'.$action;
+        if ($memo !== null && isset($memo[$cle])) {
+            return $memo[$cle];
+        }
+        $resultat = self::evaluer($user, $niveau, $action);
+        if ($memo !== null) {
+            $memo[$cle] = $resultat;
+        }
+
+        return $resultat;
+    }
+
+    private static function evaluer(User $user, string $niveau, string $action): bool
+    {
         if ($user->can('rbm.admin')) {
             return true;
         }
 
-        $actionGlobale = 'rbm.'.($ACTION_MAP[$action] ?? $action);
+        $actionGlobale = 'rbm.'.(self::ACTION_MAP[$action] ?? $action);
         if ($user->can($actionGlobale)) {
             return true;
         }

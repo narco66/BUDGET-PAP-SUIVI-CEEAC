@@ -81,10 +81,28 @@ class PapP1Test extends TestCase
 
     public function test_dashboard_filtre_pilier(): void
     {
-        $this->actingAs($this->gestionnaire)
+        $response = $this->actingAs($this->gestionnaire)
             ->get(route('paps.dashboard', ['exercice' => 2026, 'pilier' => '201']))
             ->assertOk()
-            ->assertSee('Effacer filtre pilier 201');
+            ->assertSee('Retirer le filtre');
+
+        // Le filtre repose sur le pilier de rattachement, pas sur un préfixe de code.
+        $produits = $response->viewData('produitsFiltres');
+        $activites = $response->viewData('activitesFiltrees');
+        $this->assertGreaterThan(0, $produits->count());
+        $this->assertGreaterThan(0, $activites->count());
+        $this->assertTrue($produits->every(fn (array $p) => $p['pilier_code'] === '201'));
+        $this->assertTrue($activites->every(fn (array $a) => $a['pilier_code'] === '201'));
+    }
+
+    public function test_dashboard_ignore_pilier_inconnu(): void
+    {
+        $response = $this->actingAs($this->gestionnaire)
+            ->get(route('paps.dashboard', ['exercice' => 2026, 'pilier' => 'INCONNU']))
+            ->assertOk()
+            ->assertDontSee('Retirer le filtre');
+
+        $this->assertNull($response->viewData('pilierFiltre'));
     }
 
     public function test_liste_pap_lien_pilotage(): void

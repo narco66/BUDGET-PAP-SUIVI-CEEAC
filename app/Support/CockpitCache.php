@@ -23,12 +23,33 @@ final class CockpitCache
 
     public static function version(): int
     {
-        return (int) Cache::get(self::GEN, 0);
+        // Mémorisée le temps de la requête (ou de la tâche de file) : un cockpit lit jusqu'à une dizaine
+        // d'agrégats, chacun relisait la génération dans le magasin de cache.
+        $memo = self::memo();
+        if ($memo !== null && isset($memo['v'])) {
+            return $memo['v'];
+        }
+        $version = (int) Cache::get(self::GEN, 0);
+        if ($memo !== null) {
+            $memo['v'] = $version;
+        }
+
+        return $version;
+    }
+
+    /** Mémoire « scoped » (réinitialisée entre requêtes et entre tâches de file) ; null hors conteneur. */
+    private static function memo(): ?\ArrayObject
+    {
+        return function_exists('app') && app()->bound('cockpit.memo') ? app('cockpit.memo') : null;
     }
 
     /** Invalide tous les agrégats de cockpit (à appeler après une écriture de compteur). */
     public static function bump(?int $exerciceId = null, array $domains = ['budget']): void
     {
+        $memo = self::memo();
+        if ($memo !== null && isset($memo['v'])) {
+            unset($memo['v']);
+        }
         try {
             // increment() renvoie false sur clé absente (magasin database) : on initialise alors.
             if (Cache::increment(self::GEN) === false) {
@@ -54,19 +75,54 @@ final class CockpitCache
     {
         $key = "cockpit:{$cle}:".($exerciceId ?? 'all').':v'.self::version();
 
-        if (Cache::has($key)) {
-            $value = Cache::get($key);
+        // Une seule lecture (au lieu de has() puis get()) ; une valeur nulle n'est jamais mise en cache par remember().
+        $value = Cache::get($key);
+        if ($value !== null) {
             if (! self::containsIncompleteClass($value)) {
-                return $value;
+                return self::decoder($value);
             }
 
             Cache::forget($key);
         }
 
         $value = $rappel();
-        Cache::put($key, $value, self::TTL);
+        // Stockage en types natifs : le magasin n'autorise aucune classe à la désérialisation
+        // (cache.serializable_classes = false) ; une Collection relue devenait __PHP_Incomplete_Class
+        // et l'agrégat était recalculé à chaque affichage.
+        Cache::put($key, self::encoder($value), self::TTL);
 
         return $value;
+    }
+
+    /** Collections et objets simples → tableaux marqués (types natifs uniquement). */
+    private static function encoder(mixed $value): mixed
+    {
+        if ($value instanceof \Illuminate\Support\Collection) {
+            return ['__cockpit_collection' => array_map(self::encoder(...), $value->all())];
+        }
+        if ($value instanceof \stdClass) {
+            return ['__cockpit_objet' => array_map(self::encoder(...), (array) $value)];
+        }
+        if (is_array($value)) {
+            return array_map(self::encoder(...), $value);
+        }
+
+        return $value;
+    }
+
+    private static function decoder(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+        if (array_key_exists('__cockpit_collection', $value) && count($value) === 1) {
+            return collect(array_map(self::decoder(...), $value['__cockpit_collection']));
+        }
+        if (array_key_exists('__cockpit_objet', $value) && count($value) === 1) {
+            return (object) array_map(self::decoder(...), $value['__cockpit_objet']);
+        }
+
+        return array_map(self::decoder(...), $value);
     }
 
     private static function containsIncompleteClass(mixed $value): bool

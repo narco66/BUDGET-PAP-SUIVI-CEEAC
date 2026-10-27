@@ -24,10 +24,10 @@ class RapportWorkflowService
         }
 
         try {
-            if ($user->can('ged.creer') || $user->hasRole('administrateur')) {
-                $this->gedBridge->indexer($rapport, $user);
-                $rapport->update(['ged_indexe' => true]);
-            }
+            // Intégration automatique : tout rapport généré rejoint la GED, quel que soit le profil de l'auteur
+            // (l'accès au document reste régi par les règles de consultation de la GED).
+            $this->gedBridge->indexer($rapport, $user);
+            $rapport->update(['ged_indexe' => true]);
         } catch (\Throwable $e) {
             Log::warning('Indexation GED rapport échouée', [
                 'rapport' => $rapport->reference,

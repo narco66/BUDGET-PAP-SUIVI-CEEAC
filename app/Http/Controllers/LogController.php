@@ -11,7 +11,8 @@ class LogController extends Controller
 {
     public function connexions(Request $request): View
     {
-        abort_unless($request->user()->can('utilisateur.consulter_journal') || $request->user()->can('audit.voir'), 403);
+        // Journal de sécurité : réservé aux habilitations dédiées (audit.voir, détenue par presque tous les rôles, ne suffit plus).
+        abort_unless($request->user()->can('utilisateur.consulter_journal') || $request->user()->can('audit.security.view'), 403);
 
         $logs = LoginLog::with('user')
             ->when($request->filled('email'), fn ($q) => $q->where('email', 'like', "%{$request->email}%"))

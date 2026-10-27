@@ -218,6 +218,8 @@ class EngagementService
                 }
                 if ($engagement->credits_reserves) {
                     LigneBudgetaire::whereKey($imp->ligne_budgetaire_id)->decrement('montant_engage', $prise);
+                    // La réservation active suit l'imputation : elle restait au montant initial après dégagement.
+                    $this->reduireReservation($engagement, (int) $imp->ligne_budgetaire_id, $prise);
                 }
                 $nouveau = round((float) $imp->montant - $prise, 2);
                 if ($nouveau <= 0.005) {
@@ -235,5 +237,22 @@ class EngagementService
 
         AuditLogger::enregistrer('engagement_degage', $engagement, null, ['montant' => $montant, 'par' => $user->id]);
         app(\App\Services\Depense\ChaineClotureService::class)->reouvrirSiNecessaire($engagement->fresh());
+    }
+
+    /** Réduit les réservations actives d'une ligne du montant dégagé ; une réservation soldée est libérée. */
+    private function reduireReservation(Engagement $engagement, int $ligneId, float $montant): void
+    {
+        $reste = $montant;
+        foreach ($engagement->reservationsCredits()->where('ligne_budgetaire_id', $ligneId)->where('statut', 'active')->orderByDesc('id')->lockForUpdate()->get() as $reservation) {
+            if ($reste <= 0.005) {
+                break;
+            }
+            $prise = min((float) $reservation->montant, $reste);
+            $nouveau = round((float) $reservation->montant - $prise, 2);
+            $reservation->update($nouveau <= 0.005
+                ? ['montant' => 0, 'statut' => 'liberee', 'liberee_le' => now()]
+                : ['montant' => $nouveau]);
+            $reste = round($reste - $prise, 2);
+        }
     }
 }

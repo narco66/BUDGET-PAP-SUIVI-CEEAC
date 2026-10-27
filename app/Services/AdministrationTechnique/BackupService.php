@@ -6,6 +6,7 @@ use App\Models\Backup;
 use App\Support\Numero;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -77,7 +78,11 @@ class BackupService
             return $this->dumpMysql($dossier, $reference);
         }
 
-        // Pilote non-MySQL ou type fichiers : snapshot logique (manifeste des tables + volumétrie).
+        if ($type === 'base' && $driver === 'pgsql') {
+            return $this->dumpPgsql($dossier, $reference);
+        }
+
+        // Pilote sqlite / type fichiers : snapshot logique (manifeste des tables + volumétrie).
         return $this->snapshotLogique($dossier, $reference, $driver);
     }
 
@@ -102,15 +107,53 @@ class BackupService
         return $chemin;
     }
 
-    /** Snapshot logique JSON (manifeste) — utilisé hors MySQL et pour les fichiers/tests. */
+    private function dumpPgsql(string $dossier, string $reference): string
+    {
+        $c = config('database.connections.pgsql');
+        $chemin = "{$dossier}/{$reference}.sql";
+        $pgDump = $this->binairePgDump();
+
+        $process = new Process([
+            $pgDump,
+            '--host='.$c['host'],
+            '--port='.(string) $c['port'],
+            '--username='.$c['username'],
+            '--no-password',
+            '--format=plain',
+            '--file='.$chemin,
+            $c['database'],
+        ], null, ['PGPASSWORD' => (string) $c['password']]);
+        $process->setTimeout(600);
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            @unlink($chemin);
+            throw new \RuntimeException('pg_dump: '.$process->getErrorOutput());
+        }
+
+        return $chemin;
+    }
+
+    private function binairePgDump(): string
+    {
+        $configure = env('PG_DUMP_PATH');
+        if (is_string($configure) && $configure !== '' && is_file($configure)) {
+            return $configure;
+        }
+
+        $windows = 'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe';
+        if (is_file($windows)) {
+            return $windows;
+        }
+
+        return 'pg_dump';
+    }
+
+    /** Snapshot logique JSON (manifeste) — utilisé hors MySQL/PostgreSQL et pour les fichiers/tests. */
     private function snapshotLogique(string $dossier, string $reference, string $driver): string
     {
         $chemin = "{$dossier}/{$reference}.json";
-        $tables = collect(DB::select(
-            $driver === 'sqlite'
-                ? "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-                : 'SHOW TABLES'
-        ))->map(fn ($r) => array_values((array) $r)[0]);
+        $tables = collect(Schema::getTableListing());
 
         $manifeste = [
             'reference' => $reference,

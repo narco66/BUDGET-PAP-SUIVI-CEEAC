@@ -1,0 +1,33 @@
+{
+    "calcule_le": "2026-10-26T03:21:06+00:00",
+    "categories": {
+        "circuits": {
+            "lignes": 15,
+            "sha256": "52b1b3fc9e8b10e9e88da395f91edcebda9f2bfb5379a3e5c84a709bfa1a0a92"
+        },
+        "etapes_circuits": {
+            "lignes": 39,
+            "sha256": "ec8c6ef19b58c951bf7ddf5c644b228036633e358865d99ed4d7983d2b5bda68"
+        },
+        "instances": {
+            "lignes": 123,
+            "sha256": "1efee245dacf8f8e126b5571e858c96677bfc90cb5f3910377057bf19337dccd"
+        },
+        "decisions_etapes": {
+            "lignes": 234,
+            "sha256": "1d42842578614088078cfe964ddbd6c4efd82c3ea6d210d3087c69da71720330"
+        },
+        "visas": {
+            "lignes": 214,
+            "sha256": "e6e950e2ce9274853bd87dd4bf13dad3e1f5883ecfd0aaabfeb2cc7f4ec9d203"
+        },
+        "audit_workflow": {
+            "lignes": 338,
+            "sha256": "8d82d1e3bcb1aa695ccc783a08f73a4cde1f2a2646ded0a0430730924cffd148"
+        },
+        "taches": {
+            "lignes": 222,
+            "sha256": "f4de1cd9458a1b1b226854c244c50d56c317b0b1db8a0d9d1404ba80f6629525"
+        }
+    }
+}

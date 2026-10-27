@@ -1,0 +1,6151 @@
+[
+    {
+        "module": "accueil",
+        "uri": "/",
+        "nom": null,
+        "controleur": "Closure@__invoke",
+        "blades": [],
+        "droits": [],
+        "sortie": "closure",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite",
+        "nom": "admin.interoperabilite.index",
+        "controleur": "InteropHubController@index",
+        "blades": [
+            "admin.interoperabilite.index"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/apps",
+        "nom": "admin.interoperabilite.apps.index",
+        "controleur": "InteropAppController@index",
+        "blades": [
+            "admin.interoperabilite.apps.index"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/apps/create",
+        "nom": "admin.interoperabilite.apps.create",
+        "controleur": "InteropAppController@create",
+        "blades": [
+            "admin.interoperabilite.apps.form"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/apps/{app}",
+        "nom": "admin.interoperabilite.apps.show",
+        "controleur": "InteropAppController@show",
+        "blades": [
+            "admin.interoperabilite.apps.show"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "app"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/apps/{app}/edit",
+        "nom": "admin.interoperabilite.apps.edit",
+        "controleur": "InteropAppController@edit",
+        "blades": [
+            "admin.interoperabilite.apps.form"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "app"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/exports/inventaire/{format}",
+        "nom": "admin.interoperabilite.exports.inventaire",
+        "controleur": "InteropExportController@inventaire",
+        "blades": [],
+        "droits": [
+            "api.publish"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/exports/securite/{format}",
+        "nom": "admin.interoperabilite.exports.securite",
+        "controleur": "InteropExportController@rapportSecurite",
+        "blades": [
+            "admin.interoperabilite.exports.rapport-securite-pdf"
+        ],
+        "droits": [
+            "api.monitor"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/journal",
+        "nom": "admin.interoperabilite.journal",
+        "controleur": "InteropJournalController@index",
+        "blades": [
+            "admin.interoperabilite.journal.index"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/monitoring",
+        "nom": "admin.interoperabilite.monitoring",
+        "controleur": "InteropMonitoringController@index",
+        "blades": [
+            "admin.interoperabilite.monitoring.index"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/webhooks",
+        "nom": "admin.interoperabilite.webhooks.index",
+        "controleur": "InteropWebhookController@index",
+        "blades": [
+            "admin.interoperabilite.webhooks.index"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/webhooks/create",
+        "nom": "admin.interoperabilite.webhooks.create",
+        "controleur": "InteropWebhookController@create",
+        "blades": [
+            "admin.interoperabilite.webhooks.form"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/webhooks/{webhook}",
+        "nom": "admin.interoperabilite.webhooks.show",
+        "controleur": "InteropWebhookController@show",
+        "blades": [
+            "admin.interoperabilite.webhooks.show"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "webhook"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/interoperabilite/webhooks/{webhook}/edit",
+        "nom": "admin.interoperabilite.webhooks.edit",
+        "controleur": "InteropWebhookController@edit",
+        "blades": [
+            "admin.interoperabilite.webhooks.form"
+        ],
+        "droits": [
+            "api.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "webhook"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/notifications/templates",
+        "nom": "admin.notifications.templates.index",
+        "controleur": "AdminEmailTemplateController@index",
+        "blades": [
+            "admin.notifications.templates.index"
+        ],
+        "droits": [
+            "notifications.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/notifications/templates/{template}/edit",
+        "nom": "admin.notifications.templates.edit",
+        "controleur": "AdminEmailTemplateController@edit",
+        "blades": [
+            "admin.notifications.templates.form"
+        ],
+        "droits": [
+            "notifications.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "template"
+        ]
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/workflows",
+        "nom": "admin.workflows.index",
+        "controleur": "WorkflowAdminController@index",
+        "blades": [
+            "workflow.admin.index"
+        ],
+        "droits": [
+            "workflow.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/workflows/create",
+        "nom": "admin.workflows.create",
+        "controleur": "WorkflowAdminController@create",
+        "blades": [
+            "workflow.admin.form"
+        ],
+        "droits": [
+            "workflow.create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "admin",
+        "uri": "/admin/workflows/{workflow}/edit",
+        "nom": "admin.workflows.edit",
+        "controleur": "WorkflowAdminController@edit",
+        "blades": [
+            "workflow.admin.form"
+        ],
+        "droits": [
+            "workflow.update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "workflow"
+        ]
+    },
+    {
+        "module": "administration-technique",
+        "uri": "/administration-technique",
+        "nom": "administration-technique.cockpit",
+        "controleur": "AdministrationTechniqueController@cockpit",
+        "blades": [
+            "administration-technique.cockpit"
+        ],
+        "droits": [
+            "admin_technique.monitor"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "administration-technique",
+        "uri": "/administration-technique/files-attente",
+        "nom": "administration-technique.queues.index",
+        "controleur": "QueueMonitorController@index",
+        "blades": [
+            "administration-technique.queues.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "administration-technique",
+        "uri": "/administration-technique/files-attente/echoues/{uuid}",
+        "nom": "administration-technique.queues.show",
+        "controleur": "QueueMonitorController@show",
+        "blades": [
+            "administration-technique.queues.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "uuid"
+        ]
+    },
+    {
+        "module": "alertes",
+        "uri": "/alertes",
+        "nom": "alertes.index",
+        "controleur": "AlerteController@index",
+        "blades": [
+            "alertes.index"
+        ],
+        "droits": [
+            "alertes.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "alertes",
+        "uri": "/alertes/export/csv",
+        "nom": "alertes.export",
+        "controleur": "AlerteController@export",
+        "blades": [],
+        "droits": [
+            "alertes.manage"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "appels-fonds",
+        "uri": "/appels-fonds",
+        "nom": "appels-fonds.index",
+        "controleur": "AppelFondsController@index",
+        "blades": [
+            "appels-fonds.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "appels-fonds",
+        "uri": "/appels-fonds/create",
+        "nom": "appels-fonds.create",
+        "controleur": "AppelFondsController@create",
+        "blades": [
+            "appels-fonds.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "appels-fonds",
+        "uri": "/appels-fonds/{appelsFond}",
+        "nom": "appels-fonds.show",
+        "controleur": "AppelFondsController@show",
+        "blades": [
+            "appels-fonds.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "appelsFond"
+        ]
+    },
+    {
+        "module": "audit",
+        "uri": "/audit",
+        "nom": "audit.index",
+        "controleur": "AuditController@index",
+        "blades": [
+            "audit.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/dossiers/{type}/{id}",
+        "nom": "audit.dossier",
+        "controleur": "AuditController@dossier",
+        "blades": [
+            "audit.dossier"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "type",
+            "id"
+        ]
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/export/{format}",
+        "nom": "audit.export",
+        "controleur": "AuditController@export",
+        "blades": [],
+        "droits": [],
+        "sortie": "json",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/integrite",
+        "nom": "audit.integrite",
+        "controleur": "AuditController@integrite",
+        "blades": [
+            "audit.integrite"
+        ],
+        "droits": [
+            "audit.integrity.execute"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/securite",
+        "nom": "audit.securite",
+        "controleur": "AuditController@securite",
+        "blades": [
+            "audit.securite"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/tableau-de-bord",
+        "nom": "audit.tableau-de-bord",
+        "controleur": "AuditController@tableauDeBord",
+        "blades": [
+            "audit.tableau-de-bord"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/utilisateurs/{user}",
+        "nom": "audit.utilisateur",
+        "controleur": "AuditController@utilisateur",
+        "blades": [
+            "audit.utilisateur"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "user"
+        ]
+    },
+    {
+        "module": "audit",
+        "uri": "/audit/{journal}",
+        "nom": "audit.show",
+        "controleur": "AuditController@show",
+        "blades": [
+            "audit.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "journal"
+        ]
+    },
+    {
+        "module": "audit-missions",
+        "uri": "/audit-missions",
+        "nom": "audit-missions.index",
+        "controleur": "MissionAuditController@index",
+        "blades": [
+            "audit-missions.index"
+        ],
+        "droits": [
+            "audit.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit-missions",
+        "uri": "/audit-missions/create",
+        "nom": "audit-missions.create",
+        "controleur": "MissionAuditController@create",
+        "blades": [
+            "audit-missions.form"
+        ],
+        "droits": [
+            "audit.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "audit-missions",
+        "uri": "/audit-missions/{mission}",
+        "nom": "audit-missions.show",
+        "controleur": "MissionAuditController@show",
+        "blades": [
+            "audit-missions.show"
+        ],
+        "droits": [
+            "audit.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "mission"
+        ]
+    },
+    {
+        "module": "audit-missions",
+        "uri": "/audit-missions/{mission}/edit",
+        "nom": "audit-missions.edit",
+        "controleur": "MissionAuditController@edit",
+        "blades": [
+            "audit-missions.form"
+        ],
+        "droits": [
+            "audit.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "mission"
+        ]
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins",
+        "nom": "besoins.index",
+        "controleur": "ExpressionBesoinController@index",
+        "blades": [
+            "besoins.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins/consolidation",
+        "nom": "besoins.consolidation",
+        "controleur": "BesoinConsolidationController@index",
+        "blades": [
+            "besoins.consolidation"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins/create",
+        "nom": "besoins.create",
+        "controleur": "ExpressionBesoinController@create",
+        "blades": [
+            "besoins.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins/{besoin}",
+        "nom": "besoins.show",
+        "controleur": "ExpressionBesoinController@show",
+        "blades": [
+            "besoins.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "besoin"
+        ]
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins/{besoin}/edit",
+        "nom": "besoins.edit",
+        "controleur": "ExpressionBesoinController@edit",
+        "blades": [
+            "besoins.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "besoin"
+        ]
+    },
+    {
+        "module": "besoins",
+        "uri": "/besoins/{besoin}/pdf",
+        "nom": "besoins.pdf",
+        "controleur": "ExpressionBesoinController@pdf",
+        "blades": [],
+        "droits": [
+            "view"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "besoin"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget",
+        "nom": "budget.index",
+        "controleur": "LigneBudgetaireController@index",
+        "blades": [
+            "budget.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/create",
+        "nom": "budget.create",
+        "controleur": "LigneBudgetaireController@create",
+        "blades": [
+            "budget.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe",
+        "nom": "budget.enveloppe.index",
+        "controleur": "BudgetEnveloppeController@index",
+        "blades": [
+            "budget.enveloppe.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/create",
+        "nom": "budget.enveloppe.create",
+        "controleur": "BudgetEnveloppeController@create",
+        "blades": [
+            "budget.enveloppe.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}",
+        "nom": "budget.enveloppe.show",
+        "controleur": "BudgetEnveloppeController@show",
+        "blades": [
+            "budget.enveloppe.show"
+        ],
+        "droits": [
+            "view",
+            "agir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}/edit",
+        "nom": "budget.enveloppe.edit",
+        "controleur": "BudgetEnveloppeController@edit",
+        "blades": [
+            "budget.enveloppe.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}/preparations",
+        "nom": "budget.enveloppe.preparations",
+        "controleur": "BudgetPreparationController@index",
+        "blades": [
+            "budget.enveloppe.preparations"
+        ],
+        "droits": [
+            "preparer"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}/rapport",
+        "nom": "budget.enveloppe.rapport",
+        "controleur": "BudgetRapportController@show",
+        "blades": [
+            "budget.enveloppe.rapport"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}/revisions",
+        "nom": "budget.enveloppe.revisions",
+        "controleur": "BudgetRevisionController@index",
+        "blades": [
+            "budget.enveloppe.revisions"
+        ],
+        "droits": [
+            "rectifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/enveloppe/{budget}/simulations",
+        "nom": "budget.enveloppe.simulations",
+        "controleur": "BudgetSimulationController@index",
+        "blades": [
+            "budget.enveloppe.simulations"
+        ],
+        "droits": [
+            "simuler"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "budget"
+        ]
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/export",
+        "nom": "budget.export",
+        "controleur": "BudgetImportController@exporter",
+        "blades": [],
+        "droits": [
+            "ligne_budgetaire.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/import",
+        "nom": "budget.import.form",
+        "controleur": "BudgetImportController@form",
+        "blades": [
+            "budget.import"
+        ],
+        "droits": [
+            "ligne_budgetaire.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/modele/lignes",
+        "nom": "budget.modele.lignes",
+        "controleur": "BudgetImportController@modeleLignes",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/modele/nomenclature",
+        "nom": "budget.modele.nomenclature",
+        "controleur": "BudgetImportController@modeleNomenclature",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/modele/pap",
+        "nom": "budget.modele.pap",
+        "controleur": "BudgetImportController@modelePap",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/rapport",
+        "nom": "budget.rapport",
+        "controleur": "BudgetRapportController@exercice",
+        "blades": [
+            "budget.enveloppe.rapport"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "budget",
+        "uri": "/budget/{ligne}/edit",
+        "nom": "budget.edit",
+        "controleur": "LigneBudgetaireController@edit",
+        "blades": [
+            "budget.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "ligne"
+        ]
+    },
+    {
+        "module": "conformite",
+        "uri": "/conformite",
+        "nom": "conformite.index",
+        "controleur": "NonConformiteController@index",
+        "blades": [
+            "conformite.index"
+        ],
+        "droits": [
+            "conformite.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "conformite",
+        "uri": "/conformite/create",
+        "nom": "conformite.create",
+        "controleur": "NonConformiteController@create",
+        "blades": [
+            "conformite.form"
+        ],
+        "droits": [
+            "conformite.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "conformite",
+        "uri": "/conformite/{nonConformite}",
+        "nom": "conformite.show",
+        "controleur": "NonConformiteController@show",
+        "blades": [
+            "conformite.show"
+        ],
+        "droits": [
+            "conformite.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "nonConformite"
+        ]
+    },
+    {
+        "module": "conformite",
+        "uri": "/conformite/{nonConformite}/edit",
+        "nom": "conformite.edit",
+        "controleur": "NonConformiteController@edit",
+        "blades": [
+            "conformite.form"
+        ],
+        "droits": [
+            "conformite.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "nonConformite"
+        ]
+    },
+    {
+        "module": "contrats",
+        "uri": "/contrats",
+        "nom": "contrats.index",
+        "controleur": "ContratController@index",
+        "blades": [
+            "contrats.index"
+        ],
+        "droits": [
+            "contrat.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "contrats",
+        "uri": "/contrats/create",
+        "nom": "contrats.create",
+        "controleur": "ContratController@create",
+        "blades": [
+            "contrats.form"
+        ],
+        "droits": [
+            "contrat.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "contrats",
+        "uri": "/contrats/{contrat}",
+        "nom": "contrats.show",
+        "controleur": "ContratController@show",
+        "blades": [
+            "contrats.show"
+        ],
+        "droits": [
+            "contrat.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "contrat"
+        ]
+    },
+    {
+        "module": "contrats",
+        "uri": "/contrats/{contrat}/edit",
+        "nom": "contrats.edit",
+        "controleur": "ContratController@edit",
+        "blades": [
+            "contrats.form"
+        ],
+        "droits": [
+            "contrat.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "contrat"
+        ]
+    },
+    {
+        "module": "controle-interne",
+        "uri": "/controle-interne",
+        "nom": "controle-interne.index",
+        "controleur": "ControleInterneController@index",
+        "blades": [
+            "controle-interne.index"
+        ],
+        "droits": [
+            "controle_interne.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "controle-interne",
+        "uri": "/controle-interne/create",
+        "nom": "controle-interne.create",
+        "controleur": "ControleInterneController@create",
+        "blades": [
+            "controle-interne.form"
+        ],
+        "droits": [
+            "controle_interne.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "controle-interne",
+        "uri": "/controle-interne/{controle}/edit",
+        "nom": "controle-interne.edit",
+        "controleur": "ControleInterneController@edit",
+        "blades": [
+            "controle-interne.form"
+        ],
+        "droits": [
+            "controle_interne.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "controle"
+        ]
+    },
+    {
+        "module": "conventions",
+        "uri": "/conventions/{convention}",
+        "nom": "conventions.show",
+        "controleur": "DecaissementConventionController@show",
+        "blades": [
+            "referentiel.conventions.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "convention"
+        ]
+    },
+    {
+        "module": "conventions",
+        "uri": "/conventions/{convention}/edit",
+        "nom": "conventions.edit",
+        "controleur": "ConventionFinancementController@edit",
+        "blades": [
+            "referentiel.conventions.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "convention"
+        ]
+    },
+    {
+        "module": "dashboard",
+        "uri": "/dashboard",
+        "nom": "dashboard",
+        "controleur": "DashboardController@index",
+        "blades": [
+            "dashboard"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/dossier/besoin/{besoin}",
+        "nom": "depense.dossier.besoin",
+        "controleur": "DepenseDossierController@besoin",
+        "blades": [
+            "depense.dossier"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "besoin"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/dossier/engagement/{engagement}",
+        "nom": "depense.dossier.engagement",
+        "controleur": "DepenseDossierController@engagement",
+        "blades": [
+            "depense.dossier"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "engagement"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/besoins",
+        "nom": "depense.export.besoins",
+        "controleur": "DepenseExportController@besoins",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/consolide",
+        "nom": "depense.export.consolide",
+        "controleur": "DepenseExportController@journalConsolide",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/ecritures",
+        "nom": "depense.export.ecritures",
+        "controleur": "DepenseExportController@ecrituresComptables",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/engagements",
+        "nom": "depense.export.engagements",
+        "controleur": "DepenseExportController@journalEngagements",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/liquidations",
+        "nom": "depense.export.liquidations",
+        "controleur": "DepenseExportController@journalLiquidations",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/ordonnancements",
+        "nom": "depense.export.ordonnancements",
+        "controleur": "DepenseExportController@journalOrdonnancements",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/paiements",
+        "nom": "depense.export.paiements",
+        "controleur": "DepenseExportController@journalPaiements",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/restes-a-engager",
+        "nom": "depense.export.restes-engager",
+        "controleur": "DepenseExportController@restesAEngager",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/restes-a-payer",
+        "nom": "depense.export.restes",
+        "controleur": "DepenseExportController@restesAPayer",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/export/{cle}/archiver",
+        "nom": "depense.export.archiver",
+        "controleur": "DepenseExportController@archiver",
+        "blades": [],
+        "droits": [
+            "depenses.export"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "cle"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/rapprochement",
+        "nom": "depense.rapprochement.index",
+        "controleur": "RapprochementBancaireController@index",
+        "blades": [
+            "depense.rapprochement.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/rapprochement/create",
+        "nom": "depense.rapprochement.create",
+        "controleur": "RapprochementBancaireController@create",
+        "blades": [
+            "depense.rapprochement.create"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/rapprochement/{rapprochement}",
+        "nom": "depense.rapprochement.show",
+        "controleur": "RapprochementBancaireController@show",
+        "blades": [
+            "depense.rapprochement.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "rapprochement"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/verifier/{type}/{id}",
+        "nom": "depense.verifier",
+        "controleur": "DepenseDossierController@verifier",
+        "blades": [
+            "depense.verifier"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type",
+            "id"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/{type}",
+        "nom": "depense.index",
+        "controleur": "EtapeDepenseController@index",
+        "blades": [
+            "depense.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/{type}/create",
+        "nom": "depense.create",
+        "controleur": "EtapeDepenseController@create",
+        "blades": [
+            "depense.form"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/{type}/{id}",
+        "nom": "depense.show",
+        "controleur": "EtapeDepenseController@show",
+        "blades": [
+            "depense.show"
+        ],
+        "droits": [
+            "view",
+            "agir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type",
+            "id"
+        ]
+    },
+    {
+        "module": "depense",
+        "uri": "/depense/{type}/{id}/pdf",
+        "nom": "depense.pdf",
+        "controleur": "EtapeDepenseController@pdf",
+        "blades": [],
+        "droits": [
+            "view"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "type",
+            "id"
+        ]
+    },
+    {
+        "module": "depense-cockpit",
+        "uri": "/depense-cockpit",
+        "nom": "depense.cockpit",
+        "controleur": "CockpitDepenseController@index",
+        "blades": [
+            "depense.cockpit"
+        ],
+        "droits": [
+            "engagement.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "encaissements",
+        "uri": "/encaissements",
+        "nom": "encaissements.index",
+        "controleur": "EncaissementController@index",
+        "blades": [
+            "encaissements.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "encaissements",
+        "uri": "/encaissements/create",
+        "nom": "encaissements.create",
+        "controleur": "EncaissementController@create",
+        "blades": [
+            "encaissements.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "encaissements",
+        "uri": "/encaissements/{encaissement}",
+        "nom": "encaissements.show",
+        "controleur": "EncaissementController@show",
+        "blades": [
+            "encaissements.show"
+        ],
+        "droits": [
+            "view",
+            "agir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "encaissement"
+        ]
+    },
+    {
+        "module": "engagements",
+        "uri": "/engagements",
+        "nom": "engagements.index",
+        "controleur": "EngagementController@index",
+        "blades": [
+            "engagements.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "engagements",
+        "uri": "/engagements/create",
+        "nom": "engagements.create",
+        "controleur": "EngagementController@create",
+        "blades": [
+            "engagements.create"
+        ],
+        "droits": [
+            "create",
+            "depenses.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "engagements",
+        "uri": "/engagements/{engagement}",
+        "nom": "engagements.show",
+        "controleur": "EngagementController@show",
+        "blades": [
+            "engagements.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "engagement"
+        ]
+    },
+    {
+        "module": "engagements",
+        "uri": "/engagements/{engagement}/certificat",
+        "nom": "engagements.certificat",
+        "controleur": "EngagementController@certificat",
+        "blades": [],
+        "droits": [
+            "view"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "engagement"
+        ]
+    },
+    {
+        "module": "engagements",
+        "uri": "/engagements/{engagement}/pdf",
+        "nom": "engagements.pdf",
+        "controleur": "EngagementController@pdf",
+        "blades": [],
+        "droits": [
+            "view"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "engagement"
+        ]
+    },
+    {
+        "module": "exercices",
+        "uri": "/exercices",
+        "nom": "exercices.index",
+        "controleur": "ExerciceController@index",
+        "blades": [
+            "exercices.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "exercices",
+        "uri": "/exercices/create",
+        "nom": "exercices.create",
+        "controleur": "ExerciceController@create",
+        "blades": [
+            "exercices.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "exercices",
+        "uri": "/exercices/{exercice}",
+        "nom": "exercices.show",
+        "controleur": "ExerciceController@show",
+        "blades": [
+            "exercices.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "exercices",
+        "uri": "/exercices/{exercice}/edit",
+        "nom": "exercices.edit",
+        "controleur": "ExerciceController@edit",
+        "blades": [
+            "exercices.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "fonctions",
+        "uri": "/fonctions",
+        "nom": "fonctions.index",
+        "controleur": "FonctionController@index",
+        "blades": [
+            "fonctions.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "fonctions",
+        "uri": "/fonctions/create",
+        "nom": "fonctions.create",
+        "controleur": "FonctionController@create",
+        "blades": [
+            "fonctions.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "fonctions",
+        "uri": "/fonctions/{fonction}/edit",
+        "nom": "fonctions.edit",
+        "controleur": "FonctionController@edit",
+        "blades": [
+            "fonctions.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "fonction"
+        ]
+    },
+    {
+        "module": "formations",
+        "uri": "/formations",
+        "nom": "formations.index",
+        "controleur": "FormationController@index",
+        "blades": [
+            "formations.index"
+        ],
+        "droits": [
+            "formation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "formations",
+        "uri": "/formations/create",
+        "nom": "formations.create",
+        "controleur": "FormationController@create",
+        "blades": [
+            "formations.form"
+        ],
+        "droits": [
+            "formation.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "formations",
+        "uri": "/formations/{formation}",
+        "nom": "formations.show",
+        "controleur": "FormationController@show",
+        "blades": [
+            "formations.show"
+        ],
+        "droits": [
+            "formation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "formation"
+        ]
+    },
+    {
+        "module": "formations",
+        "uri": "/formations/{formation}/edit",
+        "nom": "formations.edit",
+        "controleur": "FormationController@edit",
+        "blades": [
+            "formations.form"
+        ],
+        "droits": [
+            "formation.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "formation"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged",
+        "nom": "ged.dashboard",
+        "controleur": "GedDashboardController@index",
+        "blades": [
+            "ged.dashboard"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/archives",
+        "nom": "ged.archives",
+        "controleur": "GedDocumentController@archives",
+        "blades": [
+            "ged.archives.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/categories",
+        "nom": "ged.categories",
+        "controleur": "GedAdminController@categories",
+        "blades": [
+            "ged.admin.categories"
+        ],
+        "droits": [
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/classement",
+        "nom": "ged.classement",
+        "controleur": "GedAdminController@classement",
+        "blades": [
+            "ged.classement.index"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/connaissances",
+        "nom": "ged.connaissances.index",
+        "controleur": "ConnaissanceController@index",
+        "blades": [
+            "ged.connaissances.index"
+        ],
+        "droits": [
+            "ged.voir",
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/connaissances/create",
+        "nom": "ged.connaissances.create",
+        "controleur": "ConnaissanceController@create",
+        "blades": [
+            "ged.connaissances.form"
+        ],
+        "droits": [
+            "ged.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/connaissances/{connaissance}",
+        "nom": "ged.connaissances.show",
+        "controleur": "ConnaissanceController@show",
+        "blades": [
+            "ged.connaissances.show"
+        ],
+        "droits": [
+            "ged.voir",
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "connaissance"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/connaissances/{connaissance}/edit",
+        "nom": "ged.connaissances.edit",
+        "controleur": "ConnaissanceController@edit",
+        "blades": [
+            "ged.connaissances.form"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "connaissance"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/conservation",
+        "nom": "ged.conservation",
+        "controleur": "GedAdminController@conservation",
+        "blades": [
+            "ged.conservation.index"
+        ],
+        "droits": [
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents",
+        "nom": "ged.documents.index",
+        "controleur": "GedDocumentController@index",
+        "blades": [
+            "ged.documents.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/confidentiels",
+        "nom": "ged.documents.confidentiels",
+        "controleur": "GedDocumentController@confidentiels",
+        "blades": [
+            "ged.documents.confidentiels"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/create",
+        "nom": "ged.documents.create",
+        "controleur": "GedDocumentController@create",
+        "blades": [
+            "ged.documents.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/expires",
+        "nom": "ged.documents.expires",
+        "controleur": "GedDocumentController@expires",
+        "blades": [
+            "ged.documents.expires"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/{document}",
+        "nom": "ged.documents.show",
+        "controleur": "GedDocumentController@show",
+        "blades": [
+            "ged.documents.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/{document}/download",
+        "nom": "ged.documents.download",
+        "controleur": "GedDocumentController@download",
+        "blades": [],
+        "droits": [
+            "download"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/{document}/edit",
+        "nom": "ged.documents.edit",
+        "controleur": "GedDocumentController@edit",
+        "blades": [
+            "ged.documents.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/documents/{document}/preview",
+        "nom": "ged.documents.preview",
+        "controleur": "GedDocumentController@preview",
+        "blades": [],
+        "droits": [
+            "preview"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/dossiers",
+        "nom": "ged.dossiers",
+        "controleur": "GedAdminController@dossiers",
+        "blades": [
+            "ged.dossiers.index"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/archives/excel",
+        "nom": "ged.exports.archives.excel",
+        "controleur": "GedExportController@registreArchives",
+        "blades": [],
+        "droits": [
+            "ged.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/excel",
+        "nom": "ged.exports.documents.excel",
+        "controleur": "GedExportController@registreDocuments",
+        "blades": [],
+        "droits": [
+            "ged.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/{document}/bordereau-archivage",
+        "nom": "ged.exports.documents.bordereau_archivage",
+        "controleur": "GedExportController@bordereauArchivage",
+        "blades": [
+            "ged.pdf.bordereau_archivage"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/{document}/bordereau-depot",
+        "nom": "ged.exports.documents.bordereau_depot",
+        "controleur": "GedExportController@bordereauDepot",
+        "blades": [
+            "ged.pdf.bordereau_depot"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/{document}/certificat-integrite",
+        "nom": "ged.exports.documents.certificat_integrite",
+        "controleur": "GedExportController@certificatIntegrite",
+        "blades": [
+            "ged.pdf.certificat_integrite"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/{document}/certificat-signature",
+        "nom": "ged.exports.documents.certificat_signature",
+        "controleur": "GedExportController@certificatSignature",
+        "blades": [
+            "ged.pdf.certificat_signature"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/documents/{document}/fiche",
+        "nom": "ged.exports.documents.fiche",
+        "controleur": "GedExportController@ficheDocument",
+        "blades": [
+            "ged.pdf.fiche"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "document"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/journal/excel",
+        "nom": "ged.exports.journal.excel",
+        "controleur": "GedExportController@registreJournal",
+        "blades": [],
+        "droits": [
+            "ged.consulter_journal"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/registres/{registre}/archiver",
+        "nom": "ged.exports.registres.archiver",
+        "controleur": "GedExportController@archiver",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": [
+            "registre"
+        ]
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/exports/signatures/excel",
+        "nom": "ged.exports.signatures.excel",
+        "controleur": "GedExportController@registreSignatures",
+        "blades": [],
+        "droits": [
+            "ged.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/journal",
+        "nom": "ged.journal",
+        "controleur": "GedAdminController@journal",
+        "blades": [
+            "ged.journal.index"
+        ],
+        "droits": [
+            "ged.consulter_journal"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/parametres",
+        "nom": "ged.parametres",
+        "controleur": "GedAdminController@parametres",
+        "blades": [
+            "ged.parametres.index"
+        ],
+        "droits": [
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/partages",
+        "nom": "ged.partages",
+        "controleur": "GedDocumentController@partages",
+        "blades": [
+            "ged.partages.index"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/recherche",
+        "nom": "ged.recherche",
+        "controleur": "GedDocumentController@rechercher",
+        "blades": [
+            "ged.recherche"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/signatures",
+        "nom": "ged.signatures.index",
+        "controleur": "GedAdminController@signatures",
+        "blades": [
+            "ged.signatures.index"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/types",
+        "nom": "ged.types",
+        "controleur": "GedAdminController@types",
+        "blades": [
+            "ged.admin.types"
+        ],
+        "droits": [
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/validations",
+        "nom": "ged.validations",
+        "controleur": "GedAdminController@validations",
+        "blades": [
+            "ged.validations.index"
+        ],
+        "droits": [
+            "ged.valider"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/versions",
+        "nom": "ged.versions",
+        "controleur": "GedAdminController@versions",
+        "blades": [
+            "ged.versions.index"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "ged",
+        "uri": "/ged/workflows",
+        "nom": "ged.workflows",
+        "controleur": "GedAdminController@workflows",
+        "blades": [
+            "ged.workflows.index"
+        ],
+        "droits": [
+            "ged.admin"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "gouvernance",
+        "uri": "/gouvernance/cockpit",
+        "nom": "gouvernance.cockpit",
+        "controleur": "GouvernanceController@cockpit",
+        "blades": [
+            "gouvernance.cockpit"
+        ],
+        "droits": [
+            "audit.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "health",
+        "uri": "/health",
+        "nom": "sante.health",
+        "controleur": "AdministrationTechniqueController@health",
+        "blades": [],
+        "droits": [],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "immobilisations",
+        "uri": "/immobilisations",
+        "nom": "immobilisations.index",
+        "controleur": "ImmobilisationController@index",
+        "blades": [
+            "immobilisations.index"
+        ],
+        "droits": [
+            "immobilisation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "immobilisations",
+        "uri": "/immobilisations/create",
+        "nom": "immobilisations.create",
+        "controleur": "ImmobilisationController@create",
+        "blades": [
+            "immobilisations.form"
+        ],
+        "droits": [
+            "immobilisation.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "immobilisations",
+        "uri": "/immobilisations/{immobilisation}",
+        "nom": "immobilisations.show",
+        "controleur": "ImmobilisationController@show",
+        "blades": [
+            "immobilisations.show"
+        ],
+        "droits": [
+            "immobilisation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "immobilisation"
+        ]
+    },
+    {
+        "module": "immobilisations",
+        "uri": "/immobilisations/{immobilisation}/edit",
+        "nom": "immobilisations.edit",
+        "controleur": "ImmobilisationController@edit",
+        "blades": [
+            "immobilisations.form"
+        ],
+        "droits": [
+            "immobilisation.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "immobilisation"
+        ]
+    },
+    {
+        "module": "incidents",
+        "uri": "/incidents",
+        "nom": "incidents.index",
+        "controleur": "IncidentController@index",
+        "blades": [
+            "incidents.index"
+        ],
+        "droits": [
+            "incident.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "incidents",
+        "uri": "/incidents/create",
+        "nom": "incidents.create",
+        "controleur": "IncidentController@create",
+        "blades": [
+            "incidents.form"
+        ],
+        "droits": [
+            "incident.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "incidents",
+        "uri": "/incidents/{incident}",
+        "nom": "incidents.show",
+        "controleur": "IncidentController@show",
+        "blades": [
+            "incidents.show"
+        ],
+        "droits": [
+            "incident.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "incident"
+        ]
+    },
+    {
+        "module": "incidents",
+        "uri": "/incidents/{incident}/edit",
+        "nom": "incidents.edit",
+        "controleur": "IncidentController@edit",
+        "blades": [
+            "incidents.form"
+        ],
+        "droits": [
+            "incident.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "incident"
+        ]
+    },
+    {
+        "module": "institution",
+        "uri": "/institution",
+        "nom": "institution.dashboard",
+        "controleur": "InstitutionController@index",
+        "blades": [
+            "institution.dashboard"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "login",
+        "uri": "/login",
+        "nom": "login",
+        "controleur": "LoginController@show",
+        "blades": [
+            "auth.login"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "logs",
+        "uri": "/logs/connexions",
+        "nom": "logs.connexions",
+        "controleur": "LogController@connexions",
+        "blades": [
+            "logs.connexions"
+        ],
+        "droits": [
+            "audit.security.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "marches",
+        "uri": "/marches",
+        "nom": "marches.index",
+        "controleur": "MarcheController@index",
+        "blades": [
+            "marches.index"
+        ],
+        "droits": [
+            "marche.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "marches",
+        "uri": "/marches/create",
+        "nom": "marches.create",
+        "controleur": "MarcheController@create",
+        "blades": [
+            "marches.form"
+        ],
+        "droits": [
+            "marche.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "marches",
+        "uri": "/marches/{marche}",
+        "nom": "marches.show",
+        "controleur": "MarcheController@show",
+        "blades": [
+            "marches.show"
+        ],
+        "droits": [
+            "marche.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "marche"
+        ]
+    },
+    {
+        "module": "marches",
+        "uri": "/marches/{marche}/edit",
+        "nom": "marches.edit",
+        "controleur": "MarcheController@edit",
+        "blades": [
+            "marches.form"
+        ],
+        "droits": [
+            "marche.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "marche"
+        ]
+    },
+    {
+        "module": "mes-taches",
+        "uri": "/mes-taches",
+        "nom": "taches.index",
+        "controleur": "TacheController@index",
+        "blades": [
+            "taches.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "mes-taches",
+        "uri": "/mes-taches/export",
+        "nom": "taches.export",
+        "controleur": "TacheController@export",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "mes-taches",
+        "uri": "/mes-taches/supervision",
+        "nom": "taches.supervision",
+        "controleur": "TacheController@supervision",
+        "blades": [
+            "taches.supervision"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "mes-taches",
+        "uri": "/mes-taches/{tache}",
+        "nom": "taches.show",
+        "controleur": "TacheController@show",
+        "blades": [
+            "taches.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "tache"
+        ]
+    },
+    {
+        "module": "mfa",
+        "uri": "/mfa",
+        "nom": "mfa.setup",
+        "controleur": "MfaController@setup",
+        "blades": [
+            "auth.mfa-setup"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "mfa",
+        "uri": "/mfa/challenge",
+        "nom": "mfa.challenge",
+        "controleur": "MfaController@challenge",
+        "blades": [
+            "auth.mfa-challenge"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "mon-mot-de-passe",
+        "uri": "/mon-mot-de-passe",
+        "nom": "password.edit",
+        "controleur": "PasswordController@edit",
+        "blades": [
+            "auth.password"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature",
+        "nom": "nomenclature.index",
+        "controleur": "NomenclatureController@index",
+        "blades": [
+            "nomenclature.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/assistant",
+        "nom": "nomenclature.assistant",
+        "controleur": "NomenclatureController@assistant",
+        "blades": [
+            "nomenclature.assistant"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/assistant/contexte",
+        "nom": "nomenclature.assistant.contexte",
+        "controleur": "NomenclatureController@contexte",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/assistant/verifier",
+        "nom": "nomenclature.assistant.verifier",
+        "controleur": "NomenclatureController@verifier",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/tableau-bord",
+        "nom": "nomenclature.tableau",
+        "controleur": "NomenclatureController@tableauBord",
+        "blades": [
+            "nomenclature.tableau"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/{niveau}/create",
+        "nom": "nomenclature.create",
+        "controleur": "NomenclatureController@create",
+        "blades": [
+            "nomenclature.form"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau"
+        ]
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/{niveau}/{id}",
+        "nom": "nomenclature.show",
+        "controleur": "NomenclatureController@show",
+        "blades": [
+            "nomenclature.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "id"
+        ]
+    },
+    {
+        "module": "nomenclature",
+        "uri": "/nomenclature/{niveau}/{id}/edit",
+        "nom": "nomenclature.edit",
+        "controleur": "NomenclatureController@edit",
+        "blades": [
+            "nomenclature.form"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "id"
+        ]
+    },
+    {
+        "module": "notifications",
+        "uri": "/notifications",
+        "nom": "notifications.index",
+        "controleur": "NotificationController@index",
+        "blades": [
+            "notifications.index"
+        ],
+        "droits": [
+            "notifications.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "notifications",
+        "uri": "/notifications/apercu",
+        "nom": "notifications.apercu",
+        "controleur": "NotificationController@apercu",
+        "blades": [],
+        "droits": [
+            "notifications.view"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "notifications",
+        "uri": "/notifications/{id}/ouvrir",
+        "nom": "notifications.ouvrir",
+        "controleur": "NotificationController@ouvrir",
+        "blades": [],
+        "droits": [
+            "notifications.view"
+        ],
+        "sortie": "redirection",
+        "parametres": [
+            "id"
+        ]
+    },
+    {
+        "module": "organigramme",
+        "uri": "/organigramme",
+        "nom": "organigramme",
+        "controleur": "OrganigrammeController@index",
+        "blades": [
+            "structures.organigramme"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "paps",
+        "uri": "/paps",
+        "nom": "paps.index",
+        "controleur": "PapController@index",
+        "blades": [
+            "paps.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/create",
+        "nom": "paps.create",
+        "controleur": "PapController@create",
+        "blades": [
+            "paps.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/export/liste",
+        "nom": "paps.export.liste",
+        "controleur": "PapExportController@liste",
+        "blades": [],
+        "droits": [
+            "viewAny",
+            "pap.modifier"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/pilotage",
+        "nom": "paps.dashboard",
+        "controleur": "PapDashboardController@index",
+        "blades": [
+            "paps.dashboard"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/{pap}",
+        "nom": "paps.show",
+        "controleur": "PapController@show",
+        "blades": [
+            "paps.show"
+        ],
+        "droits": [
+            "view",
+            "agir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "pap"
+        ]
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/{pap}/edit",
+        "nom": "paps.edit",
+        "controleur": "PapController@edit",
+        "blades": [
+            "paps.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "pap"
+        ]
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/{pap}/execution-financiere",
+        "nom": "paps.execution-financiere",
+        "controleur": "PapIntegrationController@executionFinanciere",
+        "blades": [
+            "paps.execution-financiere"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "pap"
+        ]
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/{pap}/historiques/{historique}/snapshot",
+        "nom": "paps.snapshot",
+        "controleur": "PapGarController@snapshot",
+        "blades": [
+            "paps.snapshot"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "pap",
+            "historique"
+        ]
+    },
+    {
+        "module": "paps",
+        "uri": "/paps/{pap}/pdf",
+        "nom": "paps.pdf",
+        "controleur": "PapController@pdf",
+        "blades": [
+            "paps.pdf.fiche"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "pap"
+        ]
+    },
+    {
+        "module": "partenaires",
+        "uri": "/partenaires",
+        "nom": "partenaires.index",
+        "controleur": "PartenaireFinancierController@index",
+        "blades": [
+            "referentiel.ptf.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "partenaires",
+        "uri": "/partenaires/create",
+        "nom": "partenaires.create",
+        "controleur": "PartenaireFinancierController@create",
+        "blades": [
+            "referentiel.ptf.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "partenaires",
+        "uri": "/partenaires/{partenaire}",
+        "nom": "partenaires.show",
+        "controleur": "PartenaireFinancierController@show",
+        "blades": [
+            "referentiel.ptf.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "partenaire"
+        ]
+    },
+    {
+        "module": "partenaires",
+        "uri": "/partenaires/{partenaire}/conventions/create",
+        "nom": "conventions.create",
+        "controleur": "ConventionFinancementController@create",
+        "blades": [
+            "referentiel.conventions.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "partenaire"
+        ]
+    },
+    {
+        "module": "partenaires",
+        "uri": "/partenaires/{partenaire}/edit",
+        "nom": "partenaires.edit",
+        "controleur": "PartenaireFinancierController@edit",
+        "blades": [
+            "referentiel.ptf.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "partenaire"
+        ]
+    },
+    {
+        "module": "permissions",
+        "uri": "/permissions",
+        "nom": "permissions.index",
+        "controleur": "PermissionController@index",
+        "blades": [
+            "permissions.index"
+        ],
+        "droits": [
+            "role.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "pieces",
+        "uri": "/pieces/{piece}/download",
+        "nom": "pieces.download",
+        "controleur": "PieceController@download",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": [
+            "piece"
+        ]
+    },
+    {
+        "module": "plans-apurement",
+        "uri": "/plans-apurement/{planApurement}",
+        "nom": "plans-apurement.show",
+        "controleur": "PlanApurementController@show",
+        "blades": [
+            "plans-apurement.show"
+        ],
+        "droits": [
+            "recette.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "planApurement"
+        ]
+    },
+    {
+        "module": "postes",
+        "uri": "/postes",
+        "nom": "postes.index",
+        "controleur": "PosteController@index",
+        "blades": [
+            "postes.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "postes",
+        "uri": "/postes/create",
+        "nom": "postes.create",
+        "controleur": "PosteController@create",
+        "blades": [
+            "postes.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "postes",
+        "uri": "/postes/{poste}/edit",
+        "nom": "postes.edit",
+        "controleur": "PosteController@edit",
+        "blades": [
+            "postes.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "poste"
+        ]
+    },
+    {
+        "module": "previsions-recettes",
+        "uri": "/previsions-recettes",
+        "nom": "previsions-recettes.index",
+        "controleur": "PrevisionRecetteController@index",
+        "blades": [
+            "recettes.previsions.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "previsions-recettes",
+        "uri": "/previsions-recettes/create",
+        "nom": "previsions-recettes.create",
+        "controleur": "PrevisionRecetteController@create",
+        "blades": [
+            "recettes.previsions.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "previsions-recettes",
+        "uri": "/previsions-recettes/{prevision}",
+        "nom": "previsions-recettes.show",
+        "controleur": "PrevisionRecetteController@show",
+        "blades": [
+            "recettes.previsions.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "prevision"
+        ]
+    },
+    {
+        "module": "previsions-recettes",
+        "uri": "/previsions-recettes/{prevision}/edit",
+        "nom": "previsions-recettes.edit",
+        "controleur": "PrevisionRecetteController@edit",
+        "blades": [
+            "recettes.previsions.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "prevision"
+        ]
+    },
+    {
+        "module": "profil",
+        "uri": "/profil/notifications",
+        "nom": "profil.notifications.edit",
+        "controleur": "ProfilNotificationController@edit",
+        "blades": [
+            "profil.notifications"
+        ],
+        "droits": [
+            "notifications.manage"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "profils",
+        "uri": "/profils",
+        "nom": "profils.index",
+        "controleur": "ProfilController@index",
+        "blades": [
+            "profils.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "profils",
+        "uri": "/profils/create",
+        "nom": "profils.create",
+        "controleur": "ProfilController@create",
+        "blades": [
+            "profils.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "profils",
+        "uri": "/profils/{profil}/edit",
+        "nom": "profils.edit",
+        "controleur": "ProfilController@edit",
+        "blades": [
+            "profils.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "profil"
+        ]
+    },
+    {
+        "module": "programmes",
+        "uri": "/programmes",
+        "nom": "programmes.index",
+        "controleur": "ProgrammeController@index",
+        "blades": [
+            "programmes.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "programmes",
+        "uri": "/programmes/create",
+        "nom": "programmes.create",
+        "controleur": "ProgrammeController@create",
+        "blades": [
+            "programmes.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "programmes",
+        "uri": "/programmes/{programme}/edit",
+        "nom": "programmes.edit",
+        "controleur": "ProgrammeController@edit",
+        "blades": [
+            "programmes.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programme"
+        ]
+    },
+    {
+        "module": "rapports",
+        "uri": "/rapports",
+        "nom": "rapports.index",
+        "controleur": "RapportController@index",
+        "blades": [],
+        "droits": [
+            "rapport.voir"
+        ],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "rapports",
+        "uri": "/rapports/execution/excel",
+        "nom": "rapports.execution.excel",
+        "controleur": "RapportController@executionBudgetaireExcel",
+        "blades": [],
+        "droits": [
+            "rapport.exporter"
+        ],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "rapports",
+        "uri": "/rapports/execution/pdf",
+        "nom": "rapports.execution.pdf",
+        "controleur": "RapportController@executionBudgetairePdf",
+        "blades": [],
+        "droits": [
+            "rapport.exporter"
+        ],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "rapports",
+        "uri": "/rapports/pap/pdf",
+        "nom": "rapports.pap.pdf",
+        "controleur": "RapportController@papPdf",
+        "blades": [],
+        "droits": [
+            "rapport.exporter"
+        ],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm",
+        "nom": "rbm.home",
+        "controleur": "Closure@__invoke",
+        "blades": [],
+        "droits": [],
+        "sortie": "closure",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/arbre/{exercice}",
+        "nom": "rbm.arbre",
+        "controleur": "RbmController@arbre",
+        "blades": [
+            "rbm.arbre"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/cadre-logique/{exercice}",
+        "nom": "rbm.cadre-logique",
+        "controleur": "RbmModuleController@cadreLogique",
+        "blades": [
+            "rbm.cadre-logique"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/cadre-logique/{exercice}/edit",
+        "nom": "rbm.cadre-logique.edit",
+        "controleur": "CadreLogiqueController@edit",
+        "blades": [
+            "rbm.cadre-logique-edit"
+        ],
+        "droits": [
+            "update",
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/catalogues/{catalogue}",
+        "nom": "rbm.catalogues.index",
+        "controleur": "RbmCatalogController@index",
+        "blades": [
+            "rbm.catalogues.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "catalogue"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/catalogues/{catalogue}/create",
+        "nom": "rbm.catalogues.create",
+        "controleur": "RbmCatalogController@create",
+        "blades": [
+            "rbm.catalogues.form"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "catalogue"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/catalogues/{catalogue}/{item}/edit",
+        "nom": "rbm.catalogues.edit",
+        "controleur": "RbmCatalogController@edit",
+        "blades": [
+            "rbm.catalogues.form"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "catalogue",
+            "item"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/chaine-resultats/{exercice}",
+        "nom": "rbm.chaine-resultats",
+        "controleur": "RbmModuleController@chaineResultats",
+        "blades": [
+            "rbm.chaine-resultats"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/export/archiver/{exercice}/{jeu}",
+        "nom": "rbm.export.archiver",
+        "controleur": "RbmExportController@archiver",
+        "blades": [],
+        "droits": [
+            "rbm.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "exercice",
+            "jeu"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/export/cadre-logique/{exercice}",
+        "nom": "rbm.export.cadre-logique",
+        "controleur": "RbmExportController@cadreLogique",
+        "blades": [],
+        "droits": [
+            "cadre_logique.voir"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/export/indicateurs/{exercice}",
+        "nom": "rbm.export.indicateurs",
+        "controleur": "RbmExportController@indicateurs",
+        "blades": [],
+        "droits": [
+            "indicateur.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/export/matrice/{exercice}",
+        "nom": "rbm.export.matrice",
+        "controleur": "RbmExportController@matrice",
+        "blades": [],
+        "droits": [
+            "rbm.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/export/{niveau}/{exercice}",
+        "nom": "rbm.export.niveau",
+        "controleur": "RbmExportController@niveau",
+        "blades": [],
+        "droits": [
+            "rbm.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "niveau",
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/ged/{type}/{id}",
+        "nom": "rbm.ged.show",
+        "controleur": "RbmGedController@show",
+        "blades": [
+            "rbm.ged"
+        ],
+        "droits": [
+            "ged.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type",
+            "id"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/historique/{exercice}",
+        "nom": "rbm.historique.index",
+        "controleur": "RbmHistoriqueController@index",
+        "blades": [
+            "rbm.historique.index"
+        ],
+        "droits": [
+            "audit.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/historique/{niveau}/{id}",
+        "nom": "rbm.historique.noeud",
+        "controleur": "RbmHistoriqueController@noeud",
+        "blades": [
+            "rbm.historique.noeud"
+        ],
+        "droits": [
+            "audit.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "id"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/hub",
+        "nom": "rbm.hub",
+        "controleur": "RbmModuleController@hub",
+        "blades": [
+            "rbm.hub"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/import",
+        "nom": "rbm.import.form",
+        "controleur": "RbmImportController@form",
+        "blades": [
+            "rbm.import"
+        ],
+        "droits": [
+            "rbm.importer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/import/modele",
+        "nom": "rbm.import.modele",
+        "controleur": "RbmImportController@modele",
+        "blades": [],
+        "droits": [
+            "rbm.importer"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/import/modele-indicateurs",
+        "nom": "rbm.import.modele-indicateurs",
+        "controleur": "RbmImportController@modeleIndicateurs",
+        "blades": [],
+        "droits": [
+            "rbm.importer"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/indicateurs/{indicateur}/edit",
+        "nom": "rbm.indicateurs.edit",
+        "controleur": "IndicateurController@edit",
+        "blades": [
+            "indicateurs.edit"
+        ],
+        "droits": [
+            "indicateur.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "indicateur"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/matrice/{exercice}",
+        "nom": "rbm.matrice",
+        "controleur": "RbmModuleController@matrice",
+        "blades": [
+            "rbm.matrice"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/archiver/{exercice}/{jeu}",
+        "nom": "rbm.pdf.archiver",
+        "controleur": "RbmPdfController@archiver",
+        "blades": [],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice",
+            "jeu"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/cadre-logique/{exercice}",
+        "nom": "rbm.pdf.cadre-logique",
+        "controleur": "RbmPdfController@cadreLogique",
+        "blades": [],
+        "droits": [
+            "cadre_logique.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/catalogue/{niveau}/{exercice}",
+        "nom": "rbm.pdf.catalogue",
+        "controleur": "RbmPdfController@catalogue",
+        "blades": [],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/indicateurs/{exercice}",
+        "nom": "rbm.pdf.indicateurs",
+        "controleur": "RbmPdfController@indicateurs",
+        "blades": [],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/matrice/{exercice}",
+        "nom": "rbm.pdf.matrice",
+        "controleur": "RbmPdfController@matrice",
+        "blades": [],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/pdf/theorie-changement/{exercice}",
+        "nom": "rbm.pdf.theorie-changement",
+        "controleur": "RbmPdfController@theorieChangement",
+        "blades": [],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/suivi-indicateurs",
+        "nom": "rbm.suivi-indicateurs.hub",
+        "controleur": "SuiviIndicateursController@hub",
+        "blades": [
+            "rbm.suivi-indicateurs.hub"
+        ],
+        "droits": [
+            "indicateur.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/synthese/{exercice}/pdf",
+        "nom": "rbm.synthese.pdf",
+        "controleur": "RbmModuleController@synthesePdf",
+        "blades": [
+            "rbm.pdf.synthese"
+        ],
+        "droits": [
+            "rbm.generer_pdf"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/theorie-changement/{exercice}",
+        "nom": "rbm.theorie-changement",
+        "controleur": "RbmModuleController@theorieChangement",
+        "blades": [
+            "rbm.theorie-changement"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "exercice"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/{niveau}/create",
+        "nom": "rbm.create",
+        "controleur": "RbmController@create",
+        "blades": [
+            "rbm.form"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "niveau"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/{niveau}/{id}/edit",
+        "nom": "rbm.edit",
+        "controleur": "RbmController@edit",
+        "blades": [
+            "rbm.form"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "id"
+        ]
+    },
+    {
+        "module": "rbm",
+        "uri": "/rbm/{niveau}/{id}/indicateurs",
+        "nom": "rbm.indicateurs.index",
+        "controleur": "IndicateurController@index",
+        "blades": [
+            "indicateurs.index"
+        ],
+        "droits": [
+            "indicateur.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "niveau",
+            "id"
+        ]
+    },
+    {
+        "module": "recettes",
+        "uri": "/recettes",
+        "nom": "recettes.index",
+        "controleur": "RecetteController@index",
+        "blades": [
+            "recettes.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "recettes",
+        "uri": "/recettes/{recette}",
+        "nom": "recettes.show",
+        "controleur": "RecetteController@show",
+        "blades": [
+            "recettes.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "recette"
+        ]
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports",
+        "nom": "recettes.rapports.index",
+        "controleur": "RecettesRapportController@index",
+        "blades": [
+            "recettes.rapports.index"
+        ],
+        "droits": [
+            "recette.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/arrieres.pdf",
+        "nom": "recettes.rapports.arrieres.pdf",
+        "controleur": "RecettesRapportController@arrieresPdf",
+        "blades": [
+            "recettes.pdf.arrieres"
+        ],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/arrieres.xlsx",
+        "nom": "recettes.rapports.arrieres.excel",
+        "controleur": "RecettesRapportController@arrieresExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/encaissements.csv",
+        "nom": "recettes.rapports.encaissements.csv",
+        "controleur": "RecettesRapportController@encaissementsCsv",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/encaissements.xlsx",
+        "nom": "recettes.rapports.encaissements.excel",
+        "controleur": "RecettesRapportController@encaissementsExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/mobilisation.csv",
+        "nom": "recettes.rapports.mobilisation.csv",
+        "controleur": "RecettesRapportController@mobilisationCsv",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/mobilisation.pdf",
+        "nom": "recettes.rapports.mobilisation.pdf",
+        "controleur": "RecettesRapportController@mobilisationPdf",
+        "blades": [
+            "recettes.pdf.mobilisation"
+        ],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/mobilisation.xlsx",
+        "nom": "recettes.rapports.mobilisation.excel",
+        "controleur": "RecettesRapportController@mobilisationExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/previsions.csv",
+        "nom": "recettes.rapports.previsions.csv",
+        "controleur": "RecettesRapportController@previsionsCsv",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/previsions.xlsx",
+        "nom": "recettes.rapports.previsions.excel",
+        "controleur": "RecettesRapportController@previsionsExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/rapport-financier.docx",
+        "nom": "recettes.rapports.financier.word",
+        "controleur": "RecettesRapportController@rapportFinancierWord",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/rapport-financier.pdf",
+        "nom": "recettes.rapports.financier.pdf",
+        "controleur": "RecettesRapportController@rapportFinancierPdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "recettes-rapports",
+        "uri": "/recettes-rapports/{cle}/archiver/{format}",
+        "nom": "recettes.rapports.archiver",
+        "controleur": "RecettesRapportController@archiver",
+        "blades": [],
+        "droits": [
+            "recette.exporter"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "cle",
+            "format"
+        ]
+    },
+    {
+        "module": "recommandations",
+        "uri": "/recommandations",
+        "nom": "recommandations.index",
+        "controleur": "RecommandationController@index",
+        "blades": [
+            "recommandations.index"
+        ],
+        "droits": [
+            "recommandation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "recommandations",
+        "uri": "/recommandations/create",
+        "nom": "recommandations.create",
+        "controleur": "RecommandationController@create",
+        "blades": [
+            "recommandations.form"
+        ],
+        "droits": [
+            "recommandation.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "recommandations",
+        "uri": "/recommandations/{recommandation}",
+        "nom": "recommandations.show",
+        "controleur": "RecommandationController@show",
+        "blades": [
+            "recommandations.show"
+        ],
+        "droits": [
+            "recommandation.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "recommandation"
+        ]
+    },
+    {
+        "module": "recommandations",
+        "uri": "/recommandations/{recommandation}/edit",
+        "nom": "recommandations.edit",
+        "controleur": "RecommandationController@edit",
+        "blades": [
+            "recommandations.form"
+        ],
+        "droits": [
+            "recommandation.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "recommandation"
+        ]
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier",
+        "nom": "referentiel.hub",
+        "controleur": "ReferentielFinancierController@hub",
+        "blades": [
+            "referentiel.hub"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/export/conventions",
+        "nom": "referentiel.export.conventions",
+        "controleur": "ReferentielFinancierExportController@conventionsExcel",
+        "blades": [],
+        "droits": [
+            "convention_financement.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/export/partenaires",
+        "nom": "referentiel.export.partenaires",
+        "controleur": "ReferentielFinancierExportController@partenairesExcel",
+        "blades": [],
+        "droits": [
+            "partenaire_financier.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/export/sources",
+        "nom": "referentiel.export.sources",
+        "controleur": "ReferentielFinancierExportController@sourcesExcel",
+        "blades": [],
+        "droits": [
+            "source_financement.exporter"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/export/{cle}/archiver",
+        "nom": "referentiel.export.archiver",
+        "controleur": "ReferentielFinancierExportController@archiverExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": [
+            "cle"
+        ]
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/pdf/ptf",
+        "nom": "referentiel.pdf.ptf",
+        "controleur": "ReferentielFinancierExportController@ptfPdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/pdf/sources",
+        "nom": "referentiel.pdf.sources",
+        "controleur": "ReferentielFinancierExportController@sourcesPdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/pdf/synthese",
+        "nom": "referentiel.pdf.synthese",
+        "controleur": "ReferentielFinancierExportController@synthesePdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "referentiel-financier",
+        "uri": "/referentiel-financier/pdf/{cle}/archiver",
+        "nom": "referentiel.pdf.archiver",
+        "controleur": "ReferentielFinancierExportController@archiverPdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "cle"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting",
+        "nom": "reporting.index",
+        "controleur": "ReportingController@index",
+        "blades": [
+            "reporting.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit",
+        "nom": "reporting.cockpit",
+        "controleur": "ReportingController@cockpit",
+        "blades": [
+            "reporting.cockpit"
+        ],
+        "droits": [
+            "reporting.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit/activites-retard/export/{format}",
+        "nom": "reporting.cockpit.retard.export",
+        "controleur": "ReportingController@activitesRetardExport",
+        "blades": [
+            "reporting.pdf.activites-retard"
+        ],
+        "droits": [
+            "reporting.view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit/activites/{activite}",
+        "nom": "reporting.cockpit.activite",
+        "controleur": "ReportingController@activiteDetail",
+        "blades": [
+            "reporting.activite-detail"
+        ],
+        "droits": [
+            "rbm.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "activite"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit/live/drilldown",
+        "nom": "reporting.cockpit.live.drilldown",
+        "controleur": "CockpitLiveController@drilldown",
+        "blades": [],
+        "droits": [],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit/live/ping",
+        "nom": "reporting.cockpit.live.ping",
+        "controleur": "CockpitLiveController@ping",
+        "blades": [],
+        "droits": [],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/cockpit/live/snapshot",
+        "nom": "reporting.cockpit.live.snapshot",
+        "controleur": "CockpitLiveController@snapshot",
+        "blades": [],
+        "droits": [],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/historique",
+        "nom": "reporting.historique",
+        "controleur": "ReportingController@historique",
+        "blades": [
+            "reporting.historique"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/modeles",
+        "nom": "reporting.modeles.index",
+        "controleur": "RapportPersonnaliseController@index",
+        "blades": [
+            "reporting.modeles.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/modeles/create",
+        "nom": "reporting.modeles.create",
+        "controleur": "RapportPersonnaliseController@create",
+        "blades": [
+            "reporting.modeles.form"
+        ],
+        "droits": [
+            "reporting.create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/modeles/{rapportPersonnalise}",
+        "nom": "reporting.modeles.show",
+        "controleur": "RapportPersonnaliseController@show",
+        "blades": [
+            "reporting.modeles.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "rapportPersonnalise"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/modeles/{rapportPersonnalise}/edit",
+        "nom": "reporting.modeles.edit",
+        "controleur": "RapportPersonnaliseController@edit",
+        "blades": [
+            "reporting.modeles.form"
+        ],
+        "droits": [
+            "reporting.create"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "rapportPersonnalise"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/modeles/{rapportPersonnalise}/generer",
+        "nom": "reporting.modeles.generer",
+        "controleur": "RapportPersonnaliseController@generer",
+        "blades": [],
+        "droits": [
+            "generate"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "rapportPersonnalise"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/planification",
+        "nom": "reporting.planification",
+        "controleur": "ReportingController@planification",
+        "blades": [
+            "reporting.planification"
+        ],
+        "droits": [
+            "viewAny",
+            "reporting.generate"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/rapports/{rapport}/telecharger",
+        "nom": "reporting.telecharger",
+        "controleur": "ReportingController@telecharger",
+        "blades": [],
+        "droits": [
+            "download"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "rapport"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/techniques",
+        "nom": "reporting.techniques",
+        "controleur": "ReportingTechniqueController@index",
+        "blades": [
+            "reporting.techniques.index"
+        ],
+        "droits": [
+            "viewAny",
+            "admin_technique.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/{type}",
+        "nom": "reporting.show",
+        "controleur": "ReportingController@show",
+        "blades": [
+            "reporting.show"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/{type}/generer",
+        "nom": "reporting.generer",
+        "controleur": "ReportingController@generer",
+        "blades": [],
+        "droits": [
+            "generate"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type"
+        ]
+    },
+    {
+        "module": "reporting",
+        "uri": "/reporting/{type}/generer-async",
+        "nom": "reporting.generer-async",
+        "controleur": "ReportingController@genererAsync",
+        "blades": [],
+        "droits": [
+            "generate"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "type"
+        ]
+    },
+    {
+        "module": "risques",
+        "uri": "/risques",
+        "nom": "risques.index",
+        "controleur": "RisqueController@index",
+        "blades": [
+            "risques.index"
+        ],
+        "droits": [
+            "risques.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "risques",
+        "uri": "/risques/cartographie",
+        "nom": "risques.cartographie",
+        "controleur": "RisqueController@cartographie",
+        "blades": [
+            "risques.cartographie"
+        ],
+        "droits": [
+            "risques.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "risques",
+        "uri": "/risques/create",
+        "nom": "risques.create",
+        "controleur": "RisqueController@create",
+        "blades": [
+            "risques.form"
+        ],
+        "droits": [
+            "risques.creer"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "risques",
+        "uri": "/risques/export/{format}",
+        "nom": "risques.export",
+        "controleur": "RisqueController@export",
+        "blades": [
+            "pdf.risques"
+        ],
+        "droits": [
+            "risques.exporter"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "risques",
+        "uri": "/risques/{risque}",
+        "nom": "risques.show",
+        "controleur": "RisqueController@show",
+        "blades": [
+            "risques.show"
+        ],
+        "droits": [
+            "risques.voir"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "risque"
+        ]
+    },
+    {
+        "module": "risques",
+        "uri": "/risques/{risque}/edit",
+        "nom": "risques.edit",
+        "controleur": "RisqueController@edit",
+        "blades": [
+            "risques.form"
+        ],
+        "droits": [
+            "risques.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "risque"
+        ]
+    },
+    {
+        "module": "roles",
+        "uri": "/roles",
+        "nom": "roles.index",
+        "controleur": "RoleController@index",
+        "blades": [
+            "roles.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "roles",
+        "uri": "/roles/create",
+        "nom": "roles.create",
+        "controleur": "RoleController@create",
+        "blades": [
+            "roles.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "roles",
+        "uri": "/roles/{role}/edit",
+        "nom": "roles.edit",
+        "controleur": "RoleController@edit",
+        "blades": [
+            "roles.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "role"
+        ]
+    },
+    {
+        "module": "sauvegardes",
+        "uri": "/sauvegardes",
+        "nom": "sauvegardes.index",
+        "controleur": "SauvegardeController@index",
+        "blades": [
+            "sauvegardes.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "sauvegardes",
+        "uri": "/sauvegardes/{backup}/telecharger",
+        "nom": "sauvegardes.telecharger",
+        "controleur": "SauvegardeController@telecharger",
+        "blades": [],
+        "droits": [
+            "admin_technique.backup"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "backup"
+        ]
+    },
+    {
+        "module": "sources",
+        "uri": "/sources",
+        "nom": "sources.index",
+        "controleur": "SourceFinancementController@index",
+        "blades": [
+            "referentiel.sources.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "sources",
+        "uri": "/sources/create",
+        "nom": "sources.create",
+        "controleur": "SourceFinancementController@create",
+        "blades": [
+            "referentiel.sources.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "sources",
+        "uri": "/sources/{source}",
+        "nom": "sources.show",
+        "controleur": "SourceFinancementController@show",
+        "blades": [
+            "referentiel.sources.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "source"
+        ]
+    },
+    {
+        "module": "sources",
+        "uri": "/sources/{source}/edit",
+        "nom": "sources.edit",
+        "controleur": "SourceFinancementController@edit",
+        "blades": [
+            "referentiel.sources.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "source"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie",
+        "nom": "strategie.home",
+        "controleur": "RedirectController@__invoke",
+        "blades": [],
+        "droits": [],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/aide",
+        "nom": "strategie.aide",
+        "controleur": "StrategieAideController@index",
+        "blades": [
+            "strategie.aide.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/aide/manuel.docx",
+        "nom": "strategie.aide.word",
+        "controleur": "StrategieAideController@word",
+        "blades": [],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/aide/manuel.pdf",
+        "nom": "strategie.aide.pdf",
+        "controleur": "StrategieAideController@pdf",
+        "blades": [],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/alignements",
+        "nom": "strategie.alignements.index",
+        "controleur": "AlignementStrategiqueController@index",
+        "blades": [
+            "strategie.alignements.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/alignements/create",
+        "nom": "strategie.alignements.create",
+        "controleur": "AlignementStrategiqueController@create",
+        "blades": [
+            "strategie.alignements.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/dashboard/decisionnel",
+        "nom": "strategie.dashboard.decisionnel",
+        "controleur": "StrategieDashboardController@decisionnel",
+        "blades": [
+            "strategie.dashboard.decisionnel"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/documents/{piece}/download",
+        "nom": "strategie.documents.download",
+        "controleur": "StrategieDocumentController@download",
+        "blades": [],
+        "droits": [
+            "strategie.view"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "piece"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/coherence.pdf",
+        "nom": "strategie.export.coherence.pdf",
+        "controleur": "StrategiePdfController@coherence",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/matrice.pdf",
+        "nom": "strategie.export.matrice.pdf",
+        "controleur": "StrategiePdfController@matrice",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/pilotage.pdf",
+        "nom": "strategie.export.pilotage.pdf",
+        "controleur": "StrategieDashboardController@pdf",
+        "blades": [
+            "strategie.pdf.pilotage"
+        ],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/synthese.pdf",
+        "nom": "strategie.export.pdf",
+        "controleur": "StrategiePdfController@synthese",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/{catalogue}.xlsx",
+        "nom": "strategie.export.excel",
+        "controleur": "StrategieExportController@excel",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "catalogue"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/{catalogue}/archiver.xlsx",
+        "nom": "strategie.export.archiver.excel",
+        "controleur": "StrategieExportController@archiver",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "catalogue"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/export/{rapport}/archiver.pdf",
+        "nom": "strategie.export.archiver.pdf",
+        "controleur": "StrategiePdfController@archiver",
+        "blades": [],
+        "droits": [
+            "strategie.export"
+        ],
+        "sortie": "fichier",
+        "parametres": [
+            "rapport"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/hub",
+        "nom": "strategie.hub",
+        "controleur": "StrategieModuleController@hub",
+        "blades": [
+            "strategie.hub"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/indicateurs",
+        "nom": "strategie.indicateurs.index",
+        "controleur": "IndicateurStrategiqueController@index",
+        "blades": [
+            "strategie.indicateurs.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/indicateurs/create",
+        "nom": "strategie.indicateurs.create",
+        "controleur": "IndicateurStrategiqueController@create",
+        "blades": [
+            "strategie.indicateurs.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/indicateurs/{indicateurStrategique}",
+        "nom": "strategie.indicateurs.show",
+        "controleur": "IndicateurStrategiqueController@show",
+        "blades": [
+            "strategie.indicateurs.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "indicateurStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/indicateurs/{indicateurStrategique}/edit",
+        "nom": "strategie.indicateurs.edit",
+        "controleur": "IndicateurStrategiqueController@edit",
+        "blades": [
+            "strategie.indicateurs.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "indicateurStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/matrice",
+        "nom": "strategie.matrice",
+        "controleur": "StrategieMatriceController@index",
+        "blades": [
+            "strategie.matrice.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/objectifs",
+        "nom": "strategie.objectifs.index",
+        "controleur": "ObjectifStrategiqueController@index",
+        "blades": [
+            "strategie.objectifs.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/objectifs/create",
+        "nom": "strategie.objectifs.create",
+        "controleur": "ObjectifStrategiqueController@create",
+        "blades": [
+            "strategie.objectifs.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/objectifs/{objectifStrategique}",
+        "nom": "strategie.objectifs.show",
+        "controleur": "ObjectifStrategiqueController@show",
+        "blades": [
+            "strategie.objectifs.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "objectifStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/objectifs/{objectifStrategique}/edit",
+        "nom": "strategie.objectifs.edit",
+        "controleur": "ObjectifStrategiqueController@edit",
+        "blades": [
+            "strategie.objectifs.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "objectifStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/orientations",
+        "nom": "strategie.orientations.index",
+        "controleur": "OrientationStrategiqueController@index",
+        "blades": [
+            "strategie.orientations.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/orientations/create",
+        "nom": "strategie.orientations.create",
+        "controleur": "OrientationStrategiqueController@create",
+        "blades": [
+            "strategie.orientations.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/orientations/{orientation}",
+        "nom": "strategie.orientations.show",
+        "controleur": "OrientationStrategiqueController@show",
+        "blades": [
+            "strategie.orientations.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "orientation"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/orientations/{orientation}/edit",
+        "nom": "strategie.orientations.edit",
+        "controleur": "OrientationStrategiqueController@edit",
+        "blades": [
+            "strategie.orientations.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "orientation"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/plans",
+        "nom": "strategie.plans.index",
+        "controleur": "PlanStrategiqueController@index",
+        "blades": [
+            "strategie.plans.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/plans/create",
+        "nom": "strategie.plans.create",
+        "controleur": "PlanStrategiqueController@create",
+        "blades": [
+            "strategie.plans.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/plans/{plan}",
+        "nom": "strategie.plans.show",
+        "controleur": "PlanStrategiqueController@show",
+        "blades": [
+            "strategie.plans.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "plan"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/plans/{plan}/edit",
+        "nom": "strategie.plans.edit",
+        "controleur": "PlanStrategiqueController@edit",
+        "blades": [
+            "strategie.plans.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "plan"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/pont-pap",
+        "nom": "strategie.pont-pap",
+        "controleur": "StrategiePontPapController@index",
+        "blades": [
+            "strategie.pont-pap.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/pont-rbm",
+        "nom": "strategie.pont-rbm",
+        "controleur": "StrategiePontRbmController@index",
+        "blades": [
+            "strategie.pont-rbm.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/portefeuilles",
+        "nom": "strategie.portefeuilles.index",
+        "controleur": "PortefeuilleProjetController@index",
+        "blades": [
+            "strategie.portefeuilles.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/portefeuilles/create",
+        "nom": "strategie.portefeuilles.create",
+        "controleur": "PortefeuilleProjetController@create",
+        "blades": [
+            "strategie.portefeuilles.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/portefeuilles/{portefeuille}",
+        "nom": "strategie.portefeuilles.show",
+        "controleur": "PortefeuilleProjetController@show",
+        "blades": [
+            "strategie.portefeuilles.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "portefeuille"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/portefeuilles/{portefeuille}/edit",
+        "nom": "strategie.portefeuilles.edit",
+        "controleur": "PortefeuilleProjetController@edit",
+        "blades": [
+            "strategie.portefeuilles.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "portefeuille"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-annuelles",
+        "nom": "strategie.programmations-annuelles.index",
+        "controleur": "ProgrammationAnnuelleController@index",
+        "blades": [
+            "strategie.programmations-annuelles.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-annuelles/create",
+        "nom": "strategie.programmations-annuelles.create",
+        "controleur": "ProgrammationAnnuelleController@create",
+        "blades": [
+            "strategie.programmations-annuelles.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-annuelles/{programmationAnnuelle}",
+        "nom": "strategie.programmations-annuelles.show",
+        "controleur": "ProgrammationAnnuelleController@show",
+        "blades": [
+            "strategie.programmations-annuelles.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmationAnnuelle"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-annuelles/{programmationAnnuelle}/edit",
+        "nom": "strategie.programmations-annuelles.edit",
+        "controleur": "ProgrammationAnnuelleController@edit",
+        "blades": [
+            "strategie.programmations-annuelles.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmationAnnuelle"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-pluri",
+        "nom": "strategie.programmations-pluri.index",
+        "controleur": "ProgrammationPluriannuelleController@index",
+        "blades": [
+            "strategie.programmations-pluri.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-pluri/create",
+        "nom": "strategie.programmations-pluri.create",
+        "controleur": "ProgrammationPluriannuelleController@create",
+        "blades": [
+            "strategie.programmations-pluri.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-pluri/{programmationPluriannuelle}",
+        "nom": "strategie.programmations-pluri.show",
+        "controleur": "ProgrammationPluriannuelleController@show",
+        "blades": [
+            "strategie.programmations-pluri.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmationPluriannuelle"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmations-pluri/{programmationPluriannuelle}/edit",
+        "nom": "strategie.programmations-pluri.edit",
+        "controleur": "ProgrammationPluriannuelleController@edit",
+        "blades": [
+            "strategie.programmations-pluri.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmationPluriannuelle"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmes",
+        "nom": "strategie.programmes.index",
+        "controleur": "ProgrammeStrategiqueController@index",
+        "blades": [
+            "strategie.programmes.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmes/create",
+        "nom": "strategie.programmes.create",
+        "controleur": "ProgrammeStrategiqueController@create",
+        "blades": [
+            "strategie.programmes.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmes/{programmeStrategique}",
+        "nom": "strategie.programmes.show",
+        "controleur": "ProgrammeStrategiqueController@show",
+        "blades": [
+            "strategie.programmes.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmeStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/programmes/{programmeStrategique}/edit",
+        "nom": "strategie.programmes.edit",
+        "controleur": "ProgrammeStrategiqueController@edit",
+        "blades": [
+            "strategie.programmes.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "programmeStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/projets",
+        "nom": "strategie.projets.index",
+        "controleur": "ProjetStrategiqueController@index",
+        "blades": [
+            "strategie.projets.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/projets/create",
+        "nom": "strategie.projets.create",
+        "controleur": "ProjetStrategiqueController@create",
+        "blades": [
+            "strategie.projets.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/projets/{projet}",
+        "nom": "strategie.projets.show",
+        "controleur": "ProjetStrategiqueController@show",
+        "blades": [
+            "strategie.projets.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "projet"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/projets/{projet}/edit",
+        "nom": "strategie.projets.edit",
+        "controleur": "ProjetStrategiqueController@edit",
+        "blades": [
+            "strategie.projets.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "projet"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/rapport/coherence",
+        "nom": "strategie.rapport.coherence",
+        "controleur": "StrategieRapportController@coherence",
+        "blades": [
+            "strategie.rapport.coherence"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/risques",
+        "nom": "strategie.risques.index",
+        "controleur": "RisqueStrategiqueController@index",
+        "blades": [
+            "strategie.risques.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/risques/create",
+        "nom": "strategie.risques.create",
+        "controleur": "RisqueStrategiqueController@create",
+        "blades": [
+            "strategie.risques.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/risques/{risqueStrategique}",
+        "nom": "strategie.risques.show",
+        "controleur": "RisqueStrategiqueController@show",
+        "blades": [
+            "strategie.risques.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "risqueStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/risques/{risqueStrategique}/edit",
+        "nom": "strategie.risques.edit",
+        "controleur": "RisqueStrategiqueController@edit",
+        "blades": [
+            "strategie.risques.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "risqueStrategique"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/visions",
+        "nom": "strategie.visions.index",
+        "controleur": "VisionController@index",
+        "blades": [
+            "strategie.visions.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/visions/create",
+        "nom": "strategie.visions.create",
+        "controleur": "VisionController@create",
+        "blades": [
+            "strategie.visions.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/visions/{vision}",
+        "nom": "strategie.visions.show",
+        "controleur": "VisionController@show",
+        "blades": [
+            "strategie.visions.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "vision"
+        ]
+    },
+    {
+        "module": "strategie",
+        "uri": "/strategie/visions/{vision}/edit",
+        "nom": "strategie.visions.edit",
+        "controleur": "VisionController@edit",
+        "blades": [
+            "strategie.visions.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "vision"
+        ]
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget",
+        "nom": "structure-budget.arbre",
+        "controleur": "StructureBudgetController@arbre",
+        "blades": [
+            "structure-budget.arbre"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/arbre-complet",
+        "nom": "structure-budget.arbre-complet",
+        "controleur": "StructureBudgetController@arbreComplet",
+        "blades": [
+            "structure-budget.arbre-complet"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/assistant",
+        "nom": "structure-budget.assistant",
+        "controleur": "StructureBudgetController@assistant",
+        "blades": [],
+        "droits": [],
+        "sortie": "redirection",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/assistant/activites",
+        "nom": "structure-budget.assistant.activites",
+        "controleur": "StructureBudgetController@activitesDeStructure",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/export",
+        "nom": "structure-budget.export",
+        "controleur": "StructureBudgetImportExportController@export",
+        "blades": [],
+        "droits": [
+            "export"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/import-export",
+        "nom": "structure-budget.import-export",
+        "controleur": "StructureBudgetImportExportController@hub",
+        "blades": [
+            "structure-budget.import-export"
+        ],
+        "droits": [
+            "viewAny",
+            "structure_budget.importer",
+            "structure_budget.creer",
+            "structure_budget.exporter"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/import/modele",
+        "nom": "structure-budget.import.modele",
+        "controleur": "StructureBudgetImportExportController@modele",
+        "blades": [],
+        "droits": [
+            "import"
+        ],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/journal",
+        "nom": "structure-budget.journal",
+        "controleur": "StructureBudgetController@journal",
+        "blades": [
+            "structure-budget.journal.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/lignes/{ligne}",
+        "nom": "structure-budget.ligne.show",
+        "controleur": "StructureBudgetController@showLigne",
+        "blades": [
+            "structure-budget.ligne.show"
+        ],
+        "droits": [
+            "structureBudget.viewLigne"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "ligne"
+        ]
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/lignes/{ligne}/edit",
+        "nom": "structure-budget.ligne.edit",
+        "controleur": "StructureBudgetController@editLigne",
+        "blades": [
+            "structure-budget.ligne.edit"
+        ],
+        "droits": [
+            "structureBudget.updateLigne"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "ligne"
+        ]
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/recherche",
+        "nom": "structure-budget.recherche",
+        "controleur": "StructureBudgetController@recherche",
+        "blades": [
+            "structure-budget.recherche"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/structure/{structure}",
+        "nom": "structure-budget.structure",
+        "controleur": "StructureBudgetController@structure",
+        "blades": [
+            "structure-budget.structure"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "structure"
+        ]
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/tableau-bord",
+        "nom": "structure-budget.tableau",
+        "controleur": "StructureBudgetController@tableauBord",
+        "blades": [
+            "structure-budget.tableau"
+        ],
+        "droits": [
+            "viewAny",
+            "structure_budget.modifier"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/wizard",
+        "nom": "structure-budget.wizard",
+        "controleur": "StructureBudgetController@wizard",
+        "blades": [
+            "structure-budget.wizard"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/wizard/activites",
+        "nom": "structure-budget.wizard.activites",
+        "controleur": "StructureBudgetController@wizardActivites",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/wizard/contexte",
+        "nom": "structure-budget.wizard.contexte",
+        "controleur": "StructureBudgetController@wizardContexte",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/wizard/rubrique/{rubrique}",
+        "nom": "structure-budget.wizard.rubrique",
+        "controleur": "StructureBudgetController@wizardRubrique",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": [
+            "rubrique"
+        ]
+    },
+    {
+        "module": "structure-budget",
+        "uri": "/structure-budget/wizard/verifier",
+        "nom": "structure-budget.wizard.verifier",
+        "controleur": "StructureBudgetController@wizardVerifier",
+        "blades": [],
+        "droits": [
+            "create"
+        ],
+        "sortie": "json",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures",
+        "nom": "structures.index",
+        "controleur": "StructureController@index",
+        "blades": [
+            "structures.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/create",
+        "nom": "structures.create",
+        "controleur": "StructureController@create",
+        "blades": [
+            "structures.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/export/annuaire.pdf",
+        "nom": "structure.exporter.annuaire.pdf",
+        "controleur": "InstitutionExportController@annuairePdf",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/export/annuaire.xlsx",
+        "nom": "structure.exporter.annuaire.excel",
+        "controleur": "InstitutionExportController@annuaireExcel",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/export/annuaire/{format}/archiver",
+        "nom": "structure.exporter.annuaire.archiver",
+        "controleur": "InstitutionExportController@archiver",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": [
+            "format"
+        ]
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/import/modele.xlsx",
+        "nom": "structure.importer.modele",
+        "controleur": "InstitutionImportController@modeleStructures",
+        "blades": [],
+        "droits": [],
+        "sortie": "fichier",
+        "parametres": []
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/{structure}",
+        "nom": "structures.show",
+        "controleur": "StructureController@show",
+        "blades": [
+            "structures.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "structure"
+        ]
+    },
+    {
+        "module": "structures",
+        "uri": "/structures/{structure}/edit",
+        "nom": "structures.edit",
+        "controleur": "StructureController@edit",
+        "blades": [
+            "structures.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "structure"
+        ]
+    },
+    {
+        "module": "suivi",
+        "uri": "/suivi",
+        "nom": "suivi.index",
+        "controleur": "CampagneSuiviController@index",
+        "blades": [
+            "suivi.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi",
+        "uri": "/suivi/create",
+        "nom": "suivi.create",
+        "controleur": "CampagneSuiviController@create",
+        "blades": [
+            "suivi.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi",
+        "uri": "/suivi/{campagne}/export/collectes/{format}",
+        "nom": "suivi.export.collectes",
+        "controleur": "SuiviExportController@collectes",
+        "blades": [],
+        "droits": [
+            "export"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "campagne",
+            "format"
+        ]
+    },
+    {
+        "module": "suivi",
+        "uri": "/suivi/{campagne}/export/collectes/{format}/archiver",
+        "nom": "suivi.export.collectes.archiver",
+        "controleur": "SuiviExportController@archiver",
+        "blades": [],
+        "droits": [
+            "export"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "campagne",
+            "format"
+        ]
+    },
+    {
+        "module": "suivi",
+        "uri": "/suivi/{suivi}",
+        "nom": "suivi.show",
+        "controleur": "CampagneSuiviController@show",
+        "blades": [
+            "suivi.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "suivi"
+        ]
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation",
+        "nom": "suivi-evaluation.index",
+        "controleur": "SuiviEvaluationController@index",
+        "blades": [
+            "suivi-evaluation.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/evaluations/{evaluation}",
+        "nom": "suivi-evaluation.evaluations.show",
+        "controleur": "SuiviEvaluationController@showEvaluation",
+        "blades": [
+            "suivi-evaluation.evaluations.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "evaluation"
+        ]
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/missions",
+        "nom": "suivi-evaluation.missions.index",
+        "controleur": "MissionSuiviController@index",
+        "blades": [
+            "suivi-evaluation.missions.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/missions/create",
+        "nom": "suivi-evaluation.missions.create",
+        "controleur": "MissionSuiviController@create",
+        "blades": [
+            "suivi-evaluation.missions.form"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/missions/{mission}",
+        "nom": "suivi-evaluation.missions.show",
+        "controleur": "MissionSuiviController@show",
+        "blades": [
+            "suivi-evaluation.missions.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "mission"
+        ]
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/plans",
+        "nom": "suivi-evaluation.plans.index",
+        "controleur": "PlanAmeliorationController@index",
+        "blades": [
+            "suivi-evaluation.plans.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/plans/create",
+        "nom": "suivi-evaluation.plans.create",
+        "controleur": "PlanAmeliorationController@create",
+        "blades": [
+            "suivi-evaluation.plans.form"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-evaluation",
+        "uri": "/suivi-evaluation/plans/{plan}",
+        "nom": "suivi-evaluation.plans.show",
+        "controleur": "PlanAmeliorationController@show",
+        "blades": [
+            "suivi-evaluation.plans.show"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "plan"
+        ]
+    },
+    {
+        "module": "suivi-financier",
+        "uri": "/suivi-financier",
+        "nom": "suivi-financier.index",
+        "controleur": "SuiviFinancierController@index",
+        "blades": [
+            "suivi-financier.index"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "suivi-financier",
+        "uri": "/suivi-financier/anomalies",
+        "nom": "suivi-financier.anomalies",
+        "controleur": "SuiviFinancierController@anomalies",
+        "blades": [
+            "suivi-financier.anomalies"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "tableaux-bord",
+        "uri": "/tableaux-bord",
+        "nom": "tableaux.index",
+        "controleur": "TableauBordController@index",
+        "blades": [
+            "tableaux.index"
+        ],
+        "droits": [
+            "tableau_bord.voir",
+            "recette.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "tableaux-bord",
+        "uri": "/tableaux-bord/tresorerie",
+        "nom": "tableaux.tresorerie",
+        "controleur": "TableauBordController@tresorerie",
+        "blades": [
+            "tableaux.tresorerie"
+        ],
+        "droits": [
+            "tableau_bord.voir"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "utilisateurs",
+        "uri": "/utilisateurs",
+        "nom": "utilisateurs.index",
+        "controleur": "UserController@index",
+        "blades": [
+            "utilisateurs.index"
+        ],
+        "droits": [
+            "viewAny"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "utilisateurs",
+        "uri": "/utilisateurs/create",
+        "nom": "utilisateurs.create",
+        "controleur": "UserController@create",
+        "blades": [
+            "utilisateurs.create"
+        ],
+        "droits": [
+            "create"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "utilisateurs",
+        "uri": "/utilisateurs/{utilisateur}",
+        "nom": "utilisateurs.show",
+        "controleur": "UserController@show",
+        "blades": [
+            "utilisateurs.show"
+        ],
+        "droits": [
+            "view"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "utilisateur"
+        ]
+    },
+    {
+        "module": "utilisateurs",
+        "uri": "/utilisateurs/{utilisateur}/edit",
+        "nom": "utilisateurs.edit",
+        "controleur": "UserController@edit",
+        "blades": [
+            "utilisateurs.edit"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "utilisateur"
+        ]
+    },
+    {
+        "module": "utilisateurs",
+        "uri": "/utilisateurs/{utilisateur}/perimetres",
+        "nom": "utilisateurs.scopes.edit",
+        "controleur": "UserController@editScopes",
+        "blades": [
+            "utilisateurs.scopes"
+        ],
+        "droits": [
+            "update"
+        ],
+        "sortie": "vue",
+        "parametres": [
+            "utilisateur"
+        ]
+    },
+    {
+        "module": "verifier",
+        "uri": "/verifier/ged/{uuid}",
+        "nom": "verification.ged",
+        "controleur": "GedAdminController@verifier",
+        "blades": [
+            "ged.signatures.verifier"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "uuid"
+        ]
+    },
+    {
+        "module": "verifier",
+        "uri": "/verifier/rapport/{token}",
+        "nom": "verification.rapport",
+        "controleur": "VerificationController@show",
+        "blades": [
+            "reporting.verification"
+        ],
+        "droits": [],
+        "sortie": "vue",
+        "parametres": [
+            "token"
+        ]
+    },
+    {
+        "module": "workflow",
+        "uri": "/workflow/audit",
+        "nom": "workflow.audit",
+        "controleur": "WorkflowAuditController@index",
+        "blades": [
+            "workflow.audit.index"
+        ],
+        "droits": [
+            "workflow.audit"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "workflow",
+        "uri": "/workflow/dashboard",
+        "nom": "workflow.dashboard",
+        "controleur": "WorkflowDashboardController@index",
+        "blades": [
+            "workflow.dashboard.index"
+        ],
+        "droits": [
+            "workflow.view"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "workflow",
+        "uri": "/workflow/dashboard/export",
+        "nom": "workflow.dashboard.export",
+        "controleur": "WorkflowDashboardController@export",
+        "blades": [],
+        "droits": [
+            "workflow.audit"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    },
+    {
+        "module": "workflow",
+        "uri": "/workflow/validations",
+        "nom": "workflow.validations",
+        "controleur": "WorkflowCorbeilleController@index",
+        "blades": [
+            "workflow.validations.index"
+        ],
+        "droits": [
+            "workflow.validate"
+        ],
+        "sortie": "vue",
+        "parametres": []
+    }
+]

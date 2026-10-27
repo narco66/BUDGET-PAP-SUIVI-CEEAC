@@ -24,8 +24,26 @@ return new class extends Migration
             }
         });
 
-        if (Schema::getConnection()->getDriverName() === 'mysql') {
-            DB::statement("ALTER TABLE expressions_besoin MODIFY statut ENUM('brouillon','soumis','valide','rejete','converti','a_corriger') NOT NULL DEFAULT 'brouillon'");
+        $this->elargirStatutBesoin([
+            'brouillon', 'soumis', 'valide', 'rejete', 'converti', 'a_corriger',
+        ]);
+    }
+
+    /** @param list<string> $valeurs */
+    private function elargirStatutBesoin(array $valeurs): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        $liste = implode(',', array_map(fn (string $v) => "'{$v}'", $valeurs));
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE expressions_besoin MODIFY statut ENUM({$liste}) NOT NULL DEFAULT 'brouillon'");
+
+            return;
+        }
+
+        if ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE expressions_besoin DROP CONSTRAINT IF EXISTS expressions_besoin_statut_check');
+            DB::statement("ALTER TABLE expressions_besoin ADD CONSTRAINT expressions_besoin_statut_check CHECK (statut::text = ANY (ARRAY[{$liste}]::text[]))");
         }
     }
 

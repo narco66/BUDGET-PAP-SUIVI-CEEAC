@@ -1,0 +1,29 @@
+{
+    "calcule_le": "2026-10-25T18:29:53+00:00",
+    "totaux": {
+        "montant_engage": {
+            "stocke": 68311725,
+            "recalcule": 68311725
+        },
+        "montant_liquide": {
+            "stocke": 51466725,
+            "recalcule": 51466725
+        },
+        "montant_ordonnance": {
+            "stocke": 41431725,
+            "recalcule": 41431725
+        },
+        "montant_paye": {
+            "stocke": 28581725,
+            "recalcule": 28581725
+        }
+    },
+    "ecarts_lignes": [],
+    "chaine": [
+        {
+            "type": "ENG",
+            "ref": "ENG-2026-0013",
+            "constat": "réservations actives 2000000 ≠ imputations 1200000"
+        }
+    ]
+}

@@ -48,6 +48,24 @@ class OpenApiP3Test extends TestCase
         $this->actingAs($admin)->get(route('api.openapi.v1'))->assertOk()->assertJsonPath('info.version', '1.0.0');
     }
 
+    public function test_api_docs_interdit_et_spec(): void
+    {
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = User::factory()->create(['actif' => true])->assignRole('administrateur');
+
+        $this->actingAs($chef)
+            ->getJson(route('api.interoperabilite.docs'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->getJson(route('api.interoperabilite.docs'))
+            ->assertOk()
+            ->assertJsonPath('info.version', '1.0.0')
+            ->assertJsonPath('openapi', '3.0.3')
+            ->assertJsonMissingPath('client_secret')
+            ->assertJsonMissingPath('secret');
+    }
+
     public function test_seeder_documentation(): void
     {
         $this->assertNotNull(ApiDocumentation::where('version', '1.0.0')->first());

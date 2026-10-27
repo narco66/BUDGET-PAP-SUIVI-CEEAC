@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Interim extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'structure_id', 'titulaire_user_id', 'interim_user_id',
         'date_debut', 'date_fin', 'motif', 'actif', 'cree_par',

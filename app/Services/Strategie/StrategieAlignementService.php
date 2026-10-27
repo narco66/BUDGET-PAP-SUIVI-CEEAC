@@ -13,6 +13,9 @@ use Illuminate\Support\Collection;
 
 class StrategieAlignementService
 {
+    /** Synthèse mémorisée (service « scoped » : une instance par requête) — elle était recalculée 3 fois par tableau de bord. */
+    private ?array $synthese = null;
+
     /** @return Collection<int, array<string, mixed>> */
     public function matriceAlignement(?int $planStrategiqueId = null): Collection
     {
@@ -96,6 +99,12 @@ class StrategieAlignementService
     /** @return array<string, mixed> */
     public function syntheseAlignement(): array
     {
+        return $this->synthese ??= $this->calculerSynthese();
+    }
+
+    /** @return array<string, mixed> */
+    private function calculerSynthese(): array
+    {
         $totalProgrammes = ProgrammeStrategique::count();
         $programmesOrientes = ProgrammeStrategique::whereHas('orientationStrategique')->count();
         $projets = ProjetStrategique::count();
@@ -115,6 +124,11 @@ class StrategieAlignementService
         return [
             'alignements_enregistres' => $alignements,
             'taux_matrice' => $tauxMatrice,
+            'lignes_matrice' => $lignes->count(),
+            'programmes' => $totalProgrammes,
+            'projets' => $projets,
+            'piliers' => $piliers,
+            'activites' => $activites,
             'programmes_orientes_pct' => $totalProgrammes > 0 ? round($programmesOrientes / $totalProgrammes * 100, 1) : 0,
             'projets_pilier_pct' => $projets > 0 ? round($projetsAvecPilier / $projets * 100, 1) : 0,
             'piliers_orientes_pct' => $piliers > 0 ? round($piliersOrientes / $piliers * 100, 1) : 0,

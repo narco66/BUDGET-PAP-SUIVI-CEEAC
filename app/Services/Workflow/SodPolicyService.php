@@ -55,12 +55,46 @@ class SodPolicyService
             ->assertVisa($user, $etape, $objet);
     }
 
+    /**
+     * Mêmes règles que assertValidationAllowed(), sans journaliser : sert à calculer les files de travail
+     * (« Mes Tâches ») sans enregistrer de fausses violations. Renvoie le motif de refus, ou null.
+     */
+    public function motifRefus(WorkflowInstance $instance, User $user, WorkflowInstanceEtape $etape): ?string
+    {
+        if (! config('workflow.sod.enabled', true) || $user->estAdministrateur()) {
+            return null;
+        }
+
+        if ($etape->ordre > 1) {
+            $precedente = $instance->etapes()->where('ordre', $etape->ordre - 1)->where('statut', 'valide')->latest('decision_le')->first();
+            if ($precedente && (int) $precedente->acteur_id === (int) $user->id) {
+                return 'Séparation des fonctions : vous avez déjà validé l\'étape précédente.';
+            }
+        }
+
+        if (config('workflow.sod.creator_cannot_validate', true)) {
+            $initiateur = $this->resolveInitiateur($instance);
+            if ($initiateur && $initiateur === (int) $user->id) {
+                return 'Séparation des fonctions : vous êtes l\'initiateur du dossier.';
+            }
+        }
+
+        try {
+            $objet = $instance->relationLoaded('objet') ? $instance->objet : $instance->objet()->first();
+            app(\App\Services\Depense\DirecteurBudgetHabilitationService::class)->assertVisa($user, $etape, $objet);
+        } catch (RuntimeException $e) {
+            return $e->getMessage();
+        }
+
+        return null;
+    }
+
     public function resolveInitiateur(WorkflowInstance $instance): ?int
     {
         $objet = $instance->relationLoaded('objet') ? $instance->objet : $instance->objet()->first();
 
         if ($objet instanceof Model) {
-            foreach (['cree_par', 'created_by', 'demandeur_id'] as $attr) {
+            foreach (['cree_par', 'created_by', 'demandeur_id', 'saisi_par'] as $attr) {
                 $val = $objet->getAttribute($attr);
                 if ($val) {
                     return (int) $val;

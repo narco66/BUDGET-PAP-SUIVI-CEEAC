@@ -24,6 +24,9 @@ export default defineConfig({
         tailwindcss(),
     ],
     server: {
+        // IPv4 explicite : sous Windows, « localhost » se résout en [::1], adresse qu'une politique CSP
+        // ne peut pas autoriser — les pages perdaient alors ceeac.css (fond bleu, menu).
+        host: '127.0.0.1',
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

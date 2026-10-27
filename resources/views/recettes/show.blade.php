@@ -41,7 +41,7 @@
 
         @can('update', $recette)
         <div class="card border-0 shadow-sm mt-3">
-            <div class="card-header bg-white fw-bold"><i class="bi bi-diagram-3 me-1"></i>Ventilation budgétaire</div>
+            <div class="card-header bg-white fw-bold" id="ventilation"><i class="bi bi-diagram-3 me-1"></i>Ventilation budgétaire</div>
             <div class="card-body">
                 @unless ($recette->rubrique_id)
                     <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle me-1"></i>Recette non ventilée : la rubrique est obligatoire avant toute comptabilisation d'encaissement.</div>

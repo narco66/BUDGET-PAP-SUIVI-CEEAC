@@ -18,7 +18,7 @@ class Tache extends Model
     protected $table = 'taches';
 
     protected $fillable = [
-        'activite_id', 'responsable_user_id', 'code', 'intitule',
+        'activite_id', 'expression_besoin_id', 'responsable_user_id', 'code', 'intitule',
         'date_debut', 'date_fin', 'montant', 'taux_realisation', 'statut', 'ordre',
         'statut_referentiel', 'created_by', 'updated_by',
     ];

@@ -22,6 +22,11 @@ class NotificationsAlertesSeeder extends Seeder
             ['workflow.etape_en_attente', 'workflow', 'Validation workflow en attente', NotificationCriticite::ATTENTION],
             ['workflow.relance_sla', 'workflow', 'Relance SLA workflow', NotificationCriticite::AVERTISSEMENT],
             ['workflow.decision', 'workflow', 'Décision workflow (validation/rejet)', NotificationCriticite::INFORMATION],
+            ['workflow.escalade', 'workflow', 'Escalade hiérarchique d’un retard', NotificationCriticite::AVERTISSEMENT],
+            ['workflow.reaffectation', 'workflow', 'Tâche réaffectée', NotificationCriticite::ATTENTION],
+            ['depense.liquidation_generee', 'depense', 'Liquidation générée au visa de l’engagement', NotificationCriticite::ATTENTION],
+            ['depense.paiement_a_preparer', 'depense', 'Paiement à préparer (ordonnancement signé)', NotificationCriticite::ATTENTION],
+            ['depense.engagement_non_soumis', 'depense', 'Engagement non soumis automatiquement', NotificationCriticite::AVERTISSEMENT],
             ['pap.soumission', 'pap', 'PAP soumis à validation', NotificationCriticite::ATTENTION],
             ['pap.decision', 'pap', 'Décision sur le PAP', NotificationCriticite::INFORMATION],
             ['pap.publication', 'pap', 'PAP publié', NotificationCriticite::INFORMATION],
@@ -157,6 +162,8 @@ class NotificationsAlertesSeeder extends Seeder
         $matrix = [
             'alerte.institutionnelle' => ['database', 'email', 'sms'],
             'ged.acces_critique' => ['database', 'email', 'sms'],
+            'workflow.etape_en_attente' => ['database', 'email'],
+
             'workflow.relance_sla' => ['database', 'email'],
             'recettes.relance' => ['database', 'email'],
             'depense.besoin_soumis' => ['database', 'email'],

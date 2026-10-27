@@ -10,7 +10,7 @@
 
 <p>Généré le {{ now()->format('d/m/Y H:i') }}@if($rapport['plan_id']) · Plan filtré @endif</p>
 
-<p class="score">Score global : {{ $rapport['score_global'] }}%</p>
+<p class="score">Score global : @if($rapport['score_evaluable'] ?? true){{ number_format($rapport['score_global'], 1, ',', ' ') }} %@else non évaluable (aucun élément à contrôler)@endif</p>
 
 <ul>
 

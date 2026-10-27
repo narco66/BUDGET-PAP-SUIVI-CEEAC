@@ -30,7 +30,7 @@
 
     <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body py-3 text-center">
 
-        <div class="text-muted small">Score global</div><div class="fs-3 fw-bold text-primary">{{ $rapport['score_global'] }}%</div>
+        <div class="text-muted small">Score global</div><div class="fs-3 fw-bold text-primary">@if($rapport['score_evaluable'] ?? true){{ number_format($rapport['score_global'], 1, ',', ' ') }} %@else<span class="text-muted fs-5" title="Aucun objectif, indicateur, risque ni ligne de matrice à contrôler">non évaluable</span>@endif</div>
 
     </div></div></div>
 

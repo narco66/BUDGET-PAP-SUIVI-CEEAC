@@ -30,6 +30,8 @@ PHPUnit : `DepenseTest`, D0–D5, `DepenseSpaApiTest`, `DepenseAvalSpaApiTest`, 
 - 24/10/2026 — QR SPA, dossier unifié, consolidation D1, visa RIB indépendant ; filtre chaîne → **74 passed**.
 - 24/10/2026 — Marchés / Contrats SPA (`GET/POST/PUT/DELETE /api/v1/marches|contrats`, montants `5000000.00`, 403 lecteur) : `MarchesContratsTest`.
 - 24/10/2026 — Suivi SPA (campagnes, reco, formations, immobilisations) : `SuiviTest`, `RecommandationsTest`, `FormationsTest`, `ImmobilisationsTest`.
+- 24/10/2026 — Circuit collecte visas CF SPA : `SuiviTest::test_api_circuit_collecte_visas`.
+- 24/10/2026 — Justificatifs collecte GED SPA : `SuiviTest::test_api_justificatif_ged_collecte`.
 - 24/10/2026 — Rapports personnalisés + suivi financier SPA : `RapportPersonnaliseTest`, `SuiviP3Test`.
 - 24/10/2026 — Cockpit exécutif + planification SPA : `ReportingSpaApiTest::test_api_cockpit_et_planification`.
 - 24/10/2026 — GED recherche + wiki SPA : `GedSpaApiTest`, `ConnaissanceTest::test_api_session_wiki_et_procedures`.
@@ -41,3 +43,5 @@ PHPUnit : `DepenseTest`, D0–D5, `DepenseSpaApiTest`, `DepenseAvalSpaApiTest`, 
 - 24/10/2026 — Journal API SPA : `ConnectedAppsP1Test::test_api_journal_interdit_et_filtre` (chef 403, sans user-agent / hash).
 - 24/10/2026 — Webhooks SPA : `WebhooksP2Test::test_api_webhooks_interdit_et_sans_secret`.
 - 24/10/2026 — Monitoring API SPA : `ApiMonitoringP3Test::test_api_monitoring_interdit_et_kpis`.
+- 24/10/2026 — Documentation API SPA : `OpenApiP3Test::test_api_docs_interdit_et_spec`.
+- 24/10/2026 — Exports interop SPA : `ApiMonitoringP3Test::test_api_exports_interdit_et_fichiers`.

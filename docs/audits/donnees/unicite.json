@@ -1,0 +1,592 @@
+[
+    {
+        "cle": "Exercice : année",
+        "table": "exercices",
+        "colonnes": [
+            "annee"
+        ],
+        "perimetre": null,
+        "enregistrements": 1,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Exercice : code",
+        "table": "exercices",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": "code IS NOT NULL",
+        "enregistrements": 1,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Nomenclature : titre",
+        "table": "budget_titres",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 11,
+        "groupes_en_double": 3,
+        "doublons": [
+            {
+                "code": "1",
+                "n": 2,
+                "ids": "1,4"
+            },
+            {
+                "code": "2",
+                "n": 2,
+                "ids": "2,5"
+            },
+            {
+                "code": "3",
+                "n": 2,
+                "ids": "3,6"
+            }
+        ],
+        "index_unique": false
+    },
+    {
+        "cle": "Nomenclature : article dans son titre",
+        "table": "budget_articles",
+        "colonnes": [
+            "titre_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 38,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Nomenclature : paragraphe dans son article",
+        "table": "budget_paragraphes",
+        "colonnes": [
+            "article_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 119,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Nomenclature : rubrique dans son paragraphe",
+        "table": "budget_rubriques",
+        "colonnes": [
+            "paragraphe_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 224,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Nomenclature : code de rubrique global",
+        "table": "budget_rubriques",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 224,
+        "groupes_en_double": 33,
+        "doublons": [
+            {
+                "code": "141100",
+                "n": 2,
+                "ids": "50,79"
+            },
+            {
+                "code": "141200",
+                "n": 2,
+                "ids": "51,80"
+            },
+            {
+                "code": "141300",
+                "n": 2,
+                "ids": "52,81"
+            },
+            {
+                "code": "141800",
+                "n": 2,
+                "ids": "53,82"
+            },
+            {
+                "code": "151100",
+                "n": 2,
+                "ids": "185,198"
+            },
+            {
+                "code": "151200",
+                "n": 2,
+                "ids": "186,199"
+            },
+            {
+                "code": "151300",
+                "n": 2,
+                "ids": "187,200"
+            },
+            {
+                "code": "161100",
+                "n": 2,
+                "ids": "188,201"
+            },
+            {
+                "code": "161200",
+                "n": 2,
+                "ids": "189,202"
+            },
+            {
+                "code": "161300",
+                "n": 2,
+                "ids": "190,203"
+            },
+            {
+                "code": "171100",
+                "n": 2,
+                "ids": "191,204"
+            },
+            {
+                "code": "171200",
+                "n": 2,
+                "ids": "192,205"
+            },
+            {
+                "code": "171300",
+                "n": 2,
+                "ids": "193,206"
+            },
+            {
+                "code": "264000",
+                "n": 2,
+                "ids": "194,207"
+            },
+            {
+                "code": "271000",
+                "n": 2,
+                "ids": "195,208"
+            },
+            {
+                "code": "272000",
+                "n": 2,
+                "ids": "196,209"
+            },
+            {
+                "code": "275000",
+                "n": 2,
+                "ids": "197,210"
+            },
+            {
+                "code": "741100",
+                "n": 2,
+                "ids": "29,54"
+            },
+            {
+                "code": "741200",
+                "n": 2,
+                "ids": "30,55"
+            },
+            {
+                "code": "741300",
+                "n": 2,
+                "ids": "31,56"
+            },
+            {
+                "code": "741400",
+                "n": 2,
+                "ids": "32,57"
+            },
+            {
+                "code": "741500",
+                "n": 2,
+                "ids": "33,58"
+            },
+            {
+                "code": "742100",
+                "n": 2,
+                "ids": "34,59"
+            },
+            {
+                "code": "742200",
+                "n": 2,
+                "ids": "35,60"
+            },
+            {
+                "code": "742300",
+                "n": 2,
+                "ids": "36,61"
+            },
+            {
+                "code": "742400",
+                "n": 2,
+                "ids": "37,62"
+            },
+            {
+                "code": "742500",
+                "n": 2,
+                "ids": "38,63"
+            },
+            {
+                "code": "743100",
+                "n": 2,
+                "ids": "39,64"
+            },
+            {
+                "code": "743200",
+                "n": 2,
+                "ids": "40,65"
+            },
+            {
+                "code": "743300",
+                "n": 2,
+                "ids": "41,66"
+            },
+            {
+                "code": "743400",
+                "n": 2,
+                "ids": "42,67"
+            },
+            {
+                "code": "743500",
+                "n": 2,
+                "ids": "43,68"
+            },
+            {
+                "code": "749000",
+                "n": 2,
+                "ids": "44,69"
+            }
+        ],
+        "index_unique": false
+    },
+    {
+        "cle": "Ligne budgétaire : exercice + code",
+        "table": "lignes_budgetaires",
+        "colonnes": [
+            "exercice_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 50,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Sous-ligne de détail : exercice + code",
+        "table": "lignes_budgetaires_details",
+        "colonnes": [
+            "exercice_id",
+            "code"
+        ],
+        "perimetre": null,
+        "enregistrements": 70,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Unité organique : code",
+        "table": "structures",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 78,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Unité organique : sigle",
+        "table": "structures",
+        "colonnes": [
+            "sigle"
+        ],
+        "perimetre": "deleted_at IS NULL AND sigle IS NOT NULL",
+        "enregistrements": 78,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "Utilisateur : identifiant de connexion (e-mail)",
+        "table": "users",
+        "colonnes": [
+            "email"
+        ],
+        "perimetre": null,
+        "enregistrements": 17,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Utilisateur : matricule",
+        "table": "users",
+        "colonnes": [
+            "matricule"
+        ],
+        "perimetre": "matricule IS NOT NULL",
+        "enregistrements": 17,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "PAP : pilier",
+        "table": "piliers",
+        "colonnes": [
+            "exercice_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 6,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "PAP : axe dans son pilier",
+        "table": "axes",
+        "colonnes": [
+            "pilier_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 21,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "PAP : produit dans son axe",
+        "table": "produits",
+        "colonnes": [
+            "axe_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 71,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "PAP : sous-produit dans son produit",
+        "table": "sous_produits",
+        "colonnes": [
+            "produit_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 213,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "PAP : code d'activité",
+        "table": "activites",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 215,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "PAP : tâche dans son activité",
+        "table": "taches",
+        "colonnes": [
+            "activite_id",
+            "code"
+        ],
+        "perimetre": "deleted_at IS NULL",
+        "enregistrements": 2,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Source de financement : code",
+        "table": "sources_financement",
+        "colonnes": [
+            "code"
+        ],
+        "perimetre": null,
+        "enregistrements": 13,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "EB : référence",
+        "table": "expressions_besoin",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 36,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "ENG : référence",
+        "table": "engagements",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 32,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "ENG : un engagement par EB",
+        "table": "engagements",
+        "colonnes": [
+            "expression_besoin_id"
+        ],
+        "perimetre": "expression_besoin_id IS NOT NULL",
+        "enregistrements": 32,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "LIQ : référence",
+        "table": "liquidations",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 27,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "ORD : référence",
+        "table": "ordonnancements",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 21,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "ORD : un ordonnancement actif par liquidation",
+        "table": "ordonnancements",
+        "colonnes": [
+            "liquidation_id"
+        ],
+        "perimetre": "statut NOT IN ('rejete','annule')",
+        "enregistrements": 20,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "PAY : référence",
+        "table": "paiements",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 22,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Ordre de paiement : référence",
+        "table": "ordres_paiement",
+        "colonnes": [
+            "numero"
+        ],
+        "perimetre": null,
+        "enregistrements": 15,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Imputation : ligne unique par engagement",
+        "table": "engagement_imputations",
+        "colonnes": [
+            "engagement_id",
+            "ligne_budgetaire_id"
+        ],
+        "perimetre": null,
+        "enregistrements": 32,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "Réservation active unique par engagement et ligne",
+        "table": "reservations_credits",
+        "colonnes": [
+            "engagement_id",
+            "ligne_budgetaire_id"
+        ],
+        "perimetre": "statut = 'active'",
+        "enregistrements": 26,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "Écriture : numéro de pièce",
+        "table": "ecritures_comptables",
+        "colonnes": [
+            "numero_piece"
+        ],
+        "perimetre": "numero_piece IS NOT NULL",
+        "enregistrements": 9,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": false
+    },
+    {
+        "cle": "GED : référence",
+        "table": "ged_documents",
+        "colonnes": [
+            "reference"
+        ],
+        "perimetre": null,
+        "enregistrements": 4,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    },
+    {
+        "cle": "Tâche workflow : référence",
+        "table": "workflow_taches",
+        "colonnes": [
+            "reference"
+        ],
+        "perimetre": null,
+        "enregistrements": 220,
+        "groupes_en_double": 0,
+        "doublons": [],
+        "index_unique": true
+    }
+]

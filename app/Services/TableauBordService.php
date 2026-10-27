@@ -59,7 +59,7 @@ class TableauBordService
             ->leftJoin('structures as s', 'lb.structure_id', '=', 's.id')
             ->where('lb.exercice_id', $exerciceId)->whereNull('lb.deleted_at')
             ->groupBy('s.id', 's.libelle', 's.sigle')
-            ->selectRaw('COALESCE(s.sigle, s.libelle, "(non rattachée)") libelle, SUM(lb.montant_ouvert) ouvert, SUM(lb.montant_engage) engage, SUM(lb.montant_paye) paye')
+            ->selectRaw('COALESCE(s.sigle, s.libelle, \'(non rattachée)\') libelle, SUM(lb.montant_ouvert) ouvert, SUM(lb.montant_engage) engage, SUM(lb.montant_paye) paye')
             ->orderByDesc('ouvert')->limit(15)->get());
     }
 

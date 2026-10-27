@@ -111,7 +111,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 document.getElementById('exercice_id')?.addEventListener('change', (event) => {
     document.querySelectorAll('.js-synthese').forEach((item) => {
         item.classList.toggle('d-none', item.dataset.exercice !== event.target.value);

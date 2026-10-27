@@ -70,6 +70,11 @@ class EmailNotificationService
 
 
 
+        // Lien interne relatif (notification in-app) : absolu dans le courriel, sur l'URL canonique APP_URL.
+        if ($url !== null && str_starts_with($url, '/')) {
+            $url = url($url);
+        }
+
         $type = NotificationType::where('code', $typeCode)->where('actif', true)->first();
 
         $module ??= $type?->module ?? 'systeme';

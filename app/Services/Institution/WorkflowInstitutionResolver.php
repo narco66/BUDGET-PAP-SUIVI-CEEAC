@@ -25,6 +25,12 @@ class WorkflowInstitutionResolver
         private readonly InstitutionGouvernanceService $gouvernance,
     ) {}
 
+    /** @return list<string> rôles dont le titulaire se déduit de l'organigramme (niveau ou structure fixe) */
+    public static function rolesOrganiques(): array
+    {
+        return array_merge(array_keys(self::ROLE_TYPE_STRUCTURE), array_keys(self::ROLE_CODE_STRUCTURE));
+    }
+
     public function peutAgirSurEtape(User $user, ?int $structureOrigineId, string $roleRequis): bool
     {
         $structureCible = $this->structureValidateur($structureOrigineId, $roleRequis);
@@ -40,7 +46,34 @@ class WorkflowInstitutionResolver
         return $this->gouvernance->utilisateurSubstitueResponsable($user, $responsable, $structureCible->id);
     }
 
+    /** @var array<string, ?Structure> structures validatrices déjà résolues pendant la requête (origine|rôle) */
+    private array $validateurs = [];
+
+    /** Version de l'organigramme : incrémentée à chaque modification de structure, elle invalide les mémoires. */
+    private static int $versionOrganigramme = 0;
+
+    private int $versionMemo = 0;
+
+    public static function organigrammeModifie(): void
+    {
+        self::$versionOrganigramme++;
+    }
+
     public function structureValidateur(?int $structureOrigineId, string $roleRequis): ?Structure
+    {
+        if ($this->versionMemo !== self::$versionOrganigramme) {
+            $this->validateurs = [];
+            $this->versionMemo = self::$versionOrganigramme;
+        }
+        $cle = ($structureOrigineId ?? 0).'|'.$roleRequis;
+        if (! array_key_exists($cle, $this->validateurs)) {
+            $this->validateurs[$cle] = $this->resoudreValidateur($structureOrigineId, $roleRequis);
+        }
+
+        return $this->validateurs[$cle];
+    }
+
+    private function resoudreValidateur(?int $structureOrigineId, string $roleRequis): ?Structure
     {
         if (isset(self::ROLE_CODE_STRUCTURE[$roleRequis])) {
             return Structure::query()

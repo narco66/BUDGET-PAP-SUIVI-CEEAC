@@ -74,7 +74,7 @@ class LigneCreditsService
             ->where('lb.exercice_id', $exerciceId)
             ->whereNull('lb.deleted_at')
             ->groupBy('s.id', 's.libelle')
-            ->selectRaw('COALESCE(s.libelle, "(non rattachée)") libelle, SUM(lb.montant_ouvert) ouvert, SUM(lb.montant_engage) engage')
+            ->selectRaw('COALESCE(s.libelle, \'(non rattachée)\') libelle, SUM(lb.montant_ouvert) ouvert, SUM(lb.montant_engage) engage')
             ->orderByDesc('ouvert')->get();
     }
 

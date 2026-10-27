@@ -30,26 +30,34 @@ class PapDashboardController extends Controller
 
         $pilotage = $this->pilotage->tableau($exercice->id);
         $exercices = Exercice::orderByDesc('annee')->get(['id', 'annee', 'statut']);
-        $paps = Pap::with('exercice')->orderByDesc('exercice_id')->get(['id', 'exercice_id', 'libelle', 'statut']);
+
+        $pilierFiltre = $request->string('pilier')->toString() ?: null;
+        if ($pilierFiltre && ! $pilotage['piliers']->contains('code', $pilierFiltre)) {
+            $pilierFiltre = null;
+        }
 
         $chartPiliers = $pilotage['piliers']->map(fn (array $p) => [
             'x' => $p['code'],
-            'label' => \Illuminate\Support\Str::limit($p['intitule'], 32),
+            'label' => $p['intitule'],
             'physique' => $p['taux_physique'],
             'financier' => $p['taux_financier'],
-            'ceeac' => $p['montant_ceeac'],
-            'ptf' => $p['montant_ptf'],
-        ]);
+            'url' => route('paps.dashboard', ['exercice' => $exercice->annee, 'pilier' => $p['code']]).'#tab-produits',
+        ])->values();
 
         return view('paps.dashboard', [
             'exercice' => $exercice,
             'pap' => $pap,
             'pilotage' => $pilotage,
             'exercices' => $exercices,
-            'paps' => $paps,
             'feux' => $this->tableauBord->feuxIndicateurs($exercice->id),
             'chartPiliers' => $chartPiliers,
-            'pilierFiltre' => $request->string('pilier')->toString() ?: null,
+            'pilierFiltre' => $pilierFiltre,
+            'produitsFiltres' => $pilierFiltre
+                ? $pilotage['produits']->where('pilier_code', $pilierFiltre)->values()
+                : $pilotage['produits'],
+            'activitesFiltrees' => $pilierFiltre
+                ? $pilotage['activites']->where('pilier_code', $pilierFiltre)->values()
+                : $pilotage['activites'],
         ]);
     }
 

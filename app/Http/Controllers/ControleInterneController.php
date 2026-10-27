@@ -27,15 +27,16 @@ class ControleInterneController extends Controller
             ->orderBy('composante')->orderBy('code')->paginate(20)->withQueryString();
 
         // Cartographie COSO : par composante, total + répartition par évaluation.
+        // Une requête groupée (composante × évaluation) au lieu de cinq comptages par composante.
+        $comptes = ControleInterne::query()->toBase()->select('composante', 'evaluation', \Illuminate\Support\Facades\DB::raw('count(*) as n'))
+            ->whereNull('deleted_at')->groupBy('composante', 'evaluation')->get();
         $parComposante = [];
         foreach (array_keys(ControleInterne::COMPOSANTES) as $c) {
-            $parComposante[$c] = [
-                'total' => ControleInterne::where('composante', $c)->count(),
-                'efficace' => ControleInterne::where('composante', $c)->where('evaluation', 'efficace')->count(),
-                'partiel' => ControleInterne::where('composante', $c)->where('evaluation', 'partiel')->count(),
-                'inefficace' => ControleInterne::where('composante', $c)->where('evaluation', 'inefficace')->count(),
-                'non_evalue' => ControleInterne::where('composante', $c)->where('evaluation', 'non_evalue')->count(),
-            ];
+            $lignes = $comptes->where('composante', $c);
+            $parComposante[$c] = ['total' => (int) $lignes->sum('n')];
+            foreach (['efficace', 'partiel', 'inefficace', 'non_evalue'] as $e) {
+                $parComposante[$c][$e] = (int) $lignes->where('evaluation', $e)->sum('n');
+            }
         }
 
         return view('controle-interne.index', [

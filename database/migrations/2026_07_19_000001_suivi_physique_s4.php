@@ -12,6 +12,9 @@ return new class extends Migration
     {
         if (Schema::hasTable('campagnes_suivi') && Schema::getConnection()->getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE campagnes_suivi MODIFY COLUMN type ENUM('mensuel','trimestriel','semestriel','annuel','pluriannuel') NOT NULL DEFAULT 'trimestriel'");
+        } elseif (Schema::hasTable('campagnes_suivi') && Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE campagnes_suivi DROP CONSTRAINT IF EXISTS campagnes_suivi_type_check');
+            DB::statement("ALTER TABLE campagnes_suivi ADD CONSTRAINT campagnes_suivi_type_check CHECK (type::text = ANY (ARRAY['mensuel','trimestriel','semestriel','annuel','pluriannuel']::text[]))");
         }
 
         Schema::table('collectes', function (Blueprint $table) {
@@ -91,6 +94,9 @@ return new class extends Migration
 
         if (Schema::hasTable('campagnes_suivi') && Schema::getConnection()->getDriverName() === 'mysql') {
             DB::statement("ALTER TABLE campagnes_suivi MODIFY COLUMN type ENUM('trimestriel','semestriel','annuel','pluriannuel') NOT NULL DEFAULT 'trimestriel'");
+        } elseif (Schema::hasTable('campagnes_suivi') && Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE campagnes_suivi DROP CONSTRAINT IF EXISTS campagnes_suivi_type_check');
+            DB::statement("ALTER TABLE campagnes_suivi ADD CONSTRAINT campagnes_suivi_type_check CHECK (type::text = ANY (ARRAY['trimestriel','semestriel','annuel','pluriannuel']::text[]))");
         }
     }
 };

@@ -59,15 +59,22 @@ class AuditTrailHardeningTest extends TestCase
         $acteur->assignRole(['chef_service', 'directeur']);
         $this->actingAs($acteur);
 
+        // Le dossier est créé et soumis par un autre agent : la règle « l'initiateur ne valide pas » ne s'applique
+        // pas à l'acteur, seule la règle des validations consécutives est éprouvée ici.
+        $demandeur = User::create([
+            'name' => 'Demandeur SoD', 'email' => 'demandeur-sod@ceeac.test',
+            'password' => bcrypt('x'), 'actif' => true, 'statut' => 'actif',
+        ]);
+
         [$activite, $ligne] = $this->activiteEtLigne($this->exercice, 'LB-SOD', 1000);
         $besoin = ExpressionBesoin::create([
             'numero' => 'EB-SOD-1', 'exercice_id' => $this->exercice->id,
-            'activite_id' => $activite->id, 'ligne_budgetaire_id' => $ligne->id,
+            'activite_id' => $activite->id, 'ligne_budgetaire_id' => $ligne->id, 'demandeur_id' => $demandeur->id,
             'objet' => 'Besoin test SoD', 'montant_estime' => 500, 'statut' => 'brouillon',
         ]);
 
         $workflow = app(WorkflowService::class);
-        $instance = $workflow->demarrer($besoin, 'BESOIN', $acteur);
+        $instance = $workflow->demarrer($besoin, 'BESOIN', $demandeur);
 
         // Étape 1 (chef_service) validée par l'acteur.
         $workflow->traiterDecision($instance->fresh(), $acteur, 'valider');

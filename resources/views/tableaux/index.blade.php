@@ -132,7 +132,9 @@ $struct = $parStructure->map(fn ($s) => ['x' => $s->libelle, 'ouvert' => (float)
 @push('scripts')
 @if ($tw('charts_all'))
 @vite('resources/js/charts.js')
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
+// Après exécution des modules Vite (ApexCharts) : un module est différé, ce script ne l'est pas.
+document.addEventListener('DOMContentLoaded', function () {
 const xaf = v => new Intl.NumberFormat('fr-FR').format(v);
 
 new ApexCharts(document.querySelector('#chartChaine'), {
@@ -146,25 +148,37 @@ new ApexCharts(document.querySelector('#chartChaine'), {
     dataLabels:{formatter:xaf}, yaxis:{labels:{formatter:xaf}}
 }).render();
 
-new ApexCharts(document.querySelector('#chartFeux'), {
-    chart:{type:'donut',height:300},
-    series:[{{ $feux['vert'] }},{{ $feux['orange'] }},{{ $feux['rouge'] }}],
-    labels:['Vert','Orange','Rouge'], colors:['#198754','#fd7e14','#dc3545']
-}).render();
+// Anneau et secteurs : valeurs numériques, et message explicite si tout est nul (sinon ApexCharts affiche « NaN % »).
+const vide = (sel, texte) => { const el = document.querySelector(sel); if (el) { el.innerHTML = '<div class="text-muted small text-center py-5">' + texte + '</div>'; } };
+const feux = [{{ (int) $feux['vert'] }}, {{ (int) $feux['orange'] }}, {{ (int) $feux['rouge'] }}];
+if (feux.reduce((a, b) => a + b, 0) === 0) {
+    vide('#chartFeux', "Aucune mesure d'indicateur enregistrée pour l'exercice.");
+} else {
+    new ApexCharts(document.querySelector('#chartFeux'), {
+        chart:{type:'donut',height:300}, series:feux,
+        labels:['Vert','Orange','Rouge'], colors:['#198754','#fd7e14','#dc3545']
+    }).render();
+}
 
 const struct = @json($struct);
 new ApexCharts(document.querySelector('#chartStructure'), {
     chart:{type:'bar',height:320,stacked:false},
-    series:[{name:'Ouvert',data:struct.map(s=>s.ouvert)},{name:'Payé',data:struct.map(s=>s.paye)}],
+    series:[{name:'Ouvert',data:struct.map(s=>Number(s.ouvert))},{name:'Payé',data:struct.map(s=>Number(s.paye))}],
     xaxis:{categories:struct.map(s=>s.x),labels:{rotate:-45,style:{fontSize:'10px'}}},
     colors:['#0a4a8f','#198754'], yaxis:{labels:{formatter:xaf}}
 }).render();
 
 const nature = @json($nature);
-new ApexCharts(document.querySelector('#chartNature'), {
-    chart:{type:'pie',height:300},
-    series:nature.map(n=>n.ouvert), labels:nature.map(n=>n.x)
-}).render();
+if (nature.reduce((a, n) => a + Number(n.ouvert), 0) === 0) {
+    vide('#chartNature', 'Aucun crédit ouvert par nature.');
+} else {
+    new ApexCharts(document.querySelector('#chartNature'), {
+        chart:{type:'pie',height:300},
+        series:nature.map(n=>Number(n.ouvert)), labels:nature.map(n=>n.x),
+        tooltip:{y:{formatter:v=>xaf(Math.round(v))+' XAF'}}
+    }).render();
+}
+});
 </script>
 @endif
 @endpush

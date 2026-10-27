@@ -23,6 +23,12 @@ use Tests\TestCase;
 /** Phase D5 — audit automatisé complet, parcours E2E HTTP, documentation. */
 class DepenseD5Test extends TestCase
 {
+    /** Acteur (clé de acteurs()) par rôle d'étape ; chef_service → chef_visa (l'initiateur ne valide pas). */
+    private const ROLES_ACTEURS = [
+        'chef_visa' => 'chef_service', 'directeur' => 'directeur', 'cf' => 'controleur_financier',
+        'gestionnaire' => 'gestionnaire_budgetaire', 'sg' => 'secretaire_general', 'comptable' => 'comptable', 'agent' => 'agent_comptable',
+    ];
+
     use RefreshDatabase, CreatesDepenseChain;
 
     private Exercice $exercice;
@@ -113,6 +119,7 @@ class DepenseD5Test extends TestCase
                 'activite_id' => $activite->id,
                 'ligne_budgetaire_id' => $ligne->id,
                 'objet' => 'Parcours E2E D5',
+                'activite_responsable_id' => $u['chef']->id,
                 'montant_estime' => 750,
                 'priorite' => 'moyenne',
             ])
@@ -122,9 +129,12 @@ class DepenseD5Test extends TestCase
         $this->assertNotNull($besoin);
 
         $this->actingAs($u['chef'])->post(route('besoins.soumettre', $besoin))->assertRedirect();
-        $this->workflow->valider($besoin->fresh()->workflowActif, $u['chef_visa']);
-        $this->workflow->valider($besoin->fresh()->workflowActif, $u['directeur']);
-        $this->workflow->valider($besoin->fresh()->workflowActif, $u['cf']);
+        // Le circuit dépend de l'EB (BESOIN, BESOIN_PAP, BESOIN_PAP_APPUI…) : chaque étape est validée par un
+        // porteur du rôle qu'elle requiert, jusqu'à la validation du besoin.
+        for ($i = 0; $i < 6 && ($instance = $besoin->fresh()->workflowActif)?->statut === 'en_cours'; $i++) {
+            $role = $instance->etapeCourante()?->role;
+            $this->workflow->valider($instance, $u[array_search($role, self::ROLES_ACTEURS, true) ?: ''] ?? $this->user($role));
+        }
         $this->assertSame('valide', $besoin->fresh()->statut);
 
         $engagement = Engagement::query()->where('expression_besoin_id', $besoin->id)->first();

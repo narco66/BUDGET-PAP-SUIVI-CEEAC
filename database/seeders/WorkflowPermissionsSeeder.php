@@ -60,6 +60,12 @@ class WorkflowPermissionsSeeder extends Seeder
         Role::findByName('auditeur', 'web')?->givePermissionTo([
             'workflow.view', 'workflow.audit',
         ]);
+        // Acteurs de circuits (EB PAP technique, autorisation de décaissement) oubliés jusqu'ici.
+        foreach (['commissaire', 'agent_comptable'] as $role) {
+            Role::where('name', $role)->where('guard_name', 'web')->first()?->givePermissionTo([
+                'workflow.view', 'workflow.validate', 'workflow.reject',
+            ]);
+        }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

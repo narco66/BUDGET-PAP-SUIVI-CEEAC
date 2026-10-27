@@ -20,7 +20,7 @@ class RapprochementBancaireService
     {
         return RapprochementBancaire::create([
             'exercice_id' => $exercice->id,
-            'reference' => Numero::suivant('rapprochements_bancaires', 'RB', $exercice->annee),
+            'reference' => Numero::suivant('rapprochements_bancaires', 'RB', $exercice->annee, 'reference'),
             'intitule' => $data['intitule'],
             'compte_bancaire' => $data['compte_bancaire'] ?? null,
             'date_debut' => $data['date_debut'] ?? null,

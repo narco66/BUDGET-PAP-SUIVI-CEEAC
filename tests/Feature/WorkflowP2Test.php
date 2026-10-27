@@ -152,10 +152,42 @@ class WorkflowP2Test extends TestCase
 
     public function test_dashboard_workflow_accessible(): void
     {
+        config(['mfa.enabled' => false]);   // MFA obligatoire pour le CF : hors du sujet de ce test
+
         $this->actingAs($this->user('controleur_financier'))
             ->get(route('workflow.dashboard'))
             ->assertOk()
-            ->assertSee('Performance des circuits');
+            ->assertSee('Performance des circuits')
+            ->assertSee('Goulots d\'étranglement par étape', false)
+            ->assertSee('Respect des délais')
+            ->assertSee('Dossiers en retard');
+    }
+
+    public function test_dashboard_workflow_mesure_le_delai_de_traitement_et_les_filtres(): void
+    {
+        config(['mfa.enabled' => false]);
+        $service = app(\App\Services\Workflow\WorkflowDashboardService::class);
+        $workflow = \App\Models\Workflow::where('code', 'ENGAGEMENT')->with('etapes')->firstOrFail();
+        $instance = \App\Models\WorkflowInstance::query()->create([
+            'workflow_id' => $workflow->id, 'objet_type' => 'test', 'objet_id' => 1,
+            'statut' => 'valide', 'etape_courante' => 1, 'demarre_par' => $this->user('directeur')->id,
+        ]);
+        $etape = $instance->etapes()->create(['workflow_etape_id' => $workflow->etapes->first()->id, 'ordre' => 1, 'role' => 'directeur', 'statut' => 'valide']);
+        $tache = \App\Models\WorkflowTache::query()->create([
+            'reference' => 'TACHE-TEST-000001', 'workflow_instance_id' => $instance->id,
+            'workflow_instance_etape_id' => $etape->id, 'workflow_code' => 'ENGAGEMENT', 'module' => 'ENG', 'objet_type' => 'test', 'objet_id' => 1,
+            'etape_ordre' => 1, 'role' => 'directeur', 'statut' => 'terminee', 'decision' => 'valide',
+            'echeance_le' => now()->addDay(), 'termine_le' => now(),
+        ]);
+        $tache->forceFill(['created_at' => now()->subHours(6)])->save();
+
+        $tableau = $service->tableau(30, 'ENG');
+        $this->assertEqualsWithDelta(6.0, $tableau['kpi']['delai_moyen_heures'], 0.1, 'Délai = activation → décision.');
+        $this->assertSame(100.0, $tableau['kpi']['taux_sla_pct']);
+        $this->assertSame(0, $service->tableau(30, 'PAY')['kpi']['decisions_periode'], 'Filtre par module appliqué.');
+
+        $this->actingAs($this->user('controleur_financier'))
+            ->get(route('workflow.dashboard', ['module' => 'ENG', 'jours' => 30]))->assertOk()->assertSee('6,0 h');
     }
 
     public function test_rejet_collecte_avec_categorie(): void

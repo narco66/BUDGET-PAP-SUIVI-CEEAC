@@ -11,10 +11,13 @@ use App\Models\Pilier;
 use App\Models\Produit;
 use App\Models\SousProduit;
 use App\Models\User;
+use Database\Seeders\GedSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\WorkflowPermissionsSeeder;
 use Database\Seeders\WorkflowSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SuiviTest extends TestCase
@@ -159,5 +162,61 @@ class SuiviTest extends TestCase
                 'periode' => '2026-T9',
             ])
             ->assertForbidden();
+    }
+
+    public function test_api_circuit_collecte_visas(): void
+    {
+        config(['mfa.enabled' => false]);
+        $c = $this->saisir('point_focal', 50, 400);
+
+        $this->actingAs($this->user('point_focal'))
+            ->postJson(route('api.collectes.verifier', $c))
+            ->assertForbidden();
+
+        $this->actingAs($this->user('controleur_financier'))
+            ->postJson(route('api.collectes.valider', $c))
+            ->assertStatus(422);
+
+        $this->actingAs($this->user('chef_service'))
+            ->postJson(route('api.collectes.verifier', $c))
+            ->assertOk()
+            ->assertJsonPath('collecte.statut', 'verifiee');
+
+        $this->actingAs($this->user('controleur_financier'))
+            ->postJson(route('api.collectes.valider', $c->fresh()))
+            ->assertStatus(422);
+
+        $this->attacherJustificatif($c->fresh());
+
+        $this->actingAs($this->user('controleur_financier'))
+            ->postJson(route('api.collectes.valider', $c->fresh()))
+            ->assertOk()
+            ->assertJsonPath('collecte.statut', 'validee')
+            ->assertJsonPath('collecte.taux_physique', '50.00');
+    }
+
+    public function test_api_justificatif_ged_collecte(): void
+    {
+        config(['mfa.enabled' => false]);
+        $this->seed(GedSeeder::class);
+        Storage::fake('local');
+        $c = $this->saisir('point_focal', 50, 400);
+
+        $this->actingAs($this->user('chef_service'))
+            ->post(route('api.collectes.justificatifs', $c), [
+                'fichier' => UploadedFile::fake()->create('rapport.pdf', 40, 'application/pdf'),
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($this->user('administrateur'))
+            ->post(route('api.collectes.justificatifs', $c), [
+                'fichier' => UploadedFile::fake()->create('rapport.pdf', 40, 'application/pdf'),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('document.titre', 'rapport.pdf')
+            ->assertJsonPath('collecte.justificatifs.total', 1)
+            ->assertJsonPath('collecte.justificatifs.requis', false)
+            ->assertJsonMissingPath('document.chemin_fichier')
+            ->assertJsonMissingPath('document.hash_sha256');
     }
 }

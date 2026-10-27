@@ -40,7 +40,31 @@ class BesoinVersEngagementService
                 throw new RuntimeException('Aucun acteur pour créer l’engagement.');
             }
 
-            return $this->engagements->creerDepuisBesoinApprouve($verrouille, $user);
+            $engagement = $this->engagements->creerDepuisBesoinApprouve($verrouille, $user);
+            $this->soumettreAutomatiquement($engagement, $verrouille->demandeur ?? $user);
+
+            return $engagement->fresh();
         });
+    }
+
+    /**
+     * Procédure ENG § 3.4 : si les crédits sont suffisants, réservation puis soumission à la Direction du Budget
+     * (circuit, tâche et notification de l'étape). Sinon l'engagement reste en attente (insuffisance enregistrée)
+     * et le demandeur est averti ; l'approbation de l'EB n'est jamais annulée.
+     */
+    private function soumettreAutomatiquement(Engagement $engagement, User $initiateur): void
+    {
+        if (! config('chaine_depense.automatisation.soumission_engagement', true)) {
+            return;
+        }
+        try {
+            $this->engagements->soumettre($engagement, $initiateur);
+        } catch (RuntimeException $e) {
+            app(\App\Services\Notifications\DepenseNotificationService::class)
+                ->notifierEngagementNonSoumis($engagement->fresh(), $e->getMessage());
+            \App\Support\AuditLogger::evenement('engagement_soumission_auto_echec', $engagement, [
+                'motif' => $e->getMessage(), 'gravite' => 'modere', 'resultat' => 'echec',
+            ]);
+        }
     }
 }

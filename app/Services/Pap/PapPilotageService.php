@@ -2,6 +2,7 @@
 
 namespace App\Services\Pap;
 
+use App\Support\CockpitCache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -14,17 +15,33 @@ class PapPilotageService
     ) {
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Tableau complet, mis en cache sous la génération de cockpit : toute écriture sur une activité,
+     * une ligne budgétaire ou une mesure l'invalide (CockpitCache::bump), les montants restent exacts.
+     *
+     * @return array<string,mixed>
+     */
     public function tableau(int $exerciceId): array
     {
+        return CockpitCache::remember('pap_pilotage', $exerciceId, fn () => $this->performance->memoriser(
+            fn () => $this->calculerTableau($exerciceId)
+        ));
+    }
+
+    /** @return array<string,mixed> */
+    private function calculerTableau(int $exerciceId): array
+    {
         $synthese = $this->performance->executionPap($exerciceId);
-        $alertes = $this->alertes($exerciceId);
+        $pilierParActivite = $this->pilierParActivite($exerciceId);
+        $activites = $this->performance->performanceActivites($exerciceId)
+            ->map(fn (array $a) => $a + ['pilier_code' => $pilierParActivite[$a['activite_id']] ?? null]);
+        $alertes = $this->alertesDepuis($activites);
 
         return [
             'synthese' => $synthese,
             'piliers' => $this->performancePiliers($exerciceId),
             'produits' => $this->performance->performanceProduits($exerciceId),
-            'activites' => $this->performance->performanceActivites($exerciceId),
+            'activites' => $activites,
             'departements' => $this->performance->classementDepartements($exerciceId),
             'structures' => $this->performance->consolidationParStructure($exerciceId),
             'alertes' => $alertes,
@@ -38,6 +55,19 @@ class PapPilotageService
                 ),
             ],
         ];
+    }
+
+    /** @return array<int,string> Code du pilier de chaque activité de l'exercice (filtre drill-down). */
+    private function pilierParActivite(int $exerciceId): array
+    {
+        return DB::table('activites as a')
+            ->join('sous_produits as sp', 'a.sous_produit_id', '=', 'sp.id')
+            ->join('produits as pr', 'sp.produit_id', '=', 'pr.id')
+            ->join('axes as ax', 'pr.axe_id', '=', 'ax.id')
+            ->join('piliers as p', 'ax.pilier_id', '=', 'p.id')
+            ->where('p.exercice_id', $exerciceId)
+            ->pluck('p.code', 'a.id')
+            ->all();
     }
 
     /** Performance consolidée par pilier (drill-down niveau 1). */
@@ -86,7 +116,12 @@ class PapPilotageService
     /** @return array{en_retard: Collection, surconsommation: Collection, total_alertes: int} */
     public function alertes(int $exerciceId, float $seuilRetard = 50): array
     {
-        $activites = $this->performance->performanceActivites($exerciceId);
+        return $this->alertesDepuis($this->performance->performanceActivites($exerciceId), $seuilRetard);
+    }
+
+    /** @return array{en_retard: Collection, surconsommation: Collection, total_alertes: int} */
+    private function alertesDepuis(Collection $activites, float $seuilRetard = 50): array
+    {
         $enRetard = $activites->filter(fn (array $a) => $a['en_retard'] || $a['taux_physique'] < $seuilRetard)->values();
         $surconsommation = $activites->filter(fn (array $a) => $a['surconsommation'])->values();
 

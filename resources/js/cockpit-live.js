@@ -28,15 +28,30 @@ function initCockpitLive(root) {
         badge.textContent = on ? 'Live' : 'Sync…';
     };
 
+    // Formats français alignés sur le rendu serveur : « 40,3 Md », « 68,3 M », « 0,2 % ».
+    const compact = (v) => {
+        const a = Math.abs(v ?? 0);
+        const un = (x) => x.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        return a >= 1e9 ? `${un(v / 1e9)} Md` : (a >= 1e6 ? `${un(v / 1e6)} M` : nf.format(Math.round(v ?? 0)));
+    };
+    const pct = (v) => `${(v ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`;
+
     const updateKpis = (data) => {
         const g = data.global || {};
         const map = {
-            'kpi-taux-exec': `${g.taux_execution ?? 0}%`,
-            'kpi-taux-engage': `${g.taux_engagement ?? 0}%`,
-            'kpi-pap-physique': `${data.pap?.physique ?? 0}%`,
-            'kpi-ouvert': nf.format(g.ouvert ?? 0),
-            'kpi-paye': nf.format(g.paye ?? 0),
+            'kpi-ouvert': compact(g.alloue ?? g.ouvert),
+            'kpi-engage': compact(g.engage),
+            'kpi-engage-detail': `${pct(g.taux_engagement)} du crédit alloué`,
+            'kpi-paye': compact(g.paye),
+            'kpi-paye-detail': `exécution ${pct(g.taux_execution)} du crédit`,
+            'kpi-reste-payer': compact(g.reste_a_payer),
+            'kpi-pap-physique': pct(data.pap?.physique),
         };
+        if (g.disponible !== null && g.disponible !== undefined) map['kpi-disponible'] = compact(g.disponible);
+        (data.chaine || []).forEach((etape, i) => {
+            map[`ck-chaine-${i}`] = compact(etape.montant);
+            map[`ck-chaine-taux-${i}`] = pct(etape.taux);
+        });
         Object.entries(map).forEach(([id, val]) => {
             const el = document.getElementById(id);
             if (el) el.textContent = val;

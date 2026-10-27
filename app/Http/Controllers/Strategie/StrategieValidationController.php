@@ -27,6 +27,12 @@ class StrategieValidationController extends Controller
 
         try {
             if ($this->workflowActifDisponible() && ! $plan->workflowActif) {
+                // Mêmes préconditions que le circuit simple (au moins une orientation et un objectif).
+                if (! $this->validation->peutSoumettre($plan)) {
+                    throw ValidationException::withMessages([
+                        'plan' => 'Le plan doit être en brouillon/rejeté, avec au moins une orientation et un objectif.',
+                    ]);
+                }
                 $this->workflow->demarrer($plan, 'STRATEGIE', auth()->user());
             } elseif (! $plan->workflowActif) {
                 $this->validation->soumettre($plan);

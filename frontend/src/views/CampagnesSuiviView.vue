@@ -46,7 +46,7 @@ watch(() => exercices.selectionId, () => {
     <div class="d-flex justify-content-between align-items-start mb-3 gap-2">
       <div>
         <h2 class="h4 mb-1">Campagnes de suivi</h2>
-        <p class="text-muted mb-0">Collecte physique par activité PAP. Clôture et circuit de validation inchangés.</p>
+        <p class="text-muted mb-0">Collecte physique par activité PAP. Vérification chef de service puis visa Contrôleur financier.</p>
       </div>
       <div class="d-flex gap-2">
         <RouterLink class="btn btn-outline-secondary btn-sm" :to="{ name: 'suivi-evaluation' }">Hub S&amp;E</RouterLink>

@@ -44,39 +44,47 @@ class ReportingService
         );
     }
 
-    /** Exécution budgétaire par AXE stratégique (lignes rattachées à une activité du PAP). */
+    /**
+     * Exécution budgétaire par AXE stratégique. Chaque ligne est rattachée à un seul axe :
+     * enveloppe PAP « ACT-{code axe} » (partagée par les activités de l'axe, sans activité unique) → cet axe ;
+     * ligne liée à une activité → axe de l'activité ; sinon reliquat « Hors PAP ». Aucun double comptage.
+     */
     public function parAxe(int $exerciceId): Collection
     {
-        $axes = DB::table('lignes_budgetaires as lb')
-            ->join('activites as a', function ($j) {
-                $j->on('lb.activite_id', '=', 'a.id')->whereNull('a.deleted_at');
-            })
+        $axes = DB::table('axes as ax')->join('piliers as pil', 'ax.pilier_id', '=', 'pil.id')
+            ->where('pil.exercice_id', $exerciceId)->whereNull('ax.deleted_at')->whereNull('pil.deleted_at')
+            ->get(['ax.id', 'ax.code', 'ax.intitule', 'pil.code as pilier'])->keyBy('id');
+        $axeParCode = $axes->keyBy('code');
+        $axeParActivite = DB::table('activites as a')
             ->join('sous_produits as sp', 'a.sous_produit_id', '=', 'sp.id')
             ->join('produits as pr', 'sp.produit_id', '=', 'pr.id')
-            ->join('axes as ax', 'pr.axe_id', '=', 'ax.id')
-            ->join('piliers as pil', 'ax.pilier_id', '=', 'pil.id')
-            ->where('lb.exercice_id', $exerciceId)->whereNull('lb.deleted_at')
-            ->groupBy('ax.id', 'ax.code', 'ax.intitule', 'pil.code')
-            ->selectRaw('pil.code as pilier, ax.code, ax.intitule,
-                         COALESCE(SUM(lb.montant_ouvert),0) ouvert,
-                         COALESCE(SUM(COALESCE(lb.montant_revise, lb.montant_ouvert)),0) alloue,
-                         COALESCE(SUM(lb.montant_engage),0) engage,
-                         COALESCE(SUM(lb.montant_liquide),0) liquide, COALESCE(SUM(lb.montant_ordonnance),0) ordonnance,
-                         COALESCE(SUM(lb.montant_paye),0) paye')
-            ->orderBy('pil.code')->orderBy('ax.code')->get()
-            ->map(fn ($r) => array_merge(
-                ['pilier' => $r->pilier, 'code' => $r->code, 'intitule' => $r->intitule],
-                $this->ligneSynthese(
-                    (float) $r->ouvert,
-                    (float) $r->engage,
-                    (float) $r->liquide,
-                    (float) $r->ordonnance,
-                    (float) $r->paye,
-                    (float) $r->alloue,
-                )
-            ));
+            ->whereNull('a.deleted_at')->whereIn('pr.axe_id', $axes->keys())
+            ->pluck('pr.axe_id', 'a.id');
 
-        return $this->avecReliquat($axes, $this->global($exerciceId), 'Hors PAP (fonctionnement & charges communes)', ['pilier' => '—', 'code' => '—']);
+        $totaux = [];
+        foreach (DB::table('lignes_budgetaires')->where('exercice_id', $exerciceId)->whereNull('deleted_at')
+            ->get(['code', 'activite_id', 'montant_ouvert', 'montant_revise', 'montant_engage', 'montant_liquide', 'montant_ordonnance', 'montant_paye']) as $l) {
+            $axeId = str_starts_with((string) $l->code, 'ACT-')
+                ? $axeParCode->get(substr((string) $l->code, 4))?->id
+                : ($l->activite_id ? $axeParActivite->get($l->activite_id) : null);
+            if (! $axeId) {
+                continue;
+            }
+            $t = $totaux[$axeId] ?? ['ouvert' => 0.0, 'alloue' => 0.0, 'engage' => 0.0, 'liquide' => 0.0, 'ordonnance' => 0.0, 'paye' => 0.0];
+            $t['ouvert'] += (float) $l->montant_ouvert;
+            $t['alloue'] += (float) $l->montant_revise > 0 ? (float) $l->montant_revise : (float) $l->montant_ouvert;
+            foreach (['engage', 'liquide', 'ordonnance', 'paye'] as $k) {
+                $t[$k] += (float) $l->{'montant_'.$k};
+            }
+            $totaux[$axeId] = $t;
+        }
+
+        $parAxe = collect($totaux)->map(fn ($t, $axeId) => array_merge(
+            ['pilier' => $axes[$axeId]->pilier, 'code' => $axes[$axeId]->code, 'intitule' => $axes[$axeId]->intitule],
+            $this->ligneSynthese($t['ouvert'], $t['engage'], $t['liquide'], $t['ordonnance'], $t['paye'], $t['alloue'])
+        ))->sortBy([['pilier', 'asc'], ['code', 'asc']])->values();
+
+        return $this->avecReliquat($parAxe, $this->global($exerciceId), 'Hors PAP (fonctionnement & charges communes)', ['pilier' => '—', 'code' => '—']);
     }
 
     /** Exécution par BAILLEUR / source de financement, avec comparaison CEEAC vs PTF. */
@@ -390,44 +398,70 @@ class ReportingService
     /** Cockpit décisionnel exécutif : KPI globaux, répartitions, évolution mensuelle, alertes. */
     public function cockpit(int $exerciceId): array
     {
+        // Agrégat complet mis en cache, invalidé à chaque écriture de compteur (CockpitCache::bump).
+        return \App\Support\CockpitCache::remember('cockpit-executif', $exerciceId, fn () => $this->calculerCockpit($exerciceId));
+    }
+
+    /** @return array<string, mixed> */
+    private function calculerCockpit(int $exerciceId): array
+    {
+        $tb = app(\App\Services\TableauBordService::class);
         $global = $this->global($exerciceId);
+        $pap = $tb->executionPap($exerciceId);
 
-        $pap = app(\App\Services\Pap\PapPerformanceService::class)->executionPap($exerciceId);
-
-        // Évolution mensuelle des décaissements (paiements validés), agrégée en PHP (portable SQLite/MySQL)
-        $paiements = Paiement::where('statut', 'valide')
+        // Décaissements mensuels et cumulés : paiements réellement réglés (instrument non rejeté), en XAF.
+        $paiements = Paiement::regles()
             ->whereHas('ordonnancement.liquidation.engagement', fn ($q) => $q->where('exercice_id', $exerciceId))
-            ->get(['montant', 'date_paiement']);
-        $evolution = collect(range(1, 12))->map(fn ($m) => [
-            'mois' => $m,
-            'montant' => (float) $paiements->filter(fn ($p) => $p->date_paiement && (int) $p->date_paiement->format('n') === $m)->sum('montant'),
-        ]);
+            ->get(['montant', 'montant_xaf', 'date_paiement', 'valide_le']);
+        $cumul = 0.0;
+        $evolution = collect(range(1, 12))->map(function ($m) use ($paiements, &$cumul) {
+            // Date d'exécution du paiement, à défaut sa date de validation (aucune date de paiement saisie sinon).
+            $montant = (float) $paiements->filter(fn ($p) => ($d = $p->date_paiement ?? $p->valide_le) && (int) $d->format('n') === $m)
+                ->sum(fn ($p) => (float) ($p->montant_xaf ?? $p->montant));
+            $cumul += $montant;
 
+            return ['mois' => $m, 'montant' => $montant, 'cumul' => $cumul];
+        });
+
+        // Alertes : mêmes règles que les écrans de détail (pas de seuil divergent sur une même page).
         $alertes = [];
         $depassees = DB::table('lignes_budgetaires')->where('exercice_id', $exerciceId)->whereNull('deleted_at')
-            ->whereColumn('montant_engage', '>', 'montant_ouvert')->count();
+            ->whereRaw('montant_engage > (CASE WHEN montant_revise > 0 THEN montant_revise ELSE montant_ouvert END)')->count();
         if ($depassees > 0) {
-            $alertes[] = ['niveau' => 'danger', 'message' => "{$depassees} ligne(s) budgétaire(s) en dépassement de crédits."];
+            $alertes[] = ['niveau' => 'danger', 'message' => "{$depassees} ligne(s) budgétaire(s) engagée(s) au-delà du crédit alloué.", 'lien' => route('budget.index', [], false)];
         }
-        $retard = Activite::whereHas('sousProduit.produit.axe.pilier', fn ($q) => $q->where('exercice_id', $exerciceId))
-            ->where('taux_realisation_physique', '<', 30)->count();
-        if ($retard > 0) {
-            $alertes[] = ['niveau' => 'warning', 'message' => "{$retard} activité(s) en retard (taux physique < 30%)."];
+        $retards = app(ActivitesRetardService::class)->synthese($exerciceId, []);
+        if (($retards['total'] ?? 0) > 0) {
+            $alertes[] = ['niveau' => 'warning', 'message' => "{$retards['total']} activité(s) en retard (échéance des tâches dépassée).", 'lien' => '#activites-retard'];
         }
-        $rouges = DB::table('mesures')->where('feu', 'rouge')->count();
-        if ($rouges > 0) {
-            $alertes[] = ['niveau' => 'warning', 'message' => "{$rouges} indicateur(s) au rouge."];
+        $feux = $tb->feuxIndicateurs($exerciceId);
+        if (($feux['rouge'] ?? 0) > 0) {
+            $alertes[] = ['niveau' => 'warning', 'message' => "{$feux['rouge']} indicateur(s) au rouge.", 'lien' => null];
+        }
+        if (($global['reste_a_payer'] ?? 0) > 0 && $global['ordonnance'] > 0 && $global['taux_paiement'] < 50) {
+            $alertes[] = ['niveau' => 'warning', 'message' => 'Moins de la moitié des montants ordonnancés est payée ('.number_format($global['taux_paiement'], 1, ',', ' ').' %).', 'lien' => null];
         }
         if (empty($alertes)) {
-            $alertes[] = ['niveau' => 'success', 'message' => 'Aucune alerte critique détectée.'];
+            $alertes[] = ['niveau' => 'success', 'message' => 'Aucune alerte critique détectée.', 'lien' => null];
         }
+
+        // Entonnoir de la chaîne : chaque étape rapportée à la précédente (l'ouvert écrasait l'échelle du graphique).
+        $chaine = [
+            ['etape' => 'Engagé', 'montant' => $global['engage'], 'taux' => $global['taux_engagement'], 'base' => 'du crédit alloué'],
+            ['etape' => 'Liquidé', 'montant' => $global['liquide'], 'taux' => $global['taux_liquidation'], 'base' => "de l'engagé"],
+            ['etape' => 'Ordonnancé', 'montant' => $global['ordonnance'], 'taux' => $global['taux_ordonnancement'], 'base' => 'du liquidé'],
+            ['etape' => 'Payé', 'montant' => $global['paye'], 'taux' => $global['taux_paiement'], 'base' => "de l'ordonnancé"],
+        ];
 
         return [
             'global' => $global,
+            'chaine' => $chaine,
             'pap' => [
                 'activites' => (int) ($pap['activites'] ?? 0),
                 'physique' => (float) ($pap['taux_physique'] ?? 0),
                 'financier' => (float) ($pap['taux_financier'] ?? 0),
+                'prevu' => (float) ($pap['montant_prevu'] ?? 0),
+                'paye' => (float) ($pap['montant_paye'] ?? 0),
             ],
             'parAxe' => $this->parAxe($exerciceId),
             'parBailleur' => $this->parBailleur($exerciceId),
@@ -435,6 +469,7 @@ class ReportingService
             'parStructure' => $this->parStructure($exerciceId),
             'evolution' => $evolution,
             'alertes' => $alertes,
+            'calcule_le' => now()->toIso8601String(),
         ];
     }
 
@@ -606,7 +641,7 @@ class ReportingService
             ->leftJoin('structures as s', 'lb.structure_id', '=', 's.id')
             ->where('lb.exercice_id', $exerciceId)->whereNull('lb.deleted_at')
             ->groupBy('s.id', 's.libelle', 's.sigle')
-            ->selectRaw('COALESCE(s.sigle, s.libelle, "(non rattachée)") libelle,
+            ->selectRaw('COALESCE(s.sigle, s.libelle, \'(non rattachée)\') libelle,
                          COALESCE(SUM(lb.montant_ouvert),0) ouvert, COALESCE(SUM(lb.montant_engage),0) engage,
                          COALESCE(SUM(lb.montant_paye),0) paye')
             ->orderByDesc('ouvert')->limit($limit)->get()

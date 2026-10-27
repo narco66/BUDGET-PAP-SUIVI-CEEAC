@@ -121,10 +121,7 @@ class StructureMasterDataAuditService
      */
     public function executer(?int $exerciceId = null): array
     {
-        $tables = collect(DB::select('SHOW TABLES'))
-            ->map(fn (object $row) => array_values((array) $row)[0])
-            ->sort()
-            ->values();
+        $tables = collect($this->listerTables())->sort()->values();
 
         $cartographie = [
             'referentiel_maitre' => $this->cartographierReferentielMaitre(),
@@ -216,8 +213,7 @@ class StructureMasterDataAuditService
             return ['dry_run' => $dryRun, 'total' => 0, 'tables' => []];
         }
 
-        $tables = collect(DB::select('SHOW TABLES'))
-            ->map(fn (object $row) => array_values((array) $row)[0])
+        $tables = collect($this->listerTables())
             ->filter(fn (mixed $table) => is_string($table) && Schema::hasColumn($table, 'structure_id'))
             ->sort()
             ->values();
@@ -391,6 +387,15 @@ class StructureMasterDataAuditService
         }
 
         return false;
+    }
+
+    /** @return list<string> */
+    private function listerTables(): array
+    {
+        return array_values(array_filter(
+            Schema::getTableListing(),
+            fn (mixed $table) => is_string($table) && $table !== ''
+        ));
     }
 
     /** @return list<array<string, string>> */

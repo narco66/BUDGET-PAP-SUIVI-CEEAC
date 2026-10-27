@@ -51,7 +51,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 document.getElementById('alignable_type')?.addEventListener('change', function () {
     const type = this.value;
     document.querySelectorAll('#alignable_id option').forEach(opt => {

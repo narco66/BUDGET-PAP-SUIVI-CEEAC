@@ -26,4 +26,10 @@ return [
         'warn_database_in_production' => env('REDIS_WARN_PRODUCTION', true),
     ],
 
+    /** Compression gzip des réponses HTML/JSON par l'application (middleware CompresserReponse). */
+    'compression' => [
+        'enabled' => env('APP_COMPRESSION', true),
+        'niveau' => (int) env('APP_COMPRESSION_NIVEAU', 5),
+    ],
+
 ];

@@ -15,7 +15,7 @@ class AuditRetentionTest extends TestCase
 
     public function test_purge_login_logs_au_dela_de_la_retention(): void
     {
-        config(['audit.retention.login_logs' => 365]);
+        config(['audit.retention.login_logs' => 365, 'audit.purge.enabled' => true]);
 
         $user = User::factory()->create(['actif' => true]);
 
@@ -57,7 +57,7 @@ class AuditRetentionTest extends TestCase
 
     public function test_refuse_retention_inferieure_au_minimum(): void
     {
-        config(['audit.purge.min_jours' => 90]);
+        config(['audit.purge.min_jours' => 90, 'audit.purge.enabled' => true]);
 
         $this->artisan('audit:purge-journaux', ['--table' => 'login_logs', '--jours' => 30])
             ->assertFailed();

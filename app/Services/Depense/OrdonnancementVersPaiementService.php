@@ -27,7 +27,7 @@ class OrdonnancementVersPaiementService
             $annee = $engagement?->exercice?->annee ?? (int) date('Y');
             $ordre = $verrouille->ordresPaiement()->where('statut', 'emis')->first();
 
-            return Paiement::create([
+            $paiement = Paiement::create([
                 'numero' => Numero::suivant('paiements', 'PAY', $annee),
                 'ordonnancement_id' => $verrouille->id,
                 'ordre_paiement_id' => $ordre?->id,
@@ -40,6 +40,10 @@ class OrdonnancementVersPaiementService
                 'etat_execution' => 'en_preparation',
                 'cree_par' => $verrouille->cree_par,
             ]);
+            // Agence comptable prévenue que le paiement est à préparer (référentiel Notifications § 6.5).
+            app(\App\Services\Notifications\DepenseNotificationService::class)->notifierPaiementAPreparer($paiement);
+
+            return $paiement;
         });
     }
 }

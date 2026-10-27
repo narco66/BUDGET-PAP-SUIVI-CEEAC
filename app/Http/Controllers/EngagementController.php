@@ -29,12 +29,14 @@ class EngagementController extends Controller
     ) {
     }
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Engagement::class);
-        $engagements = Engagement::with('exercice', 'createur')->latest()->paginate(20);
+        // Même service que les listes LIQ / ORD / PAY : périmètre organique, filtres, indicateurs, action attendue.
+        $liste = app(\App\Services\Depense\EtapeDepenseListeService::class)->lister(
+            'engagement', ['model' => Engagement::class, 'date_cle' => 'date_engagement', 'colonne_montant' => 'montant_total'], $request, $request->user());
 
-        return view('engagements.index', compact('engagements'));
+        return view('engagements.index', $liste);
     }
 
     public function create(Request $request): View
@@ -126,22 +128,7 @@ class EngagementController extends Controller
         }
 
         try {
-            $this->workflow->traiterDecision(
-                $instance,
-                auth()->user(),
-                $data['decision'],
-                $data['observation'] ?? null,
-                $data['categorie_rejet'] ?? null,
-            );
-
-            if ($data['decision'] === 'valider') {
-                $engagement->update(['controleur_id' => auth()->id()]);
-                $this->webhooks->declencher('engagement.vise', [
-                    'numero' => $engagement->numero,
-                    'montant' => (float) $engagement->montant_total,
-                    'objet' => $engagement->objet,
-                ]);
-            }
+            app(\App\Services\Workflow\DecisionMetierService::class)->decider($engagement, auth()->user(), $data);
         } catch (RuntimeException $e) {
             return back()->with('erreur', $e->getMessage());
         }

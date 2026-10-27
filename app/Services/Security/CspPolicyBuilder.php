@@ -62,11 +62,13 @@ class CspPolicyBuilder
         // mode strict_report (Report-Only) : pas de unsafe-inline → signale les inline restants.
 
         if ($this->viteDevEnabled()) {
-            $viteHost = 'http://localhost:5173';
-            $viteWs = 'ws://localhost:5173';
-            $script[] = $viteHost;
-            $connect[] = $viteHost;
-            $connect[] = $viteWs;
+            foreach ($this->originesViteDev() as $viteHost) {
+                // Vite sert aussi ceeac.css : sans style-src, les pages perdent la charte (fond bleu, menu).
+                $script[] = $viteHost;
+                $style[] = $viteHost;
+                $connect[] = $viteHost;
+                $connect[] = preg_replace('#^http#', 'ws', $viteHost);
+            }
             $font[] = $fonts[0] ?? 'https://fonts.bunny.net';
         }
 
@@ -85,6 +87,10 @@ class CspPolicyBuilder
             'frame-src' => ["'self'"],
             'worker-src' => ["'self'", 'blob:'],
             'script-src' => $this->unique($script),
+            // Avec un nonce dans script-src, les navigateurs ignorent 'unsafe-inline' : les attributs
+            // onchange/onclick des vues étaient bloqués (sélecteurs d'exercice, boutons inertes).
+            // Les blocs <script> restent soumis au nonce ; seuls les attributs sont tolérés ici.
+            ...(in_array($mode, ['standard', 'strict'], true) ? ['script-src-attr' => ["'unsafe-inline'"]] : []),
             'style-src' => $this->unique($style),
             'img-src' => ["'self'", 'data:', 'blob:'],
             'font-src' => $this->unique($font),
@@ -108,6 +114,25 @@ class CspPolicyBuilder
         }
 
         return [];
+    }
+
+    /**
+     * Origines du serveur Vite de développement : celle écrite dans public/hot par `npm run dev`
+     * (souvent http://[::1]:5173), plus l'origine historique http://localhost:5173.
+     *
+     * @return list<string>
+     */
+    private function originesViteDev(): array
+    {
+        $origines = ['http://localhost:5173'];
+        $hot = \Illuminate\Support\Facades\Vite::hotFile();
+        // Une source CSP ne peut pas désigner une adresse IPv6 (« http://[::1]:5173 » est ignoré par les
+        // navigateurs) : Vite écoute donc sur 127.0.0.1 (vite.config.js).
+        if (is_file($hot) && preg_match('#^(https?://[^/\s\[]+)#', trim((string) file_get_contents($hot)), $m)) {
+            $origines[] = $m[1];
+        }
+
+        return array_values(array_unique($origines));
     }
 
     private function viteDevEnabled(): bool

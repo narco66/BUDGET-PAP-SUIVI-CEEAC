@@ -100,19 +100,6 @@ return new class extends Migration
 
     private function indexExists(string $table, string $index): bool
     {
-        $driver = Schema::getConnection()->getDriverName();
-
-        if ($driver === 'sqlite') {
-            $indexes = DB::select("PRAGMA index_list('{$table}')");
-
-            return collect($indexes)->contains(fn ($i) => ($i->name ?? '') === $index);
-        }
-
-        $rows = DB::select(
-            'SELECT COUNT(*) AS c FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?',
-            [$table, $index]
-        );
-
-        return ((int) ($rows[0]->c ?? 0)) > 0;
+        return Schema::hasIndex($table, $index);
     }
 };

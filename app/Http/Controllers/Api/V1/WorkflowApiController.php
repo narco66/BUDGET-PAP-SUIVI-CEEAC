@@ -171,7 +171,7 @@ class WorkflowApiController extends Controller
         $this->assertWorkflow($request);
         abort_unless($this->workflow->peutAgir($instance, $request->user()) || $this->peut($request, 'workflow.audit'), 403);
 
-        $instance->load(['workflow', 'etapes', 'objet', 'version']);
+        $instance->load(['workflow', 'etapes.acteur', 'objet', 'version']);
 
         return new JsonResource($this->formatInstance($instance, $request->user()));
     }
@@ -181,28 +181,67 @@ class WorkflowApiController extends Controller
         $this->assertWorkflow($request);
         abort_unless($this->peut($request, 'workflow.validate'), 403);
 
+        // Motif et catégorie exigés par la procédure : plus de catégorie « technique » imposée par défaut.
         $data = $request->validate([
             'decision' => ['required', 'in:valider,rejeter,renvoyer'],
-            'observation' => ['nullable', 'string', 'max:2000'],
-            'categorie_rejet' => ['nullable', 'string', 'max:50'],
+            'observation' => ['nullable', 'required_if:decision,rejeter,renvoyer', 'string', 'max:2000'],
+            'categorie_rejet' => ['nullable', 'required_if:decision,rejeter', 'string', 'in:'.implode(',', WorkflowRejetCategorie::values())],
+            'etape_attendue_id' => ['nullable', 'integer'],
         ]);
 
-        try {
-            $this->workflow->traiterDecision(
-                $instance,
-                $request->user(),
-                $data['decision'],
-                $data['observation'] ?? null,
-                $data['categorie_rejet'] ?? WorkflowRejetCategorie::TECHNIQUE,
-            );
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        $etapeAttendue = isset($data['etape_attendue_id']) ? (int) $data['etape_attendue_id'] : null;
+        // Commande idempotente (P04) : un rejeu de la même clé renvoie la même réponse sans nouvelle transition.
+        $resultat = app(\App\Services\Api\IdempotenceActionService::class)->executer(
+            $request,
+            'workflow.decision.'.$instance->id,
+            function () use ($request, $instance, $data, $etapeAttendue) {
+                if (! $this->workflow->peutAgir($instance->fresh(), $request->user())) {
+                    $statut = $instance->fresh()->statut !== 'en_cours' || ($etapeAttendue && ! $this->etapeEnAttente($instance, $etapeAttendue)) ? 409 : 403;
 
-        return response()->json([
-            'message' => 'Décision enregistrée.',
-            'data' => $this->formatInstance($instance->fresh(['workflow', 'etapes', 'objet']), $request->user()),
+                    return $this->refus($request, $instance, $data['decision'], $statut,
+                        $statut === 409 ? 'Ce dossier a déjà été traité ou a changé d\'étape.' : 'Vous n\'êtes pas habilité à traiter l\'étape courante.');
+                }
+                try {
+                    // Mêmes contrôles et effets que l'écran du module (RIB, valideur, notifications…).
+                    $objet = $instance->objet;
+                    if ($objet && method_exists($objet, 'workflowActif') && $objet->workflowActif?->id === $instance->id) {
+                        app(\App\Services\Workflow\DecisionMetierService::class)->decider($objet, $request->user(), $data, $etapeAttendue);
+                    } else {
+                        $this->workflow->traiterDecision($instance, $request->user(), $data['decision'], $data['observation'] ?? null, $data['categorie_rejet'] ?? null, $etapeAttendue);
+                    }
+                } catch (RuntimeException $e) {
+                    $conflit = str_contains($e->getMessage(), 'déjà été traitée') || str_contains($e->getMessage(), 'Aucune étape en attente');
+
+                    return $this->refus($request, $instance, $data['decision'], $conflit ? 409 : 422, $e->getMessage());
+                }
+
+                return ['status' => 200, 'body' => [
+                    'message' => 'Décision enregistrée.',
+                    'data' => $this->formatInstance($instance->fresh(['workflow', 'etapes.acteur', 'objet', 'version']), $request->user()),
+                ]];
+            },
+        );
+
+        return response()->json($resultat['body'], $resultat['status']);
+    }
+
+    private function etapeEnAttente(WorkflowInstance $instance, int $etapeId): bool
+    {
+        return $instance->etapes()->whereKey($etapeId)->where('statut', 'en_attente')->exists();
+    }
+
+    /** Refus tracé au journal central (§ 20 : refus d'action, revalidation des droits à l'instant de décision). */
+    private function refus(Request $request, WorkflowInstance $instance, string $decision, int $statut, string $message): array
+    {
+        \App\Support\AuditLogger::evenement('workflow_decision_refusee', $instance, [
+            'module' => 'WORKFLOW',
+            'resultat' => 'refus',
+            'motif' => $message,
+            'workflow_instance_id' => $instance->id,
+            'apres' => ['decision' => $decision, 'statut_http' => $statut, 'etape_courante' => $instance->etape_courante],
         ]);
+
+        return ['status' => $statut, 'body' => ['message' => $message]];
     }
 
     private function assertWorkflow(Request $request): void
@@ -256,12 +295,27 @@ class WorkflowApiController extends Controller
                 'url' => WorkflowObjetUrls::show($instance->objet),
             ],
             'etapes' => $instance->etapes->map(fn ($e) => [
+                'id' => $e->id,
                 'ordre' => $e->ordre,
+                'libelle' => $e->libelle,
                 'role' => $e->role,
                 'statut' => $e->statut,
                 'acteur_id' => $e->acteur_id,
                 'decision_le' => $e->decision_le?->toIso8601String(),
+                'echeance_le' => $e->echeance_le?->toIso8601String(),
             ])->values(),
+            // Historique des décisions (§ 18 « history ») : acteur, motif, catégorie, empreinte de visa.
+            'historique' => $instance->etapes->whereNotNull('decision_le')->sortBy('decision_le')->map(fn ($e) => [
+                'etape' => $e->ordre,
+                'libelle' => $e->libelle,
+                'decision' => $e->statut,
+                'acteur' => $e->acteur?->name,
+                'observation' => $e->observation,
+                'categorie_rejet' => $e->categorie_rejet,
+                'decision_le' => $e->decision_le?->toIso8601String(),
+                'visa' => $e->hash_visa ? substr($e->hash_visa, 0, 16) : null,
+            ])->values(),
+            'version_publiee_le' => $instance->version?->published_at?->toIso8601String(),
             'peut_agir' => $this->workflow->peutAgir($instance, $user),
         ];
     }

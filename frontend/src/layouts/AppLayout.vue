@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import NavMenu from '@/components/NavMenu.vue'
 import { api } from '@/api/client'
@@ -21,13 +21,31 @@ onMounted(async () => {
     erreurMenu.value = 'Impossible de charger le menu.'
   }
   if (auth.peut('notifications.view')) {
-    try {
-      const json = await api<{ count: number }>('/api/v1/notifications/unread-count')
-      nonLues.value = json.count
-    } catch {
-      nonLues.value = 0
-    }
+    await actualiserCompteur()
+    // Compteur actualisé périodiquement et au retour sur l'onglet (reprise des notifications manquées).
+    minuterie = window.setInterval(() => { if (!document.hidden) void actualiserCompteur() }, 60_000)
+    document.addEventListener('visibilitychange', surVisibilite)
   }
+})
+
+let minuterie: number | undefined
+
+async function actualiserCompteur(): Promise<void> {
+  try {
+    const json = await api<{ count: number }>('/api/v1/notifications/unread-count')
+    nonLues.value = json.count
+  } catch {
+    // Compteur conservé : une panne passagère ne doit pas faire croire à l'absence de notification.
+  }
+}
+
+function surVisibilite(): void {
+  if (!document.hidden) void actualiserCompteur()
+}
+
+onBeforeUnmount(() => {
+  if (minuterie) window.clearInterval(minuterie)
+  document.removeEventListener('visibilitychange', surVisibilite)
 })
 
 async function deconnecter(): Promise<void> {

@@ -9,6 +9,7 @@ use App\Services\Alertes\AlerteDashboardService;
 use App\Services\Alertes\AlerteRegistryService;
 use App\Services\Api\IdempotenceActionService;
 use App\Services\Notifications\AuditNotificationService;
+use App\Services\Notifications\NotificationActionResolver;
 use App\Services\Notifications\NotificationInboxService;
 use App\Services\Notifications\NotificationPreferenceService;
 use Illuminate\Http\JsonResponse;
@@ -69,6 +70,49 @@ class NotificationsApiController extends Controller
         return response()->json([
             'count' => $request->user()->unreadNotifications()->whereNull('archive_at')->count(),
         ]);
+    }
+
+    /** Synthèse de la boîte (§ 14.2 summary) : non lues, actions en attente, critiques, ventilation par module. */
+    public function summary(Request $request): JsonResponse
+    {
+        $this->assertNotifications($request);
+        $user = $request->user();
+
+        return response()->json([
+            'stats' => $this->inbox->stats($user),
+            // reorder() : la relation Laravel trie par date, incompatible avec GROUP BY sous PostgreSQL.
+            'par_module' => $user->notifications()->reorder()->whereNull('archive_at')->whereNull('read_at')
+                ->selectRaw('module, count(*) as nombre')->groupBy('module')->pluck('nombre', 'module'),
+        ]);
+    }
+
+    /** Détail d'une notification du seul destinataire (404 pour celle d'un autre : pas d'IDOR). */
+    public function show(Request $request, string $id): JsonResponse
+    {
+        $this->assertNotifications($request);
+
+        return response()->json(['data' => $this->inbox->serialiser($this->inbox->trouver($request->user(), $id))]);
+    }
+
+    /** Destination résolue côté serveur (§ 9) : lien interne, action encore disponible, message si obsolète. */
+    public function destination(Request $request, string $id, NotificationActionResolver $resolver, AuditNotificationService $audit): JsonResponse
+    {
+        $this->assertNotifications($request);
+        $notification = $this->inbox->trouver($request->user(), $id);
+        $destination = $resolver->destination($notification, $request->user());
+        $notification->markAsRead();
+        $audit->journaliser('consultation', $notification->type_code, $notification->module, 'api', $request->user(), $request->user(),
+            payload: ['notification_id' => $notification->id, 'action_disponible' => $destination['action_disponible']]);
+
+        return response()->json($destination);
+    }
+
+    public function markUnread(Request $request, string $id): JsonResponse
+    {
+        $this->assertNotifications($request);
+        $this->inbox->marquerNonLue($request->user(), $id);
+
+        return response()->json(['ok' => true, 'id' => $id]);
     }
 
     public function markRead(Request $request, string $id): JsonResponse

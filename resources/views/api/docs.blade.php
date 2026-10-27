@@ -12,7 +12,7 @@
 @push('scripts')
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
 <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 document.addEventListener('DOMContentLoaded', () => {
     SwaggerUIBundle({
         url: @json($specUrl),

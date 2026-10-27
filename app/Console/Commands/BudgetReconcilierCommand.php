@@ -39,7 +39,8 @@ class BudgetReconcilierCommand extends Command
         foreach ($activites as $activite) {
             if ($dry) {
                 $ligne = LigneBudgetaire::find($activite->ligne_budgetaire_id);
-                if ($ligne && (int) $ligne->activite_id !== (int) $activite->id) {
+                // Enveloppe PAP partagée : pas de lien inverse unique (même règle que RbmBudgetSyncService).
+                if ($ligne && ! \App\Services\Depense\ImputationPapService::estEnveloppePap($ligne) && (int) $ligne->activite_id !== (int) $activite->id) {
                     $this->line("  Activité {$activite->code} → ligne {$ligne->code} (activite_id à corriger)");
                     $stats['activites']++;
                 }

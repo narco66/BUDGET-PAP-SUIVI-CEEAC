@@ -119,6 +119,7 @@ class Niveaux
                 'champs' => [
                     'code' => ['type' => 'text', 'requis' => true, 'max' => 40, 'code_unique' => true],
                     'intitule' => ['type' => 'text', 'requis' => true, 'max' => 1000],
+                    'responsable_user_id' => ['type' => 'select', 'source' => 'users', 'label' => 'Responsable'],
                     'date_debut' => ['type' => 'date'],
                     'date_fin' => ['type' => 'date'],
                     'montant' => ['type' => 'decimal', 'defaut' => 0],

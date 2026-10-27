@@ -32,6 +32,23 @@ class ExpressionBesoinPolicy
         return $user->can('besoin.modifier') && $b->estModifiable() && $this->dansPerimetre($user, $b);
     }
 
+    /**
+     * Joindre (ou retirer) des pièces justificatives : quiconque peut modifier l'EB, et aussi son demandeur
+     * tant qu'elle reste modifiable — le point focal qui prépare le besoin y joint ses justificatifs avant
+     * de le transmettre au chef de service, sans pour autant pouvoir le soumettre.
+     */
+    public function joindrePieces(User $user, ExpressionBesoin $b): bool
+    {
+        if ($this->update($user, $b)) {
+            return true;
+        }
+
+        return $user->can('besoin.creer')
+            && (int) $b->demandeur_id === $user->id
+            && $b->estModifiable()
+            && $this->dansPerimetre($user, $b);
+    }
+
     public function delete(User $user, ExpressionBesoin $b): bool
     {
         return $user->can('besoin.supprimer')

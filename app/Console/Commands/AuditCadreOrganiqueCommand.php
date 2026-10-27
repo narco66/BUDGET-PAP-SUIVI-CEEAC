@@ -92,7 +92,7 @@ class AuditCadreOrganiqueCommand extends Command
             ->leftJoin('structures as p3', 'p2.parent_id', '=', 'p3.id')
             ->where('structures.type', 'direction')
             ->whereNull('structures.deleted_at')
-            ->whereRaw("COALESCE(p.type = 'departement', 0) + COALESCE(p2.type = 'departement', 0) + COALESCE(p3.type = 'departement', 0) = 0")
+            ->whereRaw("NOT (COALESCE(p.type = 'departement', false) OR COALESCE(p2.type = 'departement', false) OR COALESCE(p3.type = 'departement', false))")
             ->orderBy('structures.code')
             ->get(['structures.code', 'structures.libelle'])
             ->map(fn ($row) => "{$row->code} - {$row->libelle}")
@@ -106,7 +106,7 @@ class AuditCadreOrganiqueCommand extends Command
             ->whereNull('deleted_at')
             ->where('actif', true)
             ->groupBy('type', 'libelle')
-            ->having('total', '>', 1)
+            ->havingRaw('COUNT(*) > 1')
             ->get()
             ->map(fn ($row) => "{$row->type}: {$row->libelle} ({$row->total})")
             ->all();

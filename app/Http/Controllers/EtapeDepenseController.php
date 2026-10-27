@@ -39,9 +39,9 @@ class EtapeDepenseController extends Controller
         $config = $this->config($type);
         $this->authorize('viewAny', $this->modele($type));
 
-        $items = $config['model']::with('createur')->latest()->paginate(20);
+        $liste = app(\App\Services\Depense\EtapeDepenseListeService::class)->lister($type, $config, $request, $request->user());
 
-        return view('depense.index', compact('config', 'type', 'items'));
+        return view('depense.index', ['config' => $config, 'type' => $type] + $liste);
     }
 
     public function create(Request $request, string $type): View
@@ -55,7 +55,7 @@ class EtapeDepenseController extends Controller
 
         return view('depense.form', [
             'config' => $config, 'type' => $type, 'parent' => $parent,
-            'montant' => $this->montantEtape($type, $parent),
+            'montant' => $this->montantEtape($type, $parent, $request),
             'montantMax' => $type === 'liquidation' && $parent instanceof Engagement
                 ? $parent->montantRestantLiquidation()
                 : null,
@@ -157,31 +157,8 @@ class EtapeDepenseController extends Controller
         }
 
         try {
-            $this->workflow->traiterDecision(
-                $instance,
-                $request->user(),
-                $data['decision'],
-                $data['observation'] ?? null,
-                $data['categorie_rejet'] ?? null,
-            );
-
-            if ($data['decision'] === 'valider') {
-                $item->update(['valide_par' => $request->user()->id]);
-                $this->webhooks->declencher("{$type}.valide", [
-                    'numero' => $item->numero, 'montant' => (float) $item->montant,
-                ]);
-                if ($item instanceof Paiement) {
-                    app(\App\Services\Notifications\DepenseNotificationService::class)
-                        ->notifierPaiementValide($item->fresh());
-                }
-            } elseif ($item instanceof Paiement) {
-                $item->rejets()->create([
-                    'motif' => \Illuminate\Support\Str::limit($data['observation'] ?? 'Rejet', 255, ''),
-                    'observation' => $data['observation'] ?? null,
-                    'rejete_par' => $request->user()->id,
-                    'rejete_le' => now(),
-                ]);
-            }
+            // Même service que l'API : le double contrôle du RIB n'est plus contournable par l'écran Blade.
+            app(\App\Services\Workflow\DecisionMetierService::class)->decider($item, $request->user(), $data);
         } catch (RuntimeException $e) {
             return back()->with('erreur', $e->getMessage());
         }

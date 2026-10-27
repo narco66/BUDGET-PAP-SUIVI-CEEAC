@@ -2,25 +2,45 @@
 @section('titre', 'Tableau de bord exécutif')
 @php
     $f = fn ($n) => number_format((float) $n, 0, ',', ' ');
+    $p = fn ($n) => number_format((float) $n, 1, ',', ' ').' %';
+    // Montants compacts pour les cartes : 40 305 795 803 → « 40,3 Md ».
+    $c = function ($n) use ($f) {
+        $a = abs((float) $n);
+
+        return $a >= 1e9 ? number_format($n / 1e9, 1, ',', ' ').' Md' : ($a >= 1e6 ? number_format($n / 1e6, 1, ',', ' ').' M' : $f($n));
+    };
     $g = $data['global'];
-    $axe = $data['parAxe']->map(fn ($r) => ['x' => $r['code'] ?? '—', 'ouvert' => $r['ouvert'], 'paye' => $r['paye']]);
-    $cat = $data['parCategorie']->map(fn ($r) => ['x' => trim(($r['code'] ?? '').' '.\Illuminate\Support\Str::limit($r['intitule'] ?? '', 18)), 'v' => $r['ouvert'], 'code' => $r['code'] ?? '—']);
-    $bail = $data['parBailleur']['ceeac_ptf']->map(fn ($r) => ['x' => $r['type'], 'v' => $r['paye']]);
-    $struct = $data['parStructure']->map(fn ($r) => ['x' => $r['libelle'], 'ouvert' => $r['ouvert'], 'paye' => $r['paye'], 'label' => $r['libelle']]);
-    $evo = $data['evolution'];
+    // Reliquat (lignes non rattachées à un axe) libellé « Hors PAP » ; il n'ouvre pas de détail par axe.
+    $axe = $data['parAxe']->map(fn ($r) => ['x' => ($r['code'] ?? '—') === '—' ? 'Hors PAP' : $r['code'], 'code' => ($r['code'] ?? '—') === '—' ? null : $r['code'], 'intitule' => $r['intitule'] ?? '', 'ouvert' => $r['ouvert'], 'paye' => $r['paye']])->values();
+    $cat = $data['parCategorie']->map(fn ($r) => ['x' => trim(($r['code'] ?? '').' '.\Illuminate\Support\Str::limit($r['intitule'] ?? '', 18)), 'v' => $r['ouvert'], 'code' => $r['code'] ?? '—'])->values();
+    $bail = $data['parBailleur']['ceeac_ptf']->map(fn ($r) => ['x' => $r['type'], 'v' => $r['paye']])->values();
+    $struct = $data['parStructure']->map(fn ($r) => ['x' => $r['libelle'], 'ouvert' => $r['ouvert'], 'paye' => $r['paye'], 'label' => $r['libelle']])->values();
+    $evo = $data['evolution']->values();
+    $chaine = $data['chaine'] ?? [];
+    $couleurTaux = fn ($t) => $t >= 75 ? 'success' : ($t >= 40 ? 'warning' : 'danger');
 @endphp
 
+@push('styles')<style>
+    .ck-kpi .libelle { font-size: .75rem; color: var(--bs-secondary-color); text-transform: uppercase; letter-spacing: .03em; }
+    .ck-kpi .valeur { font-size: 1.45rem; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+    .ck-kpi .detail { font-size: .75rem; color: var(--bs-secondary-color); }
+    .ck-etape { border-left: 4px solid var(--bs-primary); }
+    .ck-num { font-variant-numeric: tabular-nums; }
+</style>@endpush
+
 @section('contenu')
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
     <div>
         <a href="{{ route('reporting.index') }}" class="text-muted small text-decoration-none"><i class="bi bi-arrow-left"></i> Reporting & Analyse</a>
         <h4 class="fw-bold mb-0">Tableau de bord exécutif</h4>
-        <span class="text-muted small">Cockpit décisionnel · Exercice <span class="badge bg-primary">{{ $exercice->annee }}</span></span>
+        <span class="text-muted small">Cockpit décisionnel · Exercice <span class="badge bg-primary">{{ $exercice->annee }}</span>
+            · calculé à {{ \App\Support\Horodatage::local($data['calcule_le'] ?? now(), 'H:i') }}</span>
         <span class="badge bg-primary-subtle text-primary ms-1">Profil : {{ $persona['persona'] ?? '—' }}</span>
-        <span id="cockpit-live-badge" class="badge bg-secondary ms-2">Sync…</span>
+        <span id="cockpit-live-badge" class="badge bg-secondary ms-1" title="Actualisation automatique des indicateurs">Sync…</span>
     </div>
-    <form method="GET">
-        <select name="exercice" class="form-select form-select-sm" style="width:140px" onchange="this.form.submit()">
+    <form method="GET" class="d-flex align-items-center gap-2">
+        <label for="ck-exercice" class="small text-muted mb-0">Exercice</label>
+        <select id="ck-exercice" name="exercice" class="form-select form-select-sm" style="width:120px" onchange="this.form.submit()">
             @foreach ($exercices as $ex)<option value="{{ $ex->id }}" @selected($exercice->id === $ex->id)>{{ $ex->annee }}</option>@endforeach
         </select>
     </form>
@@ -45,79 +65,96 @@
     <div class="card-body p-0" id="cockpit-drill-body"></div>
 </div>
 
-{{-- Synthèse Suivi-Évaluation (performance) --}}
-@include('reporting._synthese_se', ['suiviEval' => $suiviEval ?? []])
-
-{{-- Alertes --}}
+{{-- Alertes (mêmes règles que les écrans de détail) --}}
 <div class="mb-3">
     @foreach ($data['alertes'] as $a)
-        <div class="alert alert-{{ $a['niveau'] }} py-2 mb-2"><i class="bi bi-{{ $a['niveau'] === 'success' ? 'check-circle' : 'exclamation-triangle' }} me-1"></i>{{ $a['message'] }}</div>
+        <div class="alert alert-{{ $a['niveau'] }} py-2 mb-2 d-flex justify-content-between align-items-center gap-2">
+            <span><i class="bi bi-{{ $a['niveau'] === 'success' ? 'check-circle' : 'exclamation-triangle' }} me-1"></i>{{ $a['message'] }}</span>
+            @if (!empty($a['lien']))<a href="{{ $a['lien'] }}" class="alert-link small text-nowrap">Voir le détail →</a>@endif
+        </div>
     @endforeach
 </div>
 
-{{-- KPI --}}
+{{-- Indicateurs budgétaires --}}
 <div class="row g-3 mb-3">
-    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <div class="text-muted small">Taux d'exécution budgétaire</div><div class="fs-3 fw-bold text-success" id="kpi-taux-exec">{{ $g['taux_execution'] }}%</div>
-        <div class="progress" style="height:6px"><div class="progress-bar bg-success" style="width:{{ min($g['taux_execution'],100) }}%"></div></div>
+    @foreach ([
+        ['Crédits alloués', $c($g['alloue']), $g['revise_delta'] ? 'dont révision '.$c($g['revise_delta']) : 'ouvert '.$c($g['ouvert']), 'kpi-ouvert', 'primary', 'bi-wallet2'],
+        ['Engagé', $c($g['engage']), $p($g['taux_engagement']).' du crédit alloué', 'kpi-engage', 'warning', 'bi-bookmark-check'],
+        ['Payé', $c($g['paye']), 'exécution '.$p($g['taux_execution']).' du crédit', 'kpi-paye', 'success', 'bi-cash-coin'],
+        ['Reste à payer', $c($g['reste_a_payer']), 'ordonnancé non encore payé', 'kpi-reste-payer', $g['reste_a_payer'] > 0 ? 'danger' : 'success', 'bi-hourglass-split'],
+        ['Disponible à engager', $c($g['disponible']), 'crédit alloué − engagé', 'kpi-disponible', 'info', 'bi-piggy-bank'],
+        ['Réalisation PAP', $p($data['pap']['physique']), $data['pap']['activites'].' activités · financier '.$p($data['pap']['financier']), 'kpi-pap-physique', 'secondary', 'bi-diagram-3'],
+    ] as [$lib, $val, $detail, $id, $couleur, $icone])
+    <div class="col-6 col-md-4 col-xl-2"><div class="card border-0 shadow-sm h-100 border-start border-4 border-{{ $couleur }} ck-kpi"><div class="card-body py-2">
+        <div class="libelle"><i class="bi {{ $icone }} me-1"></i>{{ $lib }}</div>
+        <div class="valeur" id="{{ $id }}">{{ $val }}</div>
+        <div class="detail" id="{{ $id }}-detail">{{ $detail }}</div>
     </div></div></div>
-    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <div class="text-muted small">Taux d'engagement</div><div class="fs-3 fw-bold text-warning" id="kpi-taux-engage">{{ $g['taux_engagement'] }}%</div>
-        <div class="progress" style="height:6px"><div class="progress-bar bg-warning" style="width:{{ min($g['taux_engagement'],100) }}%"></div></div>
-    </div></div></div>
-    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <div class="text-muted small">Réalisation physique PAP</div><div class="fs-3 fw-bold text-primary" id="kpi-pap-physique">{{ $data['pap']['physique'] }}%</div>
-        <small class="text-muted">{{ $data['pap']['activites'] }} activités · fin. {{ $data['pap']['financier'] }}%</small>
-    </div></div></div>
-    <div class="col-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <div class="text-muted small">Crédits ouverts</div><div class="fs-5 fw-bold text-dark" id="kpi-ouvert">{{ $f($g['ouvert']) }}</div>
-        <small class="text-muted">Payé : <span id="kpi-paye">{{ $f($g['paye']) }}</span> XAF</small>
-    </div></div></div>
+    @endforeach
 </div>
 
-@canany(['suivi_financier.view', 'tableau_bord.voir'])
-<div class="mb-3">
-    <a href="{{ route('suivi-financier.index', ['exercice' => $exercice->id]) }}" class="card border-0 shadow-sm text-decoration-none text-dark">
-        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div>
-                <div class="text-muted small">Module Suivi Financier</div>
-                <div class="fw-bold">Restes à payer : {{ $f($g['reste_a_payer'] ?? max($g['ordonnance'] - $g['paye'], 0)) }} XAF</div>
-                <small class="text-muted">Engagement {{ $g['taux_engagement'] }}% · Exécution {{ $g['taux_execution'] }}%</small>
+{{-- Chaîne d'exécution : entonnoir des étapes, chaque taux rapporté à l'étape précédente --}}
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-bold"><i class="bi bi-arrow-right-circle me-1"></i>Chaîne d'exécution de la dépense</span>
+        @canany(['suivi_financier.view', 'tableau_bord.voir'])
+            <a href="{{ route('suivi-financier.index', ['exercice' => $exercice->id]) }}" class="small">Suivi financier détaillé →</a>
+        @endcanany
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            @foreach ($chaine as $i => $etape)
+            <div class="col-6 col-lg-3">
+                <div class="p-2 rounded bg-body-tertiary ck-etape h-100">
+                    <div class="small text-muted">{{ $i + 1 }}. {{ $etape['etape'] }}</div>
+                    <div class="fw-bold fs-5 ck-num" id="ck-chaine-{{ $i }}" title="{{ $f($etape['montant']) }} XAF">{{ $c($etape['montant']) }}</div>
+                    <div class="d-flex justify-content-between small"><span class="text-muted">{{ $etape['base'] }}</span>
+                        <span class="fw-semibold text-{{ $couleurTaux($etape['taux']) }}" id="ck-chaine-taux-{{ $i }}">{{ $p($etape['taux']) }}</span></div>
+                    <div class="progress mt-1" style="height:5px" role="progressbar" aria-label="{{ $etape['etape'] }} : {{ $p($etape['taux']) }} {{ $etape['base'] }}"
+                         aria-valuenow="{{ min(100, $etape['taux']) }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar bg-{{ $couleurTaux($etape['taux']) }}" style="width: {{ min(100, $etape['taux']) }}%"></div>
+                    </div>
+                </div>
             </div>
-            <span class="btn btn-sm btn-outline-primary">Ouvrir le hub →</span>
+            @endforeach
         </div>
-    </a>
+        <div class="small text-muted mt-2">Montants en XAF ; survolez une valeur pour le montant exact. Base : lignes budgétaires de l'exercice (compteurs d'exécution).</div>
+    </div>
 </div>
-@endcanany
 
-<div class="row g-3">
+<div class="row g-3 mb-3">
     <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Chaîne d'exécution budgétaire</h6><div id="cChaine"></div></div></div></div>
+        <h6 class="fw-bold mb-3">Décaissements mensuels et cumulés</h6><div id="cEvo" role="img" aria-label="Décaissements mensuels et cumul de l'exercice"></div></div></div></div>
     <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Répartition par catégorie</h6><div id="cCat"></div></div></div></div>
+        <h6 class="fw-bold mb-3">Répartition par nature <small class="text-muted fw-normal">(cliquez pour le détail)</small></h6><div id="cCat" role="img" aria-label="Répartition des crédits par nature"></div></div></div></div>
     <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Exécution par axe (ouvert vs payé)</h6><div id="cAxe"></div></div></div></div>
+        <h6 class="fw-bold mb-3">Exécution par axe — ouvert et payé <small class="text-muted fw-normal">(cliquez pour le détail)</small></h6><div id="cAxe" role="img" aria-label="Crédits ouverts et payés par axe"></div></div></div></div>
     <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Financement CEEAC vs PTF (payé)</h6><div id="cBail"></div></div></div></div>
-    <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Répartition par département</h6><div id="cStruct"></div></div></div></div>
-    <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-        <h6 class="fw-bold mb-3">Évolution mensuelle des décaissements</h6><div id="cEvo"></div></div></div></div>
+        <h6 class="fw-bold mb-3">Financement CEEAC et PTF (payé)</h6><div id="cBail" role="img" aria-label="Montants payés par source de financement"></div></div></div></div>
+    <div class="col-12"><div class="card border-0 shadow-sm h-100"><div class="card-body">
+        <h6 class="fw-bold mb-3">Répartition par département — ouvert et payé <small class="text-muted fw-normal">(cliquez pour le détail)</small></h6><div id="cStruct" role="img" aria-label="Crédits ouverts et payés par département"></div></div></div></div>
 </div>
+
+{{-- Synthèse Suivi-Évaluation (performance) --}}
+@include('reporting._synthese_se', ['suiviEval' => $suiviEval ?? []])
 
 {{-- Activités en retard (suivi opérationnel) --}}
+<div id="activites-retard">
 @include('reporting._activites_retard')
+</div>
 @endsection
 
 @push('scripts')
 @if (!empty($reverb['enabled']))
-<script>window.__reverbConfig = @json($reverb);</script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>window.__reverbConfig = @json($reverb);</script>
 @vite(['resources/js/echo.js', 'resources/js/charts.js', 'resources/js/cockpit-live.js'])
 @else
 @vite(['resources/js/charts.js', 'resources/js/cockpit-live.js'])
 @endif
-<script>
-(function () {
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
+// Après exécution des modules Vite (ApexCharts) : un module est différé, ce script ne l'est pas.
+document.addEventListener('DOMContentLoaded', function () {
+    if (!window.ApexCharts) { return; }
     const drillEnabled = document.getElementById('cockpit-live-root')?.dataset.drillEnabled === '1';
     const onDrill = (niveau, parent, title) => drillEnabled && window.cockpitDrill?.(niveau, parent, title);
     const nf = new Intl.NumberFormat('fr-FR');
@@ -126,7 +163,7 @@
         if (a >= 1e6) return (v/1e6).toLocaleString('fr-FR',{maximumFractionDigits:0})+' M';
         if (a >= 1e3) return (v/1e3).toLocaleString('fr-FR',{maximumFractionDigits:0})+' k'; return nf.format(v); };
     const money = { y: { formatter: v => nf.format(Math.round(v)) + ' XAF' } };
-    const base = { chart:{fontFamily:'inherit',toolbar:{show:false}}, noData:{text:'Aucune donnée'} };
+    const base = { chart:{fontFamily:'inherit',toolbar:{show:false},animations:{enabled:false}}, noData:{text:'Aucune donnée'} };
     window.__cockpitCharts = {};
     const mount = (key, sel, opts) => {
         const el = document.querySelector(sel);
@@ -139,13 +176,12 @@
         } catch (e) { console.error(sel, e); return null; }
     };
 
-    mount('cChaine', '#cChaine', { ...base, chart:{...base.chart,type:'bar',height:300},
-        plotOptions:{bar:{horizontal:true,distributed:true,borderRadius:4}},
-        series:[{data:[
-            {x:'Ouvert',y:{{ (int)$g['ouvert'] }}},{x:'Engagé',y:{{ (int)$g['engage'] }}},
-            {x:'Liquidé',y:{{ (int)$g['liquide'] }}},{x:'Ordonnancé',y:{{ (int)$g['ordonnance'] }}},{x:'Payé',y:{{ (int)$g['paye'] }}}]}],
-        colors:['#0a4a8f','#fd7e14','#0dcaf0','#6c757d','#198754'], legend:{show:false},
-        dataLabels:{formatter:compact}, xaxis:{labels:{formatter:compact}}, tooltip:money });
+    const evo = @json($evo);
+    const mois = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+    mount('cEvo', '#cEvo', { ...base, chart:{...base.chart,type:'line',height:300},
+        series:[{name:'Décaissements du mois',type:'column',data:evo.map(e=>e.montant)},{name:'Cumul',type:'line',data:evo.map(e=>e.cumul)}],
+        xaxis:{categories:mois}, yaxis:{labels:{formatter:compact}}, stroke:{width:[0,3],curve:'smooth'},
+        colors:['#0a4a8f','#198754'], dataLabels:{enabled:false}, legend:{position:'top'}, tooltip:{ shared:true, ...money } });
 
     const cat = @json($cat);
     mount('cCat', '#cCat', { ...base, chart:{...base.chart,type:'donut',height:300,
@@ -153,7 +189,8 @@
             const item = cat[cfg.dataPointIndex];
             if (item?.code) onDrill('categorie', item.code, 'Nature : ' + item.x);
         }}},
-        series:cat.map(c=>c.v), labels:cat.map(c=>c.x), legend:{position:'bottom'}, tooltip:money });
+        series:cat.map(c=>c.v), labels:cat.map(c=>c.x), legend:{position:'bottom'}, tooltip:money,
+        plotOptions:{pie:{donut:{labels:{show:true,total:{show:true,label:'Total',formatter:(w)=>compact(w.globals.seriesTotals.reduce((a,b)=>a+b,0))}}}}} });
 
     const axe = @json($axe);
     mount('cAxe', '#cAxe', { ...base, chart:{...base.chart,type:'bar',height:320,
@@ -177,14 +214,7 @@
         }}},
         series:[{name:'Ouvert',data:struct.map(s=>s.ouvert)},{name:'Payé',data:struct.map(s=>s.paye)}],
         xaxis:{categories:struct.map(s=>s.x),labels:{rotate:-45,style:{fontSize:'10px'}}},
-        yaxis:{labels:{formatter:compact}}, colors:['#0a4a8f','#198754'], dataLabels:{enabled:false}, tooltip:money });
-
-    const evo = @json($evo);
-    const mois = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
-    mount('cEvo', '#cEvo', { ...base, chart:{...base.chart,type:'area',height:320},
-        series:[{name:'Décaissements',data:evo.map(e=>e.montant)}],
-        xaxis:{categories:mois}, yaxis:{labels:{formatter:compact}},
-        colors:['#0a4a8f'], stroke:{curve:'smooth',width:2}, fill:{opacity:.2}, tooltip:money });
-})();
+        yaxis:{labels:{formatter:compact}}, colors:['#0a4a8f','#198754'], dataLabels:{enabled:false}, legend:{position:'top'}, tooltip:money });
+});
 </script>
 @endpush

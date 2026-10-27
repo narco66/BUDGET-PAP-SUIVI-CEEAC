@@ -9,3 +9,6 @@ Broadcast::channel('cockpit.{exerciceId}', function ($user, string $exerciceId) 
 
     return ['id' => $user->id, 'name' => $user->name];
 });
+
+// Canal privé des notifications : réservé à son seul titulaire (référentiel Notifications § 15).
+Broadcast::channel('App.Models.User.{id}', fn ($user, string $id) => (int) $user->id === (int) $id);

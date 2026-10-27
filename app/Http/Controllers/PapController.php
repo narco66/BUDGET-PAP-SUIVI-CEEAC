@@ -92,15 +92,19 @@ class PapController extends Controller
             'historiques.auteur',
         ]);
         $instance = $pap->workflowActif;
-        $peutAgir = auth()->user()->can('agir', $pap);
+        $peutAgir = $instance && $this->workflow->peutAgir($instance, auth()->user());
 
-        $synthese = $this->performance->executionPap($pap->exercice_id);
-        $audit = $this->audit->executer($pap->exercice_id);
-        $consolidation = $this->performance->consolidationParStructure($pap->exercice_id)->take(8);
-        $classementDepartements = $this->performance->classementDepartements($pap->exercice_id)->take(8);
-        $performanceProduits = $this->performance->performanceProduits($pap->exercice_id);
-        $performanceActivites = $this->performance->performanceActivites($pap->exercice_id);
-        $alertes = $this->pilotage->alertes($pap->exercice_id);
+        // Calcul composite : les activités de l'exercice ne sont chargées qu'une fois pour tous les indicateurs.
+        [$synthese, $audit, $consolidation, $classementDepartements, $performanceProduits, $performanceActivites, $alertes]
+            = $this->performance->memoriser(fn () => [
+                $this->performance->executionPap($pap->exercice_id),
+                $this->audit->executer($pap->exercice_id),
+                $this->performance->consolidationParStructure($pap->exercice_id)->take(8),
+                $this->performance->classementDepartements($pap->exercice_id)->take(8),
+                $this->performance->performanceProduits($pap->exercice_id),
+                $this->performance->performanceActivites($pap->exercice_id),
+                $this->pilotage->alertes($pap->exercice_id),
+            ]);
         $risques = $pap->risques()->with(['activite', 'responsable'])->orderBy('code')->get();
         $mesures = $pap->mesuresCorrectives()->with(['risque', 'activite', 'responsable'])->latest()->get();
         $activitesEcarts = Activite::query()

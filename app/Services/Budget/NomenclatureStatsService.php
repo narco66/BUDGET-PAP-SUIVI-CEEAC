@@ -63,7 +63,7 @@ class NomenclatureStatsService
             ->where('lb.exercice_id', $exerciceId)->whereNull('lb.deleted_at')
             ->where('lb.montant_engage', '<=', 0)
             ->selectRaw('lb.code, lb.intitule, lb.montant_ouvert, r.code rubrique_code,
-                         COALESCE(s.sigle, s.libelle, "—") structure')
+                         COALESCE(s.sigle, s.libelle, \'—\') structure')
             ->orderByDesc('lb.montant_ouvert')
             ->limit($limite)->get();
     }

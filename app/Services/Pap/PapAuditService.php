@@ -111,6 +111,7 @@ class PapAuditService
             ->join('axes as ax', 'pr.axe_id', '=', 'ax.id')
             ->join('piliers as p', 'ax.pilier_id', '=', 'p.id')
             ->where('p.exercice_id', $exerciceId)
+            ->where('lb.code', 'not like', 'ACT-%')   // enveloppe PAP partagée : pas de lien 1:1 attendu
             ->where(function ($q) {
                 $q->whereNull('lb.activite_id')->orWhereColumn('lb.activite_id', '!=', 'a.id');
             })

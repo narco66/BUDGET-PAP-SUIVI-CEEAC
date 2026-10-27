@@ -707,6 +707,54 @@ export interface WorkflowTache {
   demarre_le?: string | null
 }
 
+/** Tâche du module « Mes Tâches » (GET /api/v1/tasks). */
+export interface TacheTravail {
+  id: number
+  reference: string
+  /** « validation » : étape de circuit ; « preparation » : action à réaliser dans le dossier. */
+  nature: 'validation' | 'preparation'
+  action_code: string | null
+  action_attendue: string
+  affectation_defaut: boolean
+  initiateur: { id: number; nom: string } | null
+  module: string
+  circuit: string
+  dossier: { type: string; id: number; reference: string | null; libelle: string | null; url: string | null; montant: number | null; statut: string | null; cree_le: string | null }
+  etape: { ordre: number; role: string; libelle: string | null }
+  unite: { id: number; code: string; libelle: string } | null
+  statut: string
+  statut_libelle: string
+  priorite: 'faible' | 'normale' | 'haute' | 'urgente'
+  decision: string | null
+  affectataire: { id: number; nom: string } | null
+  recue_le: string | null
+  echeance_le: string | null
+  termine_le: string | null
+  en_retard: boolean
+  par_delegation: boolean
+  motif_non_traitable: string | null
+  libelle_validation: string
+  version: number
+  available_actions: string[]
+  url: string
+  url_legacy: string
+}
+
+export interface TachesStats {
+  a_traiter: number
+  en_cours: number
+  suspendues: number
+  urgentes: number
+  en_retard: number
+  recues_periode: number
+  terminees_periode: number
+  retournees_periode: number
+  deleguees_periode: number
+  delai_moyen_heures: number | null
+  taux_dans_delais: number | null
+  depuis: string
+}
+
 export interface WorkflowInstance {
   id: number
   statut: string
@@ -782,6 +830,17 @@ export interface NotificationItem {
   lu_le?: string | null
   archive?: boolean
   cree_le?: string | null
+  cree_le_local?: string | null
+  priorite?: 'P1' | 'P2' | 'P3' | 'P4'
+  nature?: 'action' | 'information' | 'alerte' | 'rappel' | 'systeme'
+  ressource?: { type: string; id: number; reference: string | null } | null
+  action?: { statut: string; libelle: string; disponible: boolean; traitee_le: string | null; traitee_par: string | null } | null
+}
+
+export interface NotificationDestination {
+  url: string
+  action_disponible: boolean
+  message: string | null
 }
 
 export interface CampagneSuivi {
@@ -877,7 +936,7 @@ export interface Immobilisation {
 }
 
 export interface NotificationsHub {
-  stats: { non_lues: number; aujourdhui: number; critiques: number }
+  stats: { non_lues: number; aujourdhui: number; critiques: number; actions_en_attente?: number; total?: number; taux_lecture?: number | null }
   peut_gerer: boolean
   peut_resoudre: boolean
   peut_exporter: boolean

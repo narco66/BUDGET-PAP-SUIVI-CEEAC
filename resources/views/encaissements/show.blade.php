@@ -13,7 +13,8 @@
         @if (in_array($encaissement->statut, ['saisi', 'rejete'], true))
             @can('soumettre', $encaissement)
             <form method="POST" action="{{ route('encaissements.soumettre', $encaissement) }}" onsubmit="return confirm('Soumettre au circuit de validation recettes ?')">
-                @csrf <button class="btn btn-sm btn-primary"><i class="bi bi-send me-1"></i>Soumettre</button>
+                @csrf
+                <button class="btn btn-sm btn-primary" @disabled($blocages !== []) @if($blocages !== []) title="Prérequis manquants : voir ci-dessous" @endif><i class="bi bi-send me-1"></i>Soumettre</button>
             </form>
             @endcan
             @can('annuler', $encaissement)
@@ -34,7 +35,29 @@
     </div>
 </div>
 
-@if (session('erreur'))<div class="alert alert-danger">{{ session('erreur') }}</div>@endif
+@if ($blocages !== [])
+<div class="alert alert-warning d-flex gap-2" role="alert">
+    <i class="bi bi-exclamation-triangle fs-5"></i>
+    <div>
+        <strong>Soumission au circuit de validation impossible pour l'instant.</strong>
+        <ul class="mb-0 mt-1 small">
+            @isset($blocages['rubrique'])
+            <li>
+                La recette <strong>{{ $encaissement->recette?->reference }}</strong> n'est pas ventilée (rubrique budgétaire manquante).
+                @if ($encaissement->recette)
+                @can('view', $encaissement->recette)
+                <a href="{{ route('recettes.show', $encaissement->recette) }}#ventilation" class="alert-link">Ventiler la recette</a>
+                @endcan
+                @endif
+            </li>
+            @endisset
+            @isset($blocages['justificatif'])
+            <li>Aucun justificatif n'est rattaché. <a href="#justificatifs" class="alert-link">Ajouter un justificatif</a></li>
+            @endisset
+        </ul>
+    </div>
+</div>
+@endif
 
 <div class="row g-3">
     <div class="col-lg-7">
@@ -58,7 +81,7 @@
                 <dt class="col-sm-4 text-muted">Observations</dt><dd class="col-sm-8">{{ $encaissement->observations ?? '—' }}</dd>
             </dl>
         </div></div>
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm" id="justificatifs">
             <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-folder2-open me-1"></i>Justificatifs (GED) ({{ $encaissement->gedDocuments->count() }})</span>
                 @can('ged.voir')

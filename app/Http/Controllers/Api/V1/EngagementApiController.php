@@ -41,6 +41,7 @@ class EngagementApiController extends Controller
                 });
             })
             ->latest();
+        app(\App\Services\AccessScopeService::class)->filtrerDossiersDepense($query, $request->user());
 
         return EngagementResource::collection(
             $query->paginate(min(100, max(1, (int) $request->integer('per_page', 20))))
@@ -123,22 +124,7 @@ class EngagementApiController extends Controller
         $resultat = $this->idempotence->executer($request, 'engagement.decision.'.$engagement->id, function () use ($request, $engagement, $instance, $data) {
             $this->assertVersion($request, $engagement);
             try {
-                $this->workflow->traiterDecision(
-                    $instance,
-                    $request->user(),
-                    $data['decision'],
-                    $data['observation'] ?? null,
-                    $data['categorie_rejet'] ?? null,
-                );
-
-                if ($data['decision'] === 'valider') {
-                    $engagement->update(['controleur_id' => $request->user()->id]);
-                    $this->webhooks->declencher('engagement.vise', [
-                        'numero' => $engagement->numero,
-                        'montant' => (float) $engagement->montant_total,
-                        'objet' => $engagement->objet,
-                    ]);
-                }
+                app(\App\Services\Workflow\DecisionMetierService::class)->decider($engagement, $request->user(), $data);
             } catch (RuntimeException $e) {
                 return ['status' => 422, 'body' => ['message' => $e->getMessage(), 'code' => 'transition_invalide']];
             }

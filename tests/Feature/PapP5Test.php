@@ -31,6 +31,7 @@ class PapP5Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);   // parcours métier : la double authentification est testée à part
         $this->seed([
             RoleSeeder::class,
             StructureSeeder::class,
@@ -83,10 +84,10 @@ class PapP5Test extends TestCase
         $exercice = Exercice::firstWhere('annee', 2026);
         $admin = User::factory()->create(['actif' => true])->assignRole('administrateur');
 
+        // Word est toujours généré en arrière-plan (config reporting.async.formats) : vérifié à part ci-dessous.
         $formats = [
             'pdf' => 'application/pdf',
             'excel' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'word' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'csv' => 'text/csv',
         ];
 
@@ -102,6 +103,11 @@ class PapP5Test extends TestCase
                 (string) $response->headers->get('content-type'),
             );
         }
+
+        \Illuminate\Support\Facades\Queue::fake();
+        $this->actingAs($admin)->get(route('reporting.generer', ['type' => 'pap', 'format' => 'word', 'exercice' => $exercice->id]))
+            ->assertRedirect()->assertSessionHas('succes');
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\GenererRapportJob::class);
     }
 
     public function test_suppression_interdite_si_piliers_lies(): void

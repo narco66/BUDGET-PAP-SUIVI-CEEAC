@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Admin\Interop\InteropExportController;
 use App\Http\Controllers\Controller;
 use App\Models\ApiClient;
 use App\Models\ApiLog;
@@ -12,6 +13,7 @@ use App\Models\WebhookLivraison;
 use App\Services\Api\IdempotenceActionService;
 use App\Services\Interop\ApiMonitoringService;
 use App\Services\Interop\ConnectedAppService;
+use App\Services\Interop\OpenApiService;
 use App\Services\WebhookService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,7 @@ class InteropApiController extends Controller
         private readonly WebhookService $webhooks,
         private readonly IdempotenceActionService $idempotence,
         private readonly ApiMonitoringService $monitoring,
+        private readonly OpenApiService $openApi,
     ) {}
 
     public function hub(Request $request): JsonResponse
@@ -42,13 +45,6 @@ class InteropApiController extends Controller
             'peut_admin' => $this->peut($request, 'api.admin'),
             'peut_monitor' => $this->peut($request, 'api.monitor'),
             'peut_publier' => $this->peut($request, 'api.publish'),
-            'href_docs' => $this->href('api.docs'),
-            'href_inventaire' => ($this->peut($request, 'api.admin') || $this->peut($request, 'api.publish'))
-                ? $this->href('admin.interoperabilite.exports.inventaire', 'xlsx')
-                : null,
-            'href_securite' => ($this->peut($request, 'api.admin') || $this->peut($request, 'api.monitor'))
-                ? $this->href('admin.interoperabilite.exports.securite', 'pdf')
-                : null,
         ]);
     }
 
@@ -120,6 +116,23 @@ class InteropApiController extends Controller
                 'total' => (int) $row->total,
             ])->values()->all(),
         ]);
+    }
+
+    public function docs(Request $request): JsonResponse
+    {
+        abort_unless($this->peut($request, 'api.view') || $this->peut($request, 'api.admin'), 403);
+
+        return response()->json($this->openApi->specification());
+    }
+
+    public function exportInventaire(Request $request, InteropExportController $export, string $format)
+    {
+        return $export->inventaire($request, $this->openApi, $format);
+    }
+
+    public function exportSecurite(Request $request, InteropExportController $export, string $format)
+    {
+        return $export->rapportSecurite($request, $this->monitoring, $format);
     }
 
     public function options(Request $request): JsonResponse
@@ -507,12 +520,5 @@ class InteropApiController extends Controller
         } catch (PermissionDoesNotExist) {
             return false;
         }
-    }
-
-    private function href(string $name, mixed ...$params): string
-    {
-        $legacy = rtrim((string) config('spa.legacy_url', config('app.url')), '/');
-
-        return $legacy.route($name, $params, false);
     }
 }

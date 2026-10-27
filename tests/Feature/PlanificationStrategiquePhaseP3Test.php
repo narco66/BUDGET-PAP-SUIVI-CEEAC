@@ -31,6 +31,7 @@ class PlanificationStrategiquePhaseP3Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed([RoleSeeder::class, StrategiePermissionsSeeder::class, ExerciceSeeder::class]);
         $this->gestionnaire = User::factory()->create(['actif' => true]);
         $this->gestionnaire->assignRole('directeur');
@@ -127,6 +128,22 @@ class PlanificationStrategiquePhaseP3Test extends TestCase
         $this->assertSame('actif', $plan->statut);
         $this->assertNotNull($plan->validated_at);
         $this->assertSame($this->validateur->id, $plan->validated_by);
+    }
+
+    public function test_soumission_workflow_refuse_plan_incomplet(): void
+    {
+        // Circuit STRATEGIE actif : les préconditions (orientation + objectif) s'appliquent aussi.
+        $this->seed(\Database\Seeders\WorkflowSeeder::class);
+        $plan = PlanStrategique::first()->replicate(['validated_at', 'validated_by', 'submitted_at']);
+        $plan->fill(['reference' => 'PSC-VIDE', 'intitule' => 'Plan sans contenu', 'statut' => 'brouillon'])->save();
+
+        $this->actingAs($this->gestionnaire)
+            ->post(route('strategie.plans.soumettre', $plan))
+            ->assertRedirect()
+            ->assertSessionHas('erreur');
+
+        $this->assertSame('brouillon', $plan->fresh()->statut);
+        $this->assertNull($plan->fresh()->workflowActif);
     }
 
     public function test_rejet_plan_strategique(): void

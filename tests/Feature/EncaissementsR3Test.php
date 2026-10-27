@@ -27,6 +27,7 @@ class EncaissementsR3Test extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed([RoleSeeder::class, RecettesPermissionsSeeder::class]);
         $this->exercice = Exercice::create(['annee' => 2026, 'libelle' => 'Ex 2026', 'statut' => 'ouvert']);
 
@@ -228,5 +229,39 @@ class EncaissementsR3Test extends TestCase
         // Le contrôleur valide (recette.valider) mais ne saisit pas.
         $controleur = $this->user('controleur_financier');
         $this->actingAs($controleur)->get(route('encaissements.create'))->assertForbidden();
+    }
+
+    public function test_fiche_non_soumise_sans_panneau_de_decision_meme_pour_administrateur(): void
+    {
+        // Le contournement administrateur de la Gate ne doit pas afficher « Votre décision » sans circuit en cours.
+        $admin = $this->user('administrateur');
+        $enc = app(EncaissementService::class)->saisir([
+            'recette_id' => $this->recette->id, 'reference' => 'ENC-UI-1',
+            'montant' => 1_000_000, 'devise' => 'XAF', 'taux_change' => 1,
+            'mode_paiement' => 'virement', 'date_encaissement' => '2026-03-01',
+        ], $admin);
+
+        $this->actingAs($admin)->get(route('encaissements.show', $enc))
+            ->assertOk()
+            ->assertDontSee('Votre décision')
+            ->assertSee('Soumission au circuit de validation impossible')
+            ->assertSee('Ajouter un justificatif');
+    }
+
+    public function test_fiche_signale_recette_non_ventilee(): void
+    {
+        $admin = $this->user('administrateur');
+        $this->recette->update(['rubrique_id' => null]);
+        $enc = app(EncaissementService::class)->saisir([
+            'recette_id' => $this->recette->id, 'reference' => 'ENC-UI-2',
+            'montant' => 1_000_000, 'devise' => 'XAF', 'taux_change' => 1,
+            'mode_paiement' => 'virement', 'date_encaissement' => '2026-03-01',
+        ], $admin);
+        $this->attacherPiece($enc, $admin);
+
+        $this->actingAs($admin)->get(route('encaissements.show', $enc))
+            ->assertOk()
+            ->assertSee('Ventiler la recette')
+            ->assertSee(route('recettes.show', $this->recette).'#ventilation', false);
     }
 }

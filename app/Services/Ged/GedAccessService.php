@@ -16,6 +16,45 @@ class GedAccessService
         private AccessScopeService $scopes,
     ) {}
 
+    /** @var array<string, array{actif: bool, telecharger: bool}> partages préchargés (clé utilisateur:document) */
+    private array $partages = [];
+
+    /** @var array<string, bool> périmètre préchargé (clé utilisateur:document) */
+    private array $perimetre = [];
+
+    /**
+     * Précharge en une requête les partages actifs d'une liste de documents pour un utilisateur : les contrôles
+     * de consultation / téléchargement de chaque ligne n'interrogent plus la base (mêmes règles).
+     *
+     * @param  iterable<GedDocument>  $documents
+     */
+    public function prechargerPartages(iterable $documents, User $user): void
+    {
+        $documents = collect($documents);
+        $ids = $documents->pluck('id')->all();
+        foreach ($ids as $id) {
+            $this->partages[$user->id.':'.$id] = ['actif' => false, 'telecharger' => false];
+        }
+        // Périmètre calculé une fois pour la liste (sinon recalculé pour chaque ligne).
+        $global = $this->scopes->estGlobal($user);
+        $autorisees = $global ? null : $this->scopes->structuresAutorisees($user);
+        foreach ($documents as $doc) {
+            $this->perimetre[$user->id.':'.$doc->id] = $global || ! $doc->structure_id || $autorisees->contains($doc->structure_id);
+        }
+        if ($ids === []) {
+            return;
+        }
+        GedPartage::query()->whereIn('document_id', $ids)
+            ->where(fn ($q) => $q->where('partage_avec', $user->id)->orWhere('structure_id', $user->structure_id))
+            ->where(fn ($q) => $q->whereNull('expire_le')->orWhere('expire_le', '>', now()))
+            ->get(['document_id', 'peut_telecharger'])
+            ->each(function (GedPartage $p) use ($user) {
+                $cle = $user->id.':'.$p->document_id;
+                $this->partages[$cle]['actif'] = true;
+                $this->partages[$cle]['telecharger'] = $this->partages[$cle]['telecharger'] || (bool) $p->peut_telecharger;
+            });
+    }
+
     public function peutConsulter(User $user, GedDocument $document): bool
     {
         if ($user->can('ged.admin')) {
@@ -38,7 +77,7 @@ class GedAccessService
             return false;
         }
 
-        if (! $this->scopes->dansPerimetre($user, $document->structure_id)) {
+        if (! ($this->perimetre[$user->id.':'.$document->id] ?? $this->scopes->dansPerimetre($user, $document->structure_id))) {
             $this->journalRefus($user, $document, 'consultation_perimetre');
 
             return false;
@@ -65,7 +104,7 @@ class GedAccessService
             return false;
         }
 
-        $partage = GedPartage::where('document_id', $document->id)
+        $partage = $this->partages[$user->id.':'.$document->id]['telecharger'] ?? GedPartage::where('document_id', $document->id)
             ->where(function ($q) use ($user) {
                 $q->where('partage_avec', $user->id)
                     ->orWhere('structure_id', $user->structure_id);
@@ -94,6 +133,10 @@ class GedAccessService
 
     private function partageActif(User $user, GedDocument $document): bool
     {
+        if (isset($this->partages[$user->id.':'.$document->id])) {
+            return $this->partages[$user->id.':'.$document->id]['actif'];
+        }
+
         return GedPartage::where('document_id', $document->id)
             ->where(function ($q) use ($user) {
                 $q->where('partage_avec', $user->id)

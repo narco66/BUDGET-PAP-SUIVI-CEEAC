@@ -28,6 +28,26 @@ Avant toute bascule SPA :
 4. `php artisan config:cache` et `php artisan route:cache`.
 5. Relancer les workers et Reverb si utilisés.
 
+## File d’attente et planificateur (exploitation)
+
+Les notifications e-mail et SMS, les notifications GED, les rapports asynchrones, les relances et les escalades d’alertes en dépendent. Les deux processus doivent tourner en permanence et redémarrer automatiquement.
+
+| Processus | Commande | Windows Server | Linux |
+|---|---|---|---|
+| Traitement de la file | `php artisan queue:work --queue=reporting,notifications,webhooks,default --tries=3 --max-time=3600` | Service Windows (NSSM), redémarrage automatique | Supervisor (`autorestart=true`) |
+| Planificateur | `php artisan schedule:run` | Planificateur de tâches : toutes les minutes, compte de service | cron : `* * * * * php /chemin/artisan schedule:run >> /dev/null 2>&1` |
+
+Après chaque déploiement : `php artisan queue:restart` (les workers rechargent le code à la fin de leur tâche en cours).
+
+Contrôles de bon fonctionnement :
+
+- `php artisan schedule:list` : prochaines exécutions cohérentes ;
+- table `jobs` : le nombre de tâches en attente ne croît pas durablement ;
+- `php artisan queue:failed` : aucune tâche en échec non traitée ;
+- table `email_logs` : pas d’accumulation au statut `en_attente`.
+
+Prérequis de la messagerie avant recette : `MAIL_MAILER` réel (SMTP institutionnel), `MAIL_FROM_ADDRESS` institutionnelle (pas `hello@example.com`), numéros de téléphone renseignés et `NOTIFICATIONS_SMS_PROVIDER` configuré pour le canal SMS.
+
 ## Déploiement frontend
 
 1. `cd frontend && npm ci && npm run build`

@@ -148,15 +148,19 @@ class BudgetAuditService
             ->whereNotNull('ligne_budgetaire_id')
             ->count();
 
+        // Enveloppes PAP « ACT-{axe} » (ImputationPapService::estEnveloppePap) exclues : partagées par plusieurs
+        // activités, elles n'ont pas de lien inverse unique (règle de RbmBudgetSyncService et budget:reconcilier).
         $liaisonsDesynchronisees = (int) DB::table('activites as a')
             ->join('lignes_budgetaires as lb', 'lb.id', '=', 'a.ligne_budgetaire_id')
             ->when($exerciceId, fn ($q) => $q->where('lb.exercice_id', $exerciceId))
+            ->where('lb.code', 'not like', 'ACT-%')
             ->where(fn ($q) => $q->whereNull('lb.activite_id')->orWhereColumn('lb.activite_id', '!=', 'a.id'))
             ->count();
 
         $lignesSansActiviteAvecMontant = LigneBudgetaire::query()
             ->when($exerciceId, fn ($q) => $q->where('exercice_id', $exerciceId))
             ->whereNull('activite_id')
+            ->where('code', 'not like', 'ACT-%')
             ->where('montant_ouvert', '>', 0)
             ->count();
 
@@ -164,13 +168,14 @@ class BudgetAuditService
             ->when($exerciceId, fn ($q) => $q->whereHas('ligneBudgetaire', fn ($lb) => $lb->where('exercice_id', $exerciceId)))
             ->whereNotNull('ligne_budgetaire_id')
             ->where(fn ($q) => $q->where('montant_ceeac', '>', 0)->orWhere('montant_ptf', '>', 0))
+            ->with(['ligneBudgetaire' => fn ($q) => $q->withSum('sourcesFinancement as total_sources', 'montant')])
             ->get()
             ->filter(function (Activite $a) {
                 $ligne = $a->ligneBudgetaire;
                 if (! $ligne) {
                     return false;
                 }
-                $pivotTotal = (float) $ligne->sourcesFinancement()->sum('montant');
+                $pivotTotal = (float) $ligne->total_sources;
                 if ($pivotTotal <= 0) {
                     return false;
                 }

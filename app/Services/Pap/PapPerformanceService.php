@@ -5,12 +5,38 @@ namespace App\Services\Pap;
 use App\Models\Activite;
 use App\Models\LigneBudgetaire;
 use App\Models\Structure;
+use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /** Calculs de performance PAP (physique déclaratif, financier = exécution réelle budgétaire). */
 class PapPerformanceService
 {
+    /** @var array<int, Collection>|null Activités par exercice, mémorisées pendant {@see memoriser()}. */
+    private ?array $memoActivites = null;
+
+    /**
+     * Exécute un calcul composite (tableau de pilotage, audit…) en ne chargeant qu'une fois les activités
+     * de chaque exercice. Hors de ce périmètre, chaque appel relit la base (aucune donnée périmée).
+     *
+     * @template TValeur
+     * @param  Closure(): TValeur  $calcul
+     * @return TValeur
+     */
+    public function memoriser(Closure $calcul): mixed
+    {
+        if ($this->memoActivites !== null) {
+            return $calcul();
+        }
+
+        $this->memoActivites = [];
+        try {
+            return $calcul();
+        } finally {
+            $this->memoActivites = null;
+        }
+    }
+
     /** Montant payé réel sur la ligne budgétaire liée. */
     public function montantPayeReel(Activite $activite): float
     {
@@ -176,8 +202,8 @@ class PapPerformanceService
             ->leftJoin('lignes_budgetaires as lb', 'a.ligne_budgetaire_id', '=', 'lb.id')
             ->where('p.exercice_id', $exerciceId)
             ->whereNull('pr.deleted_at')
-            ->groupBy('pr.id', 'pr.code', 'pr.intitule')
-            ->selectRaw('pr.code, pr.intitule,
+            ->groupBy('pr.id', 'pr.code', 'pr.intitule', 'p.code')
+            ->selectRaw('pr.code, pr.intitule, p.code pilier_code,
                 COUNT(DISTINCT a.id) activites,
                 COALESCE(SUM(a.montant_total),0) budget_prevu,
                 COALESCE(SUM(lb.montant_paye),0) budget_paye,
@@ -187,6 +213,7 @@ class PapPerformanceService
             ->map(fn ($r) => [
                 'code' => $r->code,
                 'intitule' => $r->intitule,
+                'pilier_code' => $r->pilier_code,
                 'activites' => (int) $r->activites,
                 'budget_prevu' => (float) $r->budget_prevu,
                 'budget_paye' => (float) $r->budget_paye,
@@ -257,7 +284,7 @@ class PapPerformanceService
     /** Classement des départements par indice de performance composite. */
     public function classementDepartements(int $exerciceId): Collection
     {
-        $activites = $this->activitesExercice($exerciceId)->load('structure.parent');
+        $activites = $this->activitesExercice($exerciceId)->loadMissing('structure.parent');
         $buckets = [];
 
         foreach ($activites as $activite) {
@@ -321,6 +348,15 @@ class PapPerformanceService
     }
 
     private function activitesExercice(int $exerciceId): Collection
+    {
+        if ($this->memoActivites !== null) {
+            return $this->memoActivites[$exerciceId] ??= $this->chargerActivites($exerciceId);
+        }
+
+        return $this->chargerActivites($exerciceId);
+    }
+
+    private function chargerActivites(int $exerciceId): Collection
     {
         return Activite::query()
             ->with('ligneBudgetaire')

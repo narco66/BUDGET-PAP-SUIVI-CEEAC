@@ -1,5 +1,9 @@
 @php
     $total = $alertes['total_alertes'] ?? ($alertes['en_retard']->count() + $alertes['surconsommation']->count());
+    $lienActivite = $lienActivite ?? false;
+    $codeActivite = fn (array $a) => $lienActivite && ! empty($a['activite_id'])
+        ? '<a href="'.e(route('reporting.cockpit.activite', $a['activite_id'])).'" class="text-decoration-none"><code>'.e($a['code']).'</code></a>'
+        : '<code>'.e($a['code']).'</code>';
 @endphp
 
 @if($total === 0)
@@ -12,7 +16,7 @@
             <ul class="list-group list-group-flush small">
                 @foreach($alertes['en_retard']->take(10) as $a)
                 <li class="list-group-item px-0 d-flex justify-content-between">
-                    <span><code>{{ $a['code'] }}</code> — {{ Str::limit($a['intitule'], 35) }}</span>
+                    <span title="{{ $a['intitule'] }}">{!! $codeActivite($a) !!} — {{ Str::limit($a['intitule'], 35) }}</span>
                     <span class="badge bg-warning text-dark">{{ $a['taux_physique'] }}%</span>
                 </li>
                 @endforeach
@@ -25,7 +29,7 @@
             <ul class="list-group list-group-flush small">
                 @foreach($alertes['surconsommation']->take(10) as $a)
                 <li class="list-group-item px-0 d-flex justify-content-between">
-                    <span><code>{{ $a['code'] }}</code> — {{ Str::limit($a['intitule'], 35) }}</span>
+                    <span title="{{ $a['intitule'] }}">{!! $codeActivite($a) !!} — {{ Str::limit($a['intitule'], 35) }}</span>
                     <span class="badge bg-danger">{{ $a['taux_financier'] }}%</span>
                 </li>
                 @endforeach

@@ -125,13 +125,13 @@ class DepenseAvalTest extends TestCase
             in_array($reponse->status(), [302, 422], true),
             'La création ORD sur LIQ non validée doit être refusée (422 métier ou 302 auth web).'
         );
-        $this->assertSame('brouillon', $liq->fresh()->statut);
+        $this->assertSame('soumis', $liq->fresh()->statut);   // circuit démarré automatiquement au visa de l'ENG
     }
 
     public function test_creation_liquidation_via_http_depuis_engagement_vise(): void
     {
         $this->assertDatabaseHas('liquidations', [
-            'engagement_id' => $this->engagement->id, 'montant' => 600, 'statut' => 'brouillon',
+            'engagement_id' => $this->engagement->id, 'montant' => 600, 'statut' => 'soumis',
         ]);
     }
 

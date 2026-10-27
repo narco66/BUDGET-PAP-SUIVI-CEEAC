@@ -27,8 +27,6 @@
     </div>
 </div>
 
-@if (session('erreur'))<div class="alert alert-danger">{{ session('erreur') }}</div>@endif
-
 <div class="row g-3">
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm mb-3"><div class="card-body">

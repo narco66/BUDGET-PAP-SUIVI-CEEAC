@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\ConcernantStructureWorkflow;
 use App\Contracts\PilotableParWorkflow;
+use App\Contracts\RenvoiAuDemandeur;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\HasPieces;
 use App\Models\Concerns\HasWorkflow;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ExpressionBesoin extends Model implements PilotableParWorkflow, ConcernantStructureWorkflow
+class ExpressionBesoin extends Model implements PilotableParWorkflow, ConcernantStructureWorkflow, RenvoiAuDemandeur
 {
     use HasFactory, SoftDeletes, Auditable, HasWorkflow, HasPieces;
 
@@ -21,7 +22,7 @@ class ExpressionBesoin extends Model implements PilotableParWorkflow, Concernant
     public const PRIORITES = ['haute' => 'Haute', 'moyenne' => 'Moyenne', 'basse' => 'Basse'];
 
     protected $fillable = [
-        'numero', 'categorie', 'exercice_id', 'structure_id', 'activite_id', 'tache_id', 'ligne_budgetaire_id', 'demandeur_id',
+        'numero', 'categorie', 'exercice_id', 'structure_id', 'activite_id', 'tache_id', 'ligne_budgetaire_id', 'ligne_detail_id', 'demandeur_id',
         'objet', 'justification', 'montant_estime', 'priorite', 'date_besoin', 'statut',
         'heritage_pap', 'alerte_credits',
     ];
@@ -58,6 +59,12 @@ class ExpressionBesoin extends Model implements PilotableParWorkflow, Concernant
         return $this->belongsTo(Tache::class);
     }
 
+    /** Détail à 5 chiffres du budget de fonctionnement choisi (besoin hors PAP). */
+    public function ligneDetail(): BelongsTo
+    {
+        return $this->belongsTo(LigneBudgetaireDetail::class, 'ligne_detail_id');
+    }
+
     public function ligneBudgetaire(): BelongsTo
     {
         return $this->belongsTo(LigneBudgetaire::class);
@@ -78,6 +85,12 @@ class ExpressionBesoin extends Model implements PilotableParWorkflow, Concernant
         return $this->hasMany(ExpressionBesoinLigne::class)->orderBy('ordre');
     }
 
+    /** Tâches de l'activité exprimée par ce besoin (saisies en sous-lignes de la ligne PAP). */
+    public function tachesActivite(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Tache::class, 'expression_besoin_id')->orderBy('ordre');
+    }
+
     protected static function booted(): void
     {
         static::deleting(function (ExpressionBesoin $besoin) {
@@ -91,8 +104,10 @@ class ExpressionBesoin extends Model implements PilotableParWorkflow, Concernant
                 throw new \RuntimeException('La catégorie PAP / hors PAP ne peut plus être modifiée après la première soumission.');
             }
 
-            if ($besoin->activite_id && ! $besoin->ligne_budgetaire_id) {
-                $besoin->ligne_budgetaire_id = Activite::find($besoin->activite_id)?->ligne_budgetaire_id;
+            if ($besoin->activite_id && ! $besoin->ligne_budgetaire_id && ($activite = Activite::find($besoin->activite_id))) {
+                // Rattachement explicite de l'activité, sinon enveloppe PAP de son axe pour l'exercice du besoin.
+                $besoin->ligne_budgetaire_id = $activite->ligne_budgetaire_id
+                    ?? app(\App\Services\Depense\ImputationPapService::class)->ligneDe($activite, $besoin->exercice_id)?->id;
             }
 
             if ($besoin->tache_id && $besoin->activite_id) {
@@ -126,6 +141,16 @@ class ExpressionBesoin extends Model implements PilotableParWorkflow, Concernant
     public function auWorkflowRenvoye(): void
     {
         $this->update(['statut' => 'a_corriger']);
+    }
+
+    public function enCorrection(): bool
+    {
+        return $this->statut === 'a_corriger';
+    }
+
+    public function auCircuitRepris(): void
+    {
+        $this->update(['statut' => 'soumis']);
     }
 
     public function auEtapeValidee(int $ordre): void

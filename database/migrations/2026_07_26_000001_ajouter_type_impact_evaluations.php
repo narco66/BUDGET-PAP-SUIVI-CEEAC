@@ -14,11 +14,7 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('evaluations_periodiques', function (Blueprint $table) {
-            $table->enum('type', ['periodique', 'campagne', 'annuelle', 'impact'])
-                ->default('periodique')
-                ->change();
-        });
+        $this->redefinirType(['periodique', 'campagne', 'annuelle', 'impact']);
     }
 
     public function down(): void
@@ -32,8 +28,22 @@ return new class extends Migration
             ->where('type', 'impact')
             ->update(['type' => 'annuelle']);
 
-        Schema::table('evaluations_periodiques', function (Blueprint $table) {
-            $table->enum('type', ['periodique', 'campagne', 'annuelle'])
+        $this->redefinirType(['periodique', 'campagne', 'annuelle']);
+    }
+
+    /** PostgreSQL : l'énum est une contrainte CHECK que change() ne sait pas réécrire. */
+    private function redefinirType(array $valeurs): void
+    {
+        if (Schema::getConnection()->getDriverName() === 'pgsql') {
+            $liste = implode(',', array_map(fn (string $v) => "'{$v}'", $valeurs));
+            DB::statement('ALTER TABLE evaluations_periodiques DROP CONSTRAINT IF EXISTS evaluations_periodiques_type_check');
+            DB::statement("ALTER TABLE evaluations_periodiques ADD CONSTRAINT evaluations_periodiques_type_check CHECK (type::text = ANY (ARRAY[{$liste}]::text[]))");
+
+            return;
+        }
+
+        Schema::table('evaluations_periodiques', function (Blueprint $table) use ($valeurs) {
+            $table->enum('type', $valeurs)
                 ->default('periodique')
                 ->change();
         });

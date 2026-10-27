@@ -23,7 +23,7 @@
 </div>
 @once
     @push('scripts')
-    <script>
+    <script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
         document.querySelectorAll('.decision-workflow').forEach(function (sel) {
             const form = sel.closest('form');
             const cat = form.querySelector('.categorie-rejet');

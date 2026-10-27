@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -17,6 +18,11 @@ return new class extends Migration
         Schema::table('budget_titres', function (Blueprint $table) {
             $table->string('sens', 20)->change();
         });
+
+        // PostgreSQL : change() conserve la contrainte CHECK de l'ancien enum.
+        if (Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE budget_titres DROP CONSTRAINT IF EXISTS budget_titres_sens_check');
+        }
 
         Schema::table('budget_rubriques', function (Blueprint $table) {
             $table->dropUnique('budget_rubriques_code_unique');

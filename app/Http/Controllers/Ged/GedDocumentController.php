@@ -45,12 +45,15 @@ class GedDocumentController extends Controller
     {
         $this->authorize('viewAny', GedDocument::class);
 
+        $filtres = $request->all();
+
         return view('ged.documents.index', [
-            'documents' => $this->recherche->rechercher($request->all(), $request->user()),
-            'filtres' => $request->all(),
+            'documents' => $this->recherche->rechercher($filtres, $request->user()),
+            'indicateurs' => $this->recherche->indicateurs($filtres, $request->user()),
+            'filtres' => $filtres,
             'statuts' => DocumentStatut::options(),
             'niveaux' => NiveauConfidentialite::options(),
-        ]);
+        ] + $this->recherche->options($request->user()));
     }
 
     public function create(): View
@@ -247,7 +250,8 @@ class GedDocumentController extends Controller
         $documents = GedDocument::whereHas('partages', function ($q) use ($request) {
             $q->where('partage_avec', $request->user()->id)
                 ->orWhere('structure_id', $request->user()->structure_id);
-        })->paginate(20);
+        })->with(['categorie', 'typeDocument', 'dossier', 'createur', 'tags'])->latest('date_depot')->paginate(20);
+        app(\App\Services\Ged\GedAccessService::class)->prechargerPartages($documents->getCollection(), $request->user());
 
         return view('ged.partages.index', compact('documents'));
     }

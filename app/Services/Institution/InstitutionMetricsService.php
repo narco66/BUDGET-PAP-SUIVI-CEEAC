@@ -129,8 +129,8 @@ class InstitutionMetricsService
         }
 
         return $query->get(array_merge([
-            DB::raw('COALESCE(dep.code, "NON-RATTACHE") as code'),
-            DB::raw('COALESCE(dep.libelle, "Non rattache") as libelle'),
+            DB::raw('COALESCE(dep.code, \'NON-RATTACHE\') as code'),
+            DB::raw('COALESCE(dep.libelle, \'Non rattache\') as libelle'),
         ], $columns));
     }
 }

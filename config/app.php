@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    /** Fuseau institutionnel d'affichage (Libreville, UTC+01:00) : n'altère jamais l'instant stocké en UTC. */
+    'timezone_affichage' => env('APP_TIMEZONE_AFFICHAGE', 'Africa/Libreville'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

@@ -101,9 +101,10 @@ class RbmReferentielService
     /** Construit la matrice RBM/GAR aplatie pour un exercice. */
     public function matriceRbm(Exercice $exercice): Collection
     {
+        // Comptages par withCount (les tâches et indicateurs n'étaient chargés que pour être comptés).
         $exercice->load([
-            'piliers.axes.produits.sousProduits.activites.taches',
-            'piliers.axes.produits.sousProduits.activites.indicateurs',
+            'piliers.axes.produits.sousProduits.activites' => fn ($q) => $q->with('structure:id,code,libelle')
+                ->withCount(['taches', 'indicateurs']),
         ]);
 
         $lignes = collect();
@@ -121,8 +122,20 @@ class RbmReferentielService
                                 'activite' => $act->code,
                                 'intitule' => $act->intitule,
                                 'montant' => (float) $act->montant_total,
-                                'nb_taches' => $act->taches->count(),
-                                'nb_indicateurs' => $act->indicateurs->count(),
+                                'nb_taches' => (int) $act->taches_count,
+                                'nb_indicateurs' => (int) $act->indicateurs_count,
+                                // Compléments d'affichage (les clés ci-dessus restent inchangées pour les exports et l'API).
+                                'activite_id' => $act->id,
+                                'pilier_intitule' => $pilier->intitule,
+                                'axe_intitule' => $axe->intitule,
+                                'produit_intitule' => $produit->intitule,
+                                'sous_produit_intitule' => $sp->intitule,
+                                'structure' => $act->structure?->code,
+                                'structure_libelle' => $act->structure?->libelle,
+                                'montant_ceeac' => (float) $act->montant_ceeac,
+                                'montant_ptf' => (float) $act->montant_ptf,
+                                'taux_physique' => $act->taux_realisation_physique !== null ? (float) $act->taux_realisation_physique : null,
+                                'taux_financier' => $act->taux_realisation_financier !== null ? (float) $act->taux_realisation_financier : null,
                             ]);
                         }
                     }

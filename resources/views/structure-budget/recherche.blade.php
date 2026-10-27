@@ -75,6 +75,7 @@
             </tr>
         </thead>
         <tbody>
+        @php $modelesLignes = \App\Models\LigneBudgetaire::query()->whereIn('id', collect(method_exists($lignes, 'items') ? $lignes->items() : $lignes)->pluck('id'))->get()->keyBy('id'); @endphp
         @forelse ($lignes as $l)
             <tr class="{{ !($l->actif ?? true) ? 'table-secondary' : '' }}">
                 <td class="font-monospace small"><a href="{{ route('structure-budget.ligne.show', ['ligne' => $l->id, 'exercice' => $exercice?->id]) }}">{{ $l->code }}</a></td>
@@ -86,7 +87,7 @@
                 <td class="text-end small">{{ $fmt($l->montant_ouvert) }}</td>
                 <td class="text-end small text-primary">{{ $fmt($l->montant_engage) }}</td>
                 <td class="text-end">
-                    @can('structureBudget.updateLigne', \App\Models\LigneBudgetaire::find($l->id))
+                    @can('structureBudget.updateLigne', $modelesLignes[$l->id] ?? \App\Models\LigneBudgetaire::find($l->id))
                         <a href="{{ route('structure-budget.ligne.edit', $l->id) }}" class="btn btn-link btn-sm p-0" title="Modifier"><i class="bi bi-pencil"></i></a>
                     @endcan
                 </td>

@@ -60,6 +60,7 @@ class RbmNoeudService
         $data = $this->appliquerParent($request, $config, $data);
         $data = $this->normaliser($config, $data);
         $this->assertPerimetreStructure($request->user(), $config, $data);
+        $this->assertBudgetTaches($niveau, $data, null);
 
         $noeud = $config['model']::create($data);
         $this->referentiel->historiser($noeud, 'create', null, $noeud->getAttributes());
@@ -80,6 +81,7 @@ class RbmNoeudService
         $data = $this->valider($request, $config, $noeud->id);
         $data = $this->normaliser($config, $data);
         $this->assertPerimetreStructure($request->user(), $config, $data);
+        $this->assertBudgetTaches($niveau, $data, $noeud);
         $avant = $noeud->getAttributes();
         $noeud->update($data);
         $this->referentiel->historiser($noeud, 'update', $avant, $noeud->fresh()->getAttributes());
@@ -248,6 +250,20 @@ class RbmNoeudService
         }
 
         return $data;
+    }
+
+    /** Total des tâches d'une ligne PAP : plafonné par le total de la ligne (TacheBudgetService). */
+    private function assertBudgetTaches(string $niveau, array $data, ?Model $noeud): void
+    {
+        $budget = app(TacheBudgetService::class);
+        if ($niveau === 'tache') {
+            $activite = Activite::find($data['activite_id'] ?? $noeud?->activite_id);
+            if ($activite) {
+                $budget->assertPlafond($activite, (float) ($data['montant'] ?? $noeud?->montant ?? 0), $noeud?->id);
+            }
+        } elseif ($niveau === 'activite' && $noeud instanceof Activite && array_key_exists('montant_total', $data)) {
+            $budget->assertTotalLigne($noeud, (float) $data['montant_total']);
+        }
     }
 
     /** @param  array<string, mixed>  $config  $data */

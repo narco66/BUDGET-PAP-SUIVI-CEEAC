@@ -10,7 +10,21 @@ interface ActiviteLigne {
   code: string
   intitule: string
   montant_total: string
-  collecte?: { id: number; statut: string; taux_physique: string; montant_realise: string; ecart: string } | null
+  collecte?: {
+    id: number
+    statut: string
+    taux_physique: string
+    montant_realise: string
+    ecart: string
+    actions?: { verifier?: boolean; valider?: boolean; rejeter?: boolean }
+    justificatifs?: {
+      total: number
+      requis: boolean
+      peut_ajouter: boolean
+      documents: { uuid: string; titre: string }[]
+      pieces: { id: number; nom: string }[]
+    }
+  } | null
 }
 
 const route = useRoute()
@@ -72,6 +86,36 @@ async function cloturer(): Promise<void> {
   }
 }
 
+async function deposerJustificatif(collecteId: number, ev: Event): Promise<void> {
+  const formEl = ev.target as HTMLFormElement
+  const input = formEl.querySelector('input[type="file"]') as HTMLInputElement | null
+  const fichier = input?.files?.[0]
+  if (!fichier) {
+    erreur.value = 'Choisissez un fichier.'
+    return
+  }
+  const form = new FormData()
+  form.append('fichier', fichier)
+  try {
+    const r = await api<{ message: string }>(`/api/v1/collectes/${collecteId}/justificatifs`, { method: 'POST', body: form })
+    succes.value = r.message
+    formEl.reset()
+    await charger()
+  } catch (e) {
+    erreur.value = e instanceof ApiError ? e.message : 'Justificatif refusé.'
+  }
+}
+
+async function agir(collecteId: number, action: 'verifier' | 'valider' | 'rejeter'): Promise<void> {
+  try {
+    const r = await api<{ message: string }>(`/api/v1/collectes/${collecteId}/${action}`, { method: 'POST' })
+    succes.value = r.message
+    await charger()
+  } catch (e) {
+    erreur.value = e instanceof ApiError ? e.message : 'Décision impossible.'
+  }
+}
+
 async function supprimer(): Promise<void> {
   if (!campagne.value?.actions?.supprimer || !confirm('Supprimer cette campagne ?')) {
     return
@@ -105,17 +149,43 @@ onMounted(() => {
       <table class="table table-sm">
         <thead><tr><th>Activité</th><th class="text-end">Budget</th><th>Taux phys.</th><th>Réalisé</th><th>Écart</th><th></th></tr></thead>
         <tbody>
-          <tr v-for="a in activites" :key="a.id">
+          <template v-for="a in activites" :key="a.id">
+          <tr>
             <td>{{ a.code }} — {{ a.intitule }}</td>
             <td class="text-end">{{ formaterMontant(a.montant_total) }}</td>
             <td style="width:6rem"><input v-model="saisie[a.id].taux" class="form-control form-control-sm" :disabled="!campagne.actions?.saisir" /></td>
             <td style="width:8rem"><input v-model="saisie[a.id].montant" class="form-control form-control-sm" :disabled="!campagne.actions?.saisir" /></td>
             <td>{{ a.collecte?.ecart ?? '—' }}</td>
-            <td>
-              <button v-if="campagne.actions?.saisir" class="btn btn-sm btn-outline-primary" type="button" @click="enregistrer(a)">OK</button>
-              <span v-else class="small text-muted">{{ a.collecte?.statut || '' }}</span>
+            <td class="text-nowrap">
+              <button v-if="campagne.actions?.saisir" class="btn btn-sm btn-outline-primary me-1" type="button" @click="enregistrer(a)">OK</button>
+              <span class="small text-muted me-1">{{ a.collecte?.statut || '' }}</span>
+              <button v-if="a.collecte?.actions?.verifier" class="btn btn-sm btn-outline-info me-1" type="button" @click="agir(a.collecte.id, 'verifier')">Vérifier</button>
+              <button v-if="a.collecte?.actions?.valider" class="btn btn-sm btn-success me-1" type="button" @click="agir(a.collecte.id, 'valider')">Valider</button>
+              <button v-if="a.collecte?.actions?.rejeter" class="btn btn-sm btn-outline-warning" type="button" @click="agir(a.collecte.id, 'rejeter')">Renvoyer</button>
             </td>
           </tr>
+          <tr v-if="a.collecte" class="table-light">
+            <td colspan="6" class="py-2">
+              <div class="border rounded p-2 bg-white small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold">Justificatifs ({{ a.collecte.justificatifs?.total ?? 0 }})</span>
+                  <span v-if="a.collecte.justificatifs?.requis" class="badge bg-warning text-dark">Requis pour validation</span>
+                </div>
+                <ul v-if="(a.collecte.justificatifs?.documents.length || a.collecte.justificatifs?.pieces.length)" class="list-unstyled mb-2 ps-2">
+                  <li v-for="d in a.collecte.justificatifs?.documents" :key="d.uuid">
+                    <RouterLink class="small" :to="{ name: 'ged-document-detail', params: { uuid: d.uuid } }">{{ d.titre }}</RouterLink>
+                  </li>
+                  <li v-for="p in a.collecte.justificatifs?.pieces" :key="'p-' + p.id" class="text-muted">{{ p.nom }} (pièce)</li>
+                </ul>
+                <p v-else class="text-muted mb-2">Aucun justificatif rattaché.</p>
+                <form v-if="a.collecte.justificatifs?.peut_ajouter" class="d-flex gap-1 align-items-center" @submit.prevent="deposerJustificatif(a.collecte.id, $event)">
+                  <input class="form-control form-control-sm" type="file" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt,.csv">
+                  <button class="btn btn-sm btn-outline-primary" type="submit">Joindre</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          </template>
         </tbody>
       </table>
       <p v-if="activites.length === 0" class="text-muted">Aucune activité PAP sur cet exercice.</p>

@@ -31,6 +31,9 @@ return new class extends Migration
                     'brouillon','en_validation','valide','publie','rejete','clos','en_revision'
                 ) NOT NULL DEFAULT 'brouillon'"
             );
+        } elseif (Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE paps DROP CONSTRAINT IF EXISTS paps_statut_check');
+            DB::statement("ALTER TABLE paps ADD CONSTRAINT paps_statut_check CHECK (statut::text = ANY (ARRAY['brouillon','en_validation','valide','publie','rejete','clos','en_revision']::text[]))");
         }
     }
 
@@ -48,6 +51,9 @@ return new class extends Migration
                     'brouillon','en_validation','valide','publie','rejete','clos'
                 ) NOT NULL DEFAULT 'brouillon'"
             );
+        } elseif (Schema::getConnection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE paps DROP CONSTRAINT IF EXISTS paps_statut_check');
+            DB::statement("ALTER TABLE paps ADD CONSTRAINT paps_statut_check CHECK (statut::text = ANY (ARRAY['brouillon','en_validation','valide','publie','rejete','clos']::text[]))");
         }
     }
 };

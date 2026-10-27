@@ -39,30 +39,40 @@ class DepenseReportingService
     {
         $engage = $this->ventilerParTache($exerciceId, $tacheId)->keyBy('tache_id');
 
-        $chaineQuery = DB::table('paiements as p')
-            ->join('ordonnancements as o', 'o.id', '=', 'p.ordonnancement_id')
-            ->join('liquidations as l', 'l.id', '=', 'o.liquidation_id')
-            ->join('engagements as e', 'e.id', '=', 'l.engagement_id')
-            ->leftJoin('taches as t', 't.id', '=', 'e.tache_id')
-            ->where('e.exercice_id', $exerciceId)
-            ->where('p.statut', 'valide')
-            ->whereNull('p.deleted_at')
-            ->whereNull('e.deleted_at')
-            ->groupBy('e.tache_id', 't.code', 't.intitule')
-            ->selectRaw('
-                e.tache_id,
-                t.code as tache_code,
-                t.intitule as tache_intitule,
-                COALESCE(SUM(l.montant), 0) as montant_liquide,
-                COALESCE(SUM(o.montant), 0) as montant_ordonnance,
-                COALESCE(SUM(p.montant), 0) as montant_paye
-            ');
+        // Une agrégation par étape, chacune sur ses propres dossiers validés : joindre paiements → ordonnancements →
+        // liquidations multipliait le liquidé et l'ordonnancé par le nombre de paiements partiels, et ignorait les
+        // liquidations et ordonnancements validés non encore payés.
+        $etape = function (string $table, string $alias, string $montant, array $chemin) use ($exerciceId, $tacheId) {
+            $q = DB::table("{$table} as {$alias}");
+            foreach ($chemin as [$jointure, $gauche, $droite]) {
+                $q->join($jointure, $gauche, '=', $droite);
+            }
 
-        if ($tacheId) {
-            $chaineQuery->where('e.tache_id', $tacheId);
-        }
-
-        $chaine = $chaineQuery->get()->keyBy('tache_id');
+            return $q->join('engagements as e', 'e.id', '=', $chemin === [] ? "{$alias}.engagement_id" : 'l.engagement_id')
+                ->where('e.exercice_id', $exerciceId)->whereNull('e.deleted_at')
+                ->where("{$alias}.statut", 'valide')->whereNull("{$alias}.deleted_at")
+                ->when($alias === 'p', fn ($b) => $b->where(fn ($w) => $w->whereNull('p.etat_execution')->orWhere('p.etat_execution', '!=', 'instrument_rejete')))
+                ->when($tacheId, fn ($b) => $b->where('e.tache_id', $tacheId))
+                ->groupBy('e.tache_id')
+                ->selectRaw("e.tache_id, COALESCE(SUM({$montant}), 0) as total")
+                ->pluck('total', 'tache_id');
+        };
+        $liquide = $etape('liquidations', 'l', 'l.montant', []);
+        $ordonnance = $etape('ordonnancements', 'o', 'o.montant', [['liquidations as l', 'l.id', 'o.liquidation_id']]);
+        $paye = $etape('paiements', 'p', 'COALESCE(p.montant_xaf, p.montant)', [
+            ['ordonnancements as o', 'o.id', 'p.ordonnancement_id'],
+            ['liquidations as l', 'l.id', 'o.liquidation_id'],
+        ]);
+        $libelles = DB::table('taches')->whereIn('id', $liquide->keys()->merge($ordonnance->keys())->merge($paye->keys())->filter()->unique())
+            ->get(['id', 'code', 'intitule'])->keyBy('id');
+        $chaine = $liquide->keys()->merge($ordonnance->keys())->merge($paye->keys())->unique()->mapWithKeys(fn ($id) => [$id => (object) [
+            'tache_id' => $id,
+            'tache_code' => $libelles[$id]->code ?? null,
+            'tache_intitule' => $libelles[$id]->intitule ?? null,
+            'montant_liquide' => (float) ($liquide[$id] ?? 0),
+            'montant_ordonnance' => (float) ($ordonnance[$id] ?? 0),
+            'montant_paye' => (float) ($paye[$id] ?? 0),
+        ]]);
         $ids = $engage->keys()->merge($chaine->keys())->unique()->filter();
 
         return $ids->map(function ($id) use ($engage, $chaine) {

@@ -52,13 +52,30 @@ class EncaissementService
 
     private function assertJustificatifsEtRubrique(Encaissement $encaissement): void
     {
+        $blocages = $this->blocagesSoumission($encaissement);
+        if ($blocages !== []) {
+            throw new RuntimeException('Soumission impossible : '.reset($blocages).'.');
+        }
+    }
+
+    /**
+     * Prérequis manquants avant soumission/comptabilisation (affichés sur la fiche avant toute action).
+     *
+     * @return array<string,string> code => libellé
+     */
+    public function blocagesSoumission(Encaissement $encaissement): array
+    {
+        $blocages = [];
+
         if ($encaissement->gedDocuments()->count() === 0 && $encaissement->pieces()->count() === 0) {
-            throw new RuntimeException('Soumission impossible : aucun justificatif n\'est rattaché.');
+            $blocages['justificatif'] = 'aucun justificatif n\'est rattaché';
         }
 
         if (! $encaissement->recette || ! $encaissement->recette->rubrique_id) {
-            throw new RuntimeException('Soumission impossible : la recette n\'est pas ventilée (rubrique budgétaire manquante).');
+            $blocages['rubrique'] = 'la recette n\'est pas ventilée (rubrique budgétaire manquante)';
         }
+
+        return $blocages;
     }
 
     /**

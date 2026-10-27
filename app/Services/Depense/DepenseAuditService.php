@@ -306,7 +306,7 @@ class DepenseAuditService
                 ->where('statut', 'valide')->count(),
             'ecritures_comptables' => EcritureComptable::when($exerciceId, fn ($q) => $q->where('exercice_id', $exerciceId))->count(),
             'montant_engage' => (float) (clone $engQuery)->where('statut', 'vise')->sum('montant_total'),
-            'montant_paye' => (float) Paiement::where('statut', 'valide')
+            'montant_paye' => (float) Paiement::regles()
                 ->whereHas('ordonnancement.liquidation.engagement', fn ($q) => $exerciceId ? $q->where('exercice_id', $exerciceId) : $q)
                 ->sum(DB::raw('COALESCE(montant_xaf, montant)')),
         ];
@@ -320,7 +320,7 @@ class DepenseAuditService
 
         AuditDepense::create([
             'exercice_id' => $exerciceId,
-            'reference' => Numero::suivant('audit_depenses', 'AUD-D', $annee),
+            'reference' => Numero::suivant('audit_depenses', 'AUD-D', $annee, 'reference'),
             'score_conformite' => (int) ($rapport['score_conformite'] ?? 0),
             'snapshot' => $rapport['synthese'] ?? [],
             'anomalies' => $rapport['anomalies'] ?? [],

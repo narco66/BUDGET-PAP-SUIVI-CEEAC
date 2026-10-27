@@ -98,7 +98,10 @@ class PieceApiController extends Controller
             return false;
         }
 
-        return $user->can('update', $objet) || $user->can('agir', $objet);
+        $politique = \Illuminate\Support\Facades\Gate::getPolicyFor($objet);
+
+        return $user->can('update', $objet) || $user->can('agir', $objet)
+            || ($politique && method_exists($politique, 'joindrePieces') && $user->can('joindrePieces', $objet));
     }
 
     private function resoudre(string $type, int $id): Model

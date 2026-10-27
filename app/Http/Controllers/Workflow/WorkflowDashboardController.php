@@ -20,10 +20,12 @@ class WorkflowDashboardController extends Controller
     {
         abort_unless($request->user()->can('workflow.view'), 403);
 
-        $jours = (int) $request->input('jours', 90);
+        $jours = in_array((int) $request->input('jours', 90), [7, 30, 90, 180, 365], true) ? (int) $request->input('jours', 90) : 90;
+        $module = $request->string('module')->toString() ?: null;
+        $circuit = $request->string('circuit')->toString() ?: null;
 
         return view('workflow.dashboard.index', [
-            'data' => $this->dashboard->tableau($jours),
+            'data' => $this->dashboard->tableau($jours, $module, $circuit, $request->user()),
             'jours' => $jours,
         ]);
     }

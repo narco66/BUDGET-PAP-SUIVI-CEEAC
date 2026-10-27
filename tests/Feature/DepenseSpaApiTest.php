@@ -97,9 +97,9 @@ class DepenseSpaApiTest extends TestCase
         $engagement = Engagement::where('expression_besoin_id', $besoin->id)->first();
         $this->assertNotNull($engagement);
         $this->assertSame('750.00', number_format((float) $engagement->montant_total, 2, '.', ''));
-        $this->actingAs($gestionnaire)->postJson(route('api.engagements.soumettre', $engagement))
-            ->assertOk()
-            ->assertJsonPath('engagement.credits_reserves', true);
+        // Soumission automatique de l'engagement à l'approbation de l'EB (chaine_depense.automatisation).
+        $this->assertSame('soumis', $engagement->statut instanceof BackedEnum ? $engagement->statut->value : $engagement->statut);
+        $this->assertTrue((bool) $engagement->credits_reserves);
 
         $this->actingAs($directeur)->postJson(route('api.engagements.decisions', $engagement->fresh()), [
             'decision' => 'valider',

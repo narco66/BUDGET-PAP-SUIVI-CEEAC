@@ -28,6 +28,12 @@ class CockpitMetricsUpdated implements ShouldBroadcast
         return [new PrivateChannel('cockpit.'.$suffix)];
     }
 
+    /** Pas de mise en file quand aucune diffusion n'est configurée (pilote log/null) : évite l'accumulation de tâches. */
+    public function broadcastWhen(): bool
+    {
+        return ! in_array(config('broadcasting.default'), ['log', 'null'], true);
+    }
+
     public function broadcastAs(): string
     {
         return 'metrics.updated';

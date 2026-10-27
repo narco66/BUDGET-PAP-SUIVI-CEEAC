@@ -55,14 +55,42 @@ class LigneBudgetaireRequest extends FormRequest
         });
     }
 
+    public function attributes(): array
+    {
+        return [
+            'sources.*.source_financement_id' => 'source de financement (ventilation)',
+            'sources.*.montant' => 'montant de la source (ventilation)',
+        ];
+    }
+
     protected function prepareForValidation(): void
     {
+        $nombre = fn ($v) => (float) str_replace([' ', ' ', ','], ['', '', '.'], (string) $v);
         foreach (['montant_ouvert', 'montant_revise'] as $champ) {
             if ($this->filled($champ)) {
-                $this->merge([
-                    $champ => (float) str_replace([' ', ' ', ','], ['', '', '.'], (string) $this->input($champ)),
-                ]);
+                $this->merge([$champ => $nombre($this->input($champ))]);
             }
+        }
+
+        // Lignes de ventilation laissées vides (« — Choisir — », montant vide ou nul) : ignorées,
+        // le champ caché est_principale ne suffit pas à rendre une ligne « saisie ».
+        if (is_array($this->input('sources'))) {
+            $sources = [];
+            $principale = $this->input('source_principale_idx');
+            foreach ($this->input('sources') as $idx => $s) {
+                $montant = trim((string) ($s['montant'] ?? ''));
+                if (empty($s['source_financement_id']) && ($montant === '' || $nombre($montant) == 0.0)) {
+                    continue;
+                }
+                if ($montant !== '') {
+                    $s['montant'] = $nombre($montant);
+                }
+                if ((string) $idx === (string) $principale) {
+                    $principale = count($sources);   // indice de la source principale après retrait des lignes vides
+                }
+                $sources[] = $s;
+            }
+            $this->merge(['sources' => $sources, 'source_principale_idx' => is_int($principale) ? $principale : 0]);
         }
     }
 }

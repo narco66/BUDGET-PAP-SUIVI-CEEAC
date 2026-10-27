@@ -31,4 +31,14 @@ return [
         'assiette' => env('CHAINE_DEPENSE_SEUIL_ASSIETTE', 'net'),
         'juridiquement_valide' => filter_var(env('CHAINE_DEPENSE_SEUIL_JURIDIQUE', false), FILTER_VALIDATE_BOOL),
     ],
+
+    /**
+     * Enchaînement automatique (procédures ENG § 3.1-4 et LIQ § 3.1) :
+     * - EB approuvée → engagement généré, crédits réservés et soumis à la Direction du Budget ;
+     * - engagement visé → liquidation générée et circuit lancé (certification du service fait par le service initiateur).
+     */
+    'automatisation' => [
+        'soumission_engagement' => filter_var(env('CHAINE_DEPENSE_SOUMISSION_AUTO_ENG', true), FILTER_VALIDATE_BOOL),
+        'demarrage_liquidation' => filter_var(env('CHAINE_DEPENSE_DEMARRAGE_AUTO_LIQ', true), FILTER_VALIDATE_BOOL),
+    ],
 ];

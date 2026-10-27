@@ -104,6 +104,28 @@ class ApiMonitoringP3Test extends TestCase
             ->assertHeader('content-disposition');
     }
 
+    public function test_api_exports_interdit_et_fichiers(): void
+    {
+        $chef = User::factory()->create(['actif' => true])->assignRole('chef_service');
+        $admin = User::factory()->create(['actif' => true])->assignRole('administrateur');
+
+        $this->actingAs($chef)
+            ->get(route('api.interoperabilite.exports.inventaire', 'csv'))
+            ->assertForbidden();
+        $this->actingAs($chef)
+            ->get(route('api.interoperabilite.exports.securite', 'csv'))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->get(route('api.interoperabilite.exports.inventaire', 'csv'))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+        $this->actingAs($admin)
+            ->get(route('api.interoperabilite.exports.securite', 'csv'))
+            ->assertOk()
+            ->assertHeader('content-disposition');
+    }
+
     public function test_endpoints_metier_pap_budget(): void
     {
         $user = User::factory()->create(['actif' => true])->assignRole('administrateur');

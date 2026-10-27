@@ -26,7 +26,9 @@ class RbmBudgetSyncService
         }
 
         $ligne = LigneBudgetaire::find($ligneId);
-        if (! $ligne) {
+        // Enveloppe PAP « ACT-{axe} » partagée par plusieurs activités : aucun lien inverse unique à écrire
+        // (l'écrire ferait alterner la ligne d'une activité à l'autre à chaque réconciliation).
+        if (! $ligne || \App\Services\Depense\ImputationPapService::estEnveloppePap($ligne)) {
             return;
         }
 

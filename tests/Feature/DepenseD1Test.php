@@ -143,6 +143,7 @@ class DepenseD1Test extends TestCase
 
     public function test_policy_liquidation_agir(): void
     {
+        config(['chaine_depense.automatisation.demarrage_liquidation' => false]);   // parcours manuel du brouillon de liquidation
         $cf = $this->user('controleur_financier');
         $gest = $this->user('gestionnaire_budgetaire');
         [$activite, $ligne] = $this->activiteEtLigne($this->exercice, 'LB-D1-POL', 3000);

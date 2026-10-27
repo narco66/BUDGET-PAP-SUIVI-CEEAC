@@ -1,0 +1,61 @@
+{
+    "calcule_le": "2026-10-25 05:08:32",
+    "categories": {
+        "utilisateurs": {
+            "lignes": 17,
+            "sha256": "0fa364f7c3d417436b3dc812df980b725c5c2323425bdc46d48677f4bf8efa61"
+        },
+        "roles": {
+            "lignes": 14,
+            "sha256": "f5269c5570ea919a7768a00838ef4295d5891651342334a6a66733a795002d21"
+        },
+        "permissions": {
+            "lignes": 392,
+            "sha256": "309e4c3d11ebc7fccaaa60f68b619688dd7fea3de1f2acefc8432b335eb175e0"
+        },
+        "roles_utilisateurs": {
+            "lignes": 17,
+            "sha256": "7dcbc82f8bb6db8dd23489358a88ed7e4ca4ced85393d6990036b21c6df5d592"
+        },
+        "permissions_roles": {
+            "lignes": 1044,
+            "sha256": "037d6f22348b89900e18b92cb64e527dbf91e97dc5147119f5e736a2614e13e7"
+        },
+        "permissions_utilisateurs": {
+            "lignes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "affectations_structures": {
+            "lignes": 13,
+            "sha256": "0f79765f3b5eebf7aea08de58a42efc27d741af40bc5c98aedea94ff9b6fb354"
+        },
+        "organigramme": {
+            "lignes": 78,
+            "sha256": "af6d032b3fd1bbd49d6e6c0f472d3de39382997268dc577531e924f6fcaba809"
+        },
+        "nomenclature_titres": {
+            "lignes": 11,
+            "sha256": "2eed24515aeeb220b698ea77524453feaa4e017b663ac1abd76b0e5fbfdd9c01"
+        },
+        "nomenclature_articles": {
+            "lignes": 38,
+            "sha256": "5ecdfa40a039de35a10aacc9480ab63c9aac82a8bf46a0920f90d4e7108d5268"
+        },
+        "nomenclature_paragraphes": {
+            "lignes": 119,
+            "sha256": "9bf06e00fe1befdd8637c7190f0a43e4725071ff3684a1b7da1d88e6f8686e13"
+        },
+        "nomenclature_rubriques": {
+            "lignes": 224,
+            "sha256": "9ac414fb9f66a294a425d146e31e29992f2841341984c00274f5df016307cb8d"
+        },
+        "budget_2026_lignes": {
+            "lignes": 56,
+            "sha256": "09d88f512190b95a9c22ca693ef70f69e5ac977f1be624c225ef2d561bcacd1a"
+        },
+        "exercices": {
+            "lignes": 1,
+            "sha256": "5b048dbf7e7ca8abe7d0dd43218484a8d9f9551598699dcd3ba246fe1082a9f0"
+        }
+    }
+}

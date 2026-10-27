@@ -24,7 +24,7 @@ class WorkflowCorbeilleService
             ->where('statut', 'en_cours')
             ->latest('updated_at')
             ->get()
-            ->filter(fn (WorkflowInstance $i) => $this->workflow->peutAgir($i, $user))
+            ->filter(fn (WorkflowInstance $i) => $this->workflow->peutAgir($i, $user) && $this->resteATraiter($i, $user))
             ->map(function (WorkflowInstance $instance) {
                 $etape = $instance->etapeCourante();
 
@@ -39,6 +39,25 @@ class WorkflowCorbeilleService
                 ];
             })
             ->values();
+    }
+
+    /**
+     * Le dossier figure dans la corbeille seulement si une tâche ouverte peut encore être traitée par l'utilisateur
+     * (mêmes règles que « Mes tâches » : séparation des fonctions, initiateur, délégation). Un acteur qui vient de
+     * statuer n'y retrouve donc pas le dossier, même s'il détient aussi le rôle de l'étape suivante.
+     */
+    private function resteATraiter(WorkflowInstance $instance, User $user): bool
+    {
+        if ($user->hasRole('administrateur')) {
+            return true;   // supervision technique inchangée
+        }
+        $taches = \App\Models\WorkflowTache::query()->where('workflow_instance_id', $instance->id)->ouvertes()->get();
+        if ($taches->isEmpty()) {
+            return true;   // circuit antérieur aux tâches : règle historique
+        }
+        $requetes = app(TacheQueryService::class);
+
+        return $taches->contains(fn ($t) => $requetes->peutTraiter($t, $user));
     }
 
     public function compterPour(User $user): int

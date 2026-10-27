@@ -71,7 +71,7 @@ watch(() => exercices.selectionId, () => {
     <div class="d-flex justify-content-between align-items-start mb-3 gap-2">
       <div>
         <h2 class="h4 mb-1">Suivi-évaluation</h2>
-        <p class="text-muted mb-0">Scores agrégés, recommandations et formations. Circuit de collecte inchangé.</p>
+        <p class="text-muted mb-0">Scores agrégés, recommandations et formations. Circuit de collecte : chef puis Contrôleur financier.</p>
       </div>
       <div class="d-flex gap-2">
         <RouterLink class="btn btn-outline-secondary btn-sm" :to="{ name: 'campagnes-suivi' }">Campagnes</RouterLink>

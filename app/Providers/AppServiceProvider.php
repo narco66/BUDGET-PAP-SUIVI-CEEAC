@@ -60,6 +60,19 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Mémoire du cache de cockpit, propre à chaque requête / tâche de file (voir CockpitCache::version()).
+        $this->app->scoped('cockpit.memo', fn () => new \ArrayObject);
+        // Une instance par requête : la synthèse d'alignement qu'elle mémorise reste à jour d'une requête à l'autre.
+        $this->app->scoped(\App\Services\Strategie\StrategieAlignementService::class);
+        // Une instance par requête : les partages préchargés pour une liste servent aux contrôles d'accès de chaque ligne.
+        $this->app->scoped(\App\Services\Ged\GedAccessService::class);
+        // Une instance par requête : structures validatrices mémorisées (origine × rôle) pendant la requête.
+        $this->app->scoped(\App\Services\Institution\WorkflowInstitutionResolver::class);
+        // Partagée par le pilotage et l'audit PAP : les activités ne sont chargées qu'une fois par calcul (memoriser()).
+        $this->app->scoped(\App\Services\Pap\PapPerformanceService::class);
+        // Droits RBM évalués une fois par requête (RbmAuthorization::peut).
+        $this->app->scoped('rbm.autorisations', fn () => new \ArrayObject);
+
         $this->app->bind(GedAntivirusScannerInterface::class, function () {
             $cfg = config('ged.antivirus', []);
 
@@ -89,6 +102,15 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         Sanctum::usePersonalAccessTokenModel(\App\Models\PersonalAccessToken::class);
+
+        // Les instances « scoped » (mémoires de requête : partages GED préchargés, structures validatrices…) sont
+        // remises à zéro à la fin de chaque requête HTTP, y compris quand plusieurs requêtes partagent le processus
+        // (tests, serveurs persistants) : aucune donnée mémorisée ne survit à la requête qui l'a calculée.
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Foundation\Http\Events\RequestHandled::class, fn () => $this->app->forgetScopedInstances());
+        // Toute modification de l'organigramme invalide les structures validatrices mémorisées.
+        foreach (['saved', 'deleted', 'restored'] as $evenement) {
+            \App\Models\Structure::{$evenement}(fn () => \App\Services\Institution\WorkflowInstitutionResolver::organigrammeModifie());
+        }
 
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(10)
@@ -149,6 +171,11 @@ class AppServiceProvider extends ServiceProvider
             $reporting = ReportingPermissionAliases::evaluate($user, $ability);
             if ($reporting !== null) {
                 return $reporting;
+            }
+
+            $journal = \App\Support\AuditPermissionAliases::evaluate($user, $ability);
+            if ($journal !== null) {
+                return $journal;
             }
 
             $workflow = WorkflowPermissionAliases::evaluate($user, $ability);
@@ -256,6 +283,13 @@ class AppServiceProvider extends ServiceProvider
         ] as $modeleCompteur) {
             $modeleCompteur::saved(fn () => \App\Support\CockpitCache::bump());
             $modeleCompteur::deleted(fn () => \App\Support\CockpitCache::bump());
+        }
+
+        // « Mes Tâches » — actions hors étape de circuit (soumettre, corriger, préparer, solder) : la tâche de
+        // préparation suit l'état réel du dossier, synchronisée après validation de chaque écriture.
+        foreach (\App\Services\Workflow\TachePreparationService::MODELES as $modeleDepense) {
+            $modeleDepense::saved(fn ($m) => app(\App\Services\Workflow\TachePreparationService::class)->planifier($m));
+            $modeleDepense::deleted(fn ($m) => app(\App\Services\Workflow\TachePreparationService::class)->planifier($m));
         }
     }
 }

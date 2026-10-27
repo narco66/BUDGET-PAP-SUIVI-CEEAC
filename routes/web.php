@@ -265,10 +265,39 @@ Route::middleware('auth')->group(function () {
         Route::post('{niveau}/{id}/indicateurs', [IndicateurController::class, 'store'])->name('indicateurs.store');
     });
 
+    // Module Import : lots traçables (analyse, correspondance, simulation, approbation, exécution, rapports).
+    Route::prefix('imports')->name('imports.')->controller(\App\Http\Controllers\ImportController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('nouveau', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('modeles/{domaine}.xlsx', 'modele')->name('modele');
+        Route::get('{lot}', 'show')->whereNumber('lot')->name('show');
+        Route::post('{lot}/fichier', 'deposer')->whereNumber('lot')->name('deposer');
+        Route::put('{lot}/correspondance', 'mapping')->whereNumber('lot')->name('mapping');
+        Route::post('{lot}/analyser', 'analyser')->whereNumber('lot')->name('analyser');
+        Route::post('{lot}/soumettre', 'soumettre')->whereNumber('lot')->name('soumettre');
+        Route::post('{lot}/decision', 'agir')->whereNumber('lot')->name('agir');
+        Route::post('{lot}/executer', 'executer')->whereNumber('lot')->name('executer');
+        Route::post('{lot}/annuler', 'annuler')->whereNumber('lot')->name('annuler');
+        Route::get('{lot}/rapports/{type}.{format}', 'rapport')->whereNumber('lot')->whereIn('type', ['anomalies', 'operations'])->whereIn('format', ['csv', 'xlsx'])->name('rapport');
+    });
+
+    // Module « Mes Tâches » : file de travail personnelle (accessible à tout utilisateur authentifié ;
+    // chacun n'y voit que les tâches qu'il peut traiter, les vues collectives restent contrôlées).
+    Route::get('mes-taches', [\App\Http\Controllers\TacheController::class, 'index'])->name('taches.index');
+    Route::get('mes-taches/supervision', [\App\Http\Controllers\TacheController::class, 'supervision'])->name('taches.supervision');
+    Route::get('mes-taches/export', [\App\Http\Controllers\TacheController::class, 'export'])->name('taches.export');
+    Route::get('mes-taches/{tache}', [\App\Http\Controllers\TacheController::class, 'show'])->whereNumber('tache')->name('taches.show');
+    Route::post('mes-taches/{tache}/{action}', [\App\Http\Controllers\TacheController::class, 'agir'])->whereNumber('tache')
+        ->whereIn('action', ['prendre_en_charge', 'liberer', 'suspendre', 'reprendre', 'commenter', 'prioriser', 'reaffecter', 'decider'])->name('taches.agir');
+
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::post('notifications/{id}/lue', [NotificationController::class, 'marquerLue'])->name('notifications.lue');
+    Route::get('notifications/apercu', [NotificationController::class, 'apercu'])->name('notifications.apercu');
+    Route::post('notifications/{id}/lue', [NotificationController::class, 'marquerLue'])->name('notifications.lue')->whereUuid('id');
+    Route::post('notifications/{id}/non-lue', [NotificationController::class, 'marquerNonLue'])->name('notifications.non-lue')->whereUuid('id');
+    Route::get('notifications/{id}/ouvrir', [NotificationController::class, 'ouvrir'])->name('notifications.ouvrir')->whereUuid('id');
     Route::post('notifications/tout-lu', [NotificationController::class, 'toutMarquerLu'])->name('notifications.tout-lu');
-    Route::post('notifications/{id}/archiver', [NotificationController::class, 'archiver'])->name('notifications.archiver');
+    Route::post('notifications/{id}/archiver', [NotificationController::class, 'archiver'])->name('notifications.archiver')->whereUuid('id');
 
     Route::get('profil/notifications', [ProfilNotificationController::class, 'edit'])->name('profil.notifications.edit');
     Route::put('profil/notifications', [ProfilNotificationController::class, 'update'])->name('profil.notifications.update');
@@ -562,6 +591,9 @@ Route::middleware('auth')->group(function () {
     Route::get('depense/verifier/{type}/{id}', [\App\Http\Controllers\Depense\DepenseDossierController::class, 'verifier'])
         ->whereIn('type', ['besoin', 'engagement', 'liquidation', 'ordonnancement', 'paiement'])
         ->name('depense.verifier');
+    Route::get('depense/tracabilite', [\App\Http\Controllers\Depense\TracabiliteDepenseController::class, 'index'])->name('depense.tracabilite.index');
+    Route::get('depense/tracabilite/{type}/{id}', [\App\Http\Controllers\Depense\TracabiliteDepenseController::class, 'show'])
+        ->whereIn('type', ['besoin', 'engagement', 'liquidation', 'ordonnancement', 'paiement'])->whereNumber('id')->name('depense.tracabilite.show');
     Route::get('depense/rapprochement', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'index'])->name('depense.rapprochement.index');
     Route::get('depense/rapprochement/create', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'create'])->name('depense.rapprochement.create');
     Route::post('depense/rapprochement', [\App\Http\Controllers\Depense\RapprochementBancaireController::class, 'store'])->name('depense.rapprochement.store');
@@ -733,6 +765,18 @@ Route::middleware('auth')->group(function () {
 
     // Audit (D11)
     Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+    // Module Journalisation, Traçabilité et Horodatage (routes littérales avant {journal}).
+    Route::prefix('audit')->name('audit.')->group(function () {
+        Route::get('tableau-de-bord', [AuditController::class, 'tableauDeBord'])->name('tableau-de-bord');
+        Route::get('securite', [AuditController::class, 'securite'])->name('securite');
+        Route::get('integrite', [AuditController::class, 'integrite'])->name('integrite');
+        Route::post('integrite/verifier', [AuditController::class, 'verifierIntegrite'])->name('integrite.verifier');
+        Route::post('integrite/sceller', [AuditController::class, 'sceller'])->name('integrite.sceller');
+        Route::get('export/{format}', [AuditController::class, 'export'])->whereIn('format', ['csv', 'json'])->name('export');
+        Route::get('dossiers/{type}/{id}', [AuditController::class, 'dossier'])->whereNumber('id')->name('dossier');
+        Route::get('utilisateurs/{user}', [AuditController::class, 'utilisateur'])->whereNumber('user')->name('utilisateur');
+        Route::get('{journal}', [AuditController::class, 'show'])->whereNumber('journal')->name('show');
+    });
 
     // Module Audit, Contrôle Interne & Conformité — Lot D : cockpit de gouvernance.
     Route::get('gouvernance/cockpit', [GouvernanceController::class, 'cockpit'])->name('gouvernance.cockpit');
@@ -887,4 +931,4 @@ Route::get('health', [AdministrationTechniqueController::class, 'health'])->name
 Route::post('csp-report', [\App\Http\Controllers\CspReportController::class, 'store'])->name('csp.report');
 
 // Vérification publique d'intégrité / signature document GED
-Route::get('verifier/ged/{uuid}', [\App\Http\Controllers\Ged\GedAdminController::class, 'verifier'])->name('verification.ged');
+Route::get('verifier/ged/{uuid}', [\App\Http\Controllers\Ged\GedAdminController::class, 'verifier'])->name('verification.ged')->whereUuid('uuid');

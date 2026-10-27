@@ -19,9 +19,10 @@ class NotificationTemplate extends Model
     }
 
     /** @param array<string, scalar|null> $variables */
-    public function appliquer(array $variables): string
+    /** Remplace les variables {{cle}} dans le corps du modèle, ou dans le gabarit fourni (ex. le sujet). */
+    public function appliquer(array $variables, ?string $gabarit = null): string
     {
-        $corps = $this->corps;
+        $corps = $gabarit ?? $this->corps;
         foreach ($variables as $cle => $valeur) {
             $corps = str_replace('{{'.$cle.'}}', (string) ($valeur ?? ''), $corps);
         }

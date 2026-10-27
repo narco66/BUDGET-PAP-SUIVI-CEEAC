@@ -11,12 +11,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /** Exports inventaire API et rapport sécurité (I-P3). */
 class InteropExportController extends Controller
 {
-    public function inventaire(Request $request, OpenApiService $openApi, string $format): Response|StreamedResponse
+    public function inventaire(Request $request, OpenApiService $openApi, string $format): Response|StreamedResponse|BinaryFileResponse
     {
         abort_unless($request->user()->can('api.admin') || $request->user()->can('api.publish'), 403);
 
@@ -33,7 +34,7 @@ class InteropExportController extends Controller
         };
     }
 
-    public function rapportSecurite(Request $request, ApiMonitoringService $monitoring, string $format): Response
+    public function rapportSecurite(Request $request, ApiMonitoringService $monitoring, string $format): Response|StreamedResponse
     {
         abort_unless($request->user()->can('api.admin') || $request->user()->can('api.monitor'), 403);
 

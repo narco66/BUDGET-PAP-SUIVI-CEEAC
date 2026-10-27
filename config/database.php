@@ -97,6 +97,9 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Session SQL alignée sur l'application (UTC) : sans cela, CURRENT_TIMESTAMP et now()
+            // héritent du fuseau du serveur PostgreSQL et divergent de now() côté PHP (JNL-004).
+            'timezone' => env('DB_TIMEZONE', 'UTC'),
         ],
 
         'sqlsrv' => [

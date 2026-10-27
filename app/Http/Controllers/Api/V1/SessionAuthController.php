@@ -234,5 +234,9 @@ class SessionAuthController extends Controller
             'user_agent' => substr((string) $request->userAgent(), 0, 500),
             'created_at' => now(),
         ]);
+
+        if (! $succes) {
+            \App\Support\JournalSecurite::echecConnexion((string) ($request->input('email') ?? $user?->email), (string) $motif);
+        }
     }
 }

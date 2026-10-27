@@ -204,8 +204,13 @@ class BesoinApiController extends Controller
                     return ['status' => 422, 'body' => ['message' => 'La justification métier est obligatoire hors PAP.', 'code' => 'hors_pap_incomplet']];
                 }
                 app(HeritagePapService::class)->figer($actuel);
-                $circuit = app(BesoinCircuitService::class)->code($actuel->fresh());
-                $this->workflow->demarrer($actuel->fresh(), $circuit, $request->user());
+                if ($actuel->enCorrection() && $actuel->workflowActif) {
+                    // Dossier corrigé après un retour : le circuit reprend au niveau qui l'avait renvoyé.
+                    $this->workflow->reprendreApresCorrection($actuel->fresh(), $request->user());
+                } else {
+                    $circuit = app(BesoinCircuitService::class)->code($actuel->fresh());
+                    $this->workflow->demarrer($actuel->fresh(), $circuit, $request->user());
+                }
                 app(DepenseNotificationService::class)->notifierBesoinSoumis($actuel->fresh());
             } catch (RuntimeException $e) {
                 return ['status' => 422, 'body' => ['message' => $e->getMessage(), 'code' => 'transition_invalide']];

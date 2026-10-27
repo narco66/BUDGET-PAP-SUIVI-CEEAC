@@ -17,6 +17,7 @@ return [
 
         ['type' => 'section', 'label' => 'Pilotage'],
         ['type' => 'link', 'label' => 'Accueil institutionnel', 'icon' => 'bi-house-door', 'route' => 'dashboard', 'active' => 'dashboard'],
+        ['type' => 'link', 'label' => 'Mes tâches', 'icon' => 'bi-list-check', 'route' => 'taches.index', 'active' => 'taches.*'],
         ['type' => 'group', 'label' => 'Tableaux de bord', 'icon' => 'bi-speedometer2', 'permissions' => ['tableau_bord.voir', 'rapport.voir', 'reporting.view', 'strategie.view', 'pap.voir', 'admin_technique.view', 'admin_technique.monitor'], 'children' => [
             ['type' => 'link', 'label' => 'Executif', 'icon' => 'bi-grid-1x2', 'route' => 'reporting.cockpit', 'active' => 'reporting.cockpit', 'permissions' => ['reporting.view', 'tableau_bord.voir', 'rapport.voir']],
             ['type' => 'link', 'label' => 'Strategique', 'icon' => 'bi-compass', 'route' => 'strategie.dashboard.decisionnel', 'active' => 'strategie.dashboard.decisionnel', 'permission' => 'strategie.view'],
@@ -80,6 +81,7 @@ return [
         ['type' => 'section', 'label' => 'Execution'],
         ['type' => 'group', 'label' => 'Chaine de la depense', 'icon' => 'bi-receipt', 'permissions' => ['besoin.voir', 'engagement.voir', 'liquidation.voir', 'ordonnancement.voir', 'paiement.voir'], 'children' => [
             ['type' => 'link', 'label' => 'Cockpit de la depense', 'icon' => 'bi-speedometer2', 'route' => 'depense.cockpit', 'active' => 'depense.cockpit', 'permission' => 'engagement.voir'],
+            ['type' => 'link', 'label' => 'Tracabilite des dossiers', 'icon' => 'bi-diagram-3', 'route' => 'depense.tracabilite.index', 'active' => 'depense.tracabilite.*', 'permissions' => ['besoin.voir', 'engagement.voir', 'liquidation.voir', 'ordonnancement.voir', 'paiement.voir']],
             ['type' => 'link', 'label' => 'Expressions du besoin', 'icon' => 'bi-clipboard-plus', 'route' => 'besoins.index', 'active' => 'besoins.*', 'permission' => 'besoin.voir'],
             ['type' => 'link', 'label' => 'Consolidation des besoins', 'icon' => 'bi-collection', 'route' => 'besoins.consolidation', 'active' => 'besoins.consolidation', 'permission' => 'besoin.valider'],
             ['type' => 'link', 'label' => 'Engagements', 'icon' => 'bi-receipt', 'route' => 'engagements.index', 'active' => 'engagements.*', 'permission' => 'engagement.voir'],
@@ -111,21 +113,21 @@ return [
         ['type' => 'group', 'label' => 'Gestion documentaire', 'icon' => 'bi-folder2-open', 'permission' => 'ged.voir', 'children' => [
             ['type' => 'link', 'label' => 'Tableau de bord GED', 'icon' => 'bi-folder2-open', 'route' => 'ged.dashboard', 'active' => 'ged.dashboard', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Documents', 'icon' => 'bi-files', 'route' => 'ged.documents.index', 'permission' => 'ged.voir', 'active_rules' => ['routes' => ['ged.documents.*'], 'exclude' => ['ged.documents.confidentiels', 'ged.documents.expires']]],
-            ['type' => 'link', 'label' => 'Depot documentaire', 'icon' => 'bi-cloud-upload', 'route' => 'ged.documents.create', 'active' => 'ged.documents.create', 'permission' => 'ged.voir'],
+            ['type' => 'link', 'label' => 'Depot documentaire', 'icon' => 'bi-cloud-upload', 'route' => 'ged.documents.create', 'active' => 'ged.documents.create', 'permission' => 'ged.creer'],
             ['type' => 'link', 'label' => 'Recherche avancee', 'icon' => 'bi-search', 'route' => 'ged.recherche', 'active' => 'ged.recherche', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Classement', 'icon' => 'bi-diagram-2', 'route' => 'ged.classement', 'active' => 'ged.classement', 'permission' => 'ged.voir'],
-            ['type' => 'link', 'label' => 'Categories', 'icon' => 'bi-tags', 'route' => 'ged.categories', 'active' => 'ged.categories', 'permission' => 'ged.voir'],
-            ['type' => 'link', 'label' => 'Types de documents', 'icon' => 'bi-file-earmark', 'route' => 'ged.types', 'active' => 'ged.types', 'permission' => 'ged.voir'],
+            ['type' => 'link', 'label' => 'Categories', 'icon' => 'bi-tags', 'route' => 'ged.categories', 'active' => 'ged.categories', 'permission' => 'ged.admin'],
+            ['type' => 'link', 'label' => 'Types de documents', 'icon' => 'bi-file-earmark', 'route' => 'ged.types', 'active' => 'ged.types', 'permission' => 'ged.admin'],
             ['type' => 'link', 'label' => 'Dossiers', 'icon' => 'bi-folder', 'route' => 'ged.dossiers', 'active' => 'ged.dossiers', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Versions', 'icon' => 'bi-layers', 'route' => 'ged.versions', 'active' => 'ged.versions', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Signatures', 'icon' => 'bi-pen', 'route' => 'ged.signatures.index', 'active' => 'ged.signatures.*', 'permission' => 'ged.voir'],
-            ['type' => 'link', 'label' => 'Circuits documentaires', 'icon' => 'bi-signpost-split', 'route' => 'ged.workflows', 'active' => 'ged.workflows', 'permission' => 'ged.voir'],
+            ['type' => 'link', 'label' => 'Circuits documentaires', 'icon' => 'bi-signpost-split', 'route' => 'ged.workflows', 'active' => 'ged.workflows', 'permission' => 'ged.admin'],
             ['type' => 'link', 'label' => 'Documents partages', 'icon' => 'bi-share', 'route' => 'ged.partages', 'active' => 'ged.partages', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Confidentiels', 'icon' => 'bi-shield-lock', 'route' => 'ged.documents.confidentiels', 'active' => 'ged.documents.confidentiels', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Expires', 'icon' => 'bi-hourglass-split', 'route' => 'ged.documents.expires', 'active' => 'ged.documents.expires', 'permission' => 'ged.voir'],
             ['type' => 'link', 'label' => 'Archives', 'icon' => 'bi-archive', 'route' => 'ged.archives', 'active' => 'ged.archives', 'permission' => 'ged.voir'],
-            ['type' => 'link', 'label' => 'Conservation', 'icon' => 'bi-safe', 'route' => 'ged.conservation', 'active' => 'ged.conservation', 'permission' => 'ged.voir'],
-            ['type' => 'link', 'label' => 'Journal documentaire', 'icon' => 'bi-journal-text', 'route' => 'ged.journal', 'active' => 'ged.journal', 'permission' => 'ged.voir'],
+            ['type' => 'link', 'label' => 'Conservation', 'icon' => 'bi-safe', 'route' => 'ged.conservation', 'active' => 'ged.conservation', 'permission' => 'ged.admin'],
+            ['type' => 'link', 'label' => 'Journal documentaire', 'icon' => 'bi-journal-text', 'route' => 'ged.journal', 'active' => 'ged.journal', 'permission' => 'ged.consulter_journal'],
             ['type' => 'link', 'label' => 'Parametres GED', 'icon' => 'bi-gear', 'route' => 'ged.parametres', 'active' => 'ged.parametres', 'permission' => 'ged.admin'],
         ]],
         ['type' => 'group', 'label' => 'Gestion des connaissances', 'icon' => 'bi-book', 'permission' => 'ged.voir', 'children' => [
@@ -152,18 +154,25 @@ return [
         ['type' => 'group', 'label' => 'Audit, controle et conformite', 'icon' => 'bi-shield-check', 'permissions' => ['audit.voir', 'risques.voir', 'controle_interne.voir', 'conformite.voir'], 'children' => [
             ['type' => 'link', 'label' => 'Cockpit gouvernance', 'icon' => 'bi-shield-check', 'route' => 'gouvernance.cockpit', 'active' => 'gouvernance.*', 'permission' => 'audit.voir'],
             ['type' => 'link', 'label' => 'Missions d audit', 'icon' => 'bi-search', 'route' => 'audit-missions.index', 'active' => 'audit-missions.*', 'permission' => 'audit.voir'],
-            ['type' => 'link', 'label' => 'Piste d audit', 'icon' => 'bi-shield-lock', 'route' => 'audit.index', 'active' => 'audit.*', 'permission' => 'audit.voir'],
             ['type' => 'link', 'label' => 'Registre des risques', 'icon' => 'bi-exclamation-triangle', 'route' => 'risques.index', 'active' => 'risques.*', 'permission' => 'risques.voir'],
             ['type' => 'link', 'label' => 'Controle interne COSO', 'icon' => 'bi-ui-checks-grid', 'route' => 'controle-interne.index', 'active' => 'controle-interne.*', 'permission' => 'controle_interne.voir'],
             ['type' => 'link', 'label' => 'Non-conformites', 'icon' => 'bi-clipboard-x', 'route' => 'conformite.index', 'active' => 'conformite.*', 'permission' => 'conformite.voir'],
         ]],
+        // Module Journalisation, Tracabilite et Horodatage : la visibilite suit le cloisonnement (alias audit.*).
+        ['type' => 'group', 'label' => 'Journalisation et tracabilite', 'icon' => 'bi-activity', 'permissions' => ['audit.dashboard.view', 'audit.security.view', 'audit.integrity.view', 'utilisateur.consulter_journal'], 'children' => [
+            ['type' => 'link', 'label' => 'Tableau de bord', 'icon' => 'bi-speedometer2', 'route' => 'audit.tableau-de-bord', 'active' => 'audit.tableau-de-bord', 'permission' => 'audit.dashboard.view'],
+            ['type' => 'link', 'label' => 'Journal des operations', 'icon' => 'bi-shield-lock', 'route' => 'audit.index', 'permission' => 'audit.events.view_own', 'active_rules' => ['routes' => ['audit.index', 'audit.show', 'audit.dossier', 'audit.utilisateur']]],
+            ['type' => 'link', 'label' => 'Journal de securite', 'icon' => 'bi-person-lock', 'route' => 'audit.securite', 'active' => 'audit.securite', 'permission' => 'audit.security.view'],
+            ['type' => 'link', 'label' => 'Journal des connexions', 'icon' => 'bi-box-arrow-in-right', 'route' => 'logs.connexions', 'active' => 'logs.*', 'permissions' => ['utilisateur.consulter_journal', 'audit.security.view']],
+            ['type' => 'link', 'label' => 'Integrite des journaux', 'icon' => 'bi-fingerprint', 'route' => 'audit.integrite', 'active' => 'audit.integrite*', 'permission' => 'audit.integrity.view'],
+        ]],
 
         ['type' => 'section', 'label' => 'Administration'],
+        ['type' => 'link', 'label' => 'Import de donnees', 'icon' => 'bi-cloud-upload', 'route' => 'imports.index', 'active' => 'imports.*', 'permission' => 'import.view'],
         ['type' => 'group', 'label' => 'Utilisateurs et acces', 'icon' => 'bi-people', 'permissions' => ['utilisateur.voir', 'role.voir', 'profil.voir', 'utilisateur.consulter_journal'], 'children' => [
             ['type' => 'link', 'label' => 'Utilisateurs', 'icon' => 'bi-people', 'route' => 'utilisateurs.index', 'active' => 'utilisateurs.*', 'permission' => 'utilisateur.voir'],
             ['type' => 'link', 'label' => 'Roles et permissions', 'icon' => 'bi-person-gear', 'route' => 'roles.index', 'permission' => 'role.voir', 'active_rules' => ['routes' => ['roles.*', 'permissions.*']]],
             ['type' => 'link', 'label' => 'Profils', 'icon' => 'bi-person-vcard', 'route' => 'profils.index', 'active' => 'profils.*', 'permission' => 'profil.voir'],
-            ['type' => 'link', 'label' => 'Journal connexions', 'icon' => 'bi-box-arrow-in-right', 'route' => 'logs.connexions', 'active' => 'logs.*', 'permission' => 'utilisateur.consulter_journal'],
         ]],
         ['type' => 'group', 'label' => 'Administration technique', 'icon' => 'bi-hdd-network', 'permissions' => ['admin_technique.view', 'admin_technique.monitor', 'incident.voir', 'admin_technique.backup', 'admin_technique.restore'], 'children' => [
             ['type' => 'link', 'label' => 'Supervision technique', 'icon' => 'bi-hdd-network', 'route' => 'administration-technique.cockpit', 'active' => 'administration-technique.cockpit', 'permissions' => ['admin_technique.view', 'admin_technique.monitor']],

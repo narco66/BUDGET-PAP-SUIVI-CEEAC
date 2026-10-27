@@ -14,7 +14,8 @@ class DashboardTest extends TestCase
     public function test_dashboard_affiche_kpis_et_graphiques(): void
     {
         $this->seed(SafeDatabaseSeeder::class);
-        $user = User::firstWhere('email', 'gestionnaire_budgetaire@ceeac.test');
+        // Persona « administration » : tous les widgets (config/dashboard-persona.php) — tableau de bord complet.
+        $user = User::firstWhere('email', 'administrateur@ceeac.test');
 
         $response = $this->actingAs($user)->get('/dashboard');
 
@@ -29,6 +30,13 @@ class DashboardTest extends TestCase
         $response->assertSee("Taux d'engagement", false);
         $response->assertSee('Derniers engagements');
         $response->assertSee('Chaîne d\'exécution budgétaire', false);
+
+        // Persona « budgétaire » : KPI et chaîne d'exécution, sans le fil d'activité (non prévu pour ce profil).
+        $this->actingAs(User::firstWhere('email', 'gestionnaire_budgetaire@ceeac.test'))->get('/dashboard')
+            ->assertOk()
+            ->assertSee("Taux d'engagement", false)
+            ->assertSee('Chaîne d\'exécution budgétaire', false)
+            ->assertDontSee('Derniers engagements');
     }
 
     public function test_dashboard_sans_donnees_affiche_message(): void

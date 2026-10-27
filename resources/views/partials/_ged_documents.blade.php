@@ -1,7 +1,20 @@
 {{-- Widget GED : documents rattachés à un objet métier --}}
 {{-- Variables : $attachable (Model), $type (alias module: besoin|engagement|pap|...) --}}
 @inject('gedAttach', 'App\Services\Ged\GedAttachmentService')
-@php $gedDocuments = $gedAttach->lister($attachable, $type); @endphp
+@php
+    $gedDocuments = $gedAttach->lister($attachable, $type);
+    // Chaîne de la dépense : documents GED des étapes précédentes (EB → ENG → LIQ → ORD → PAY), avec leur origine.
+    $gedAmont = collect(\App\Http\Controllers\PieceController::dossiersAmont($attachable))
+        ->flatMap(function ($amont) use ($gedAttach) {
+            [$etape, $dossier] = $amont;
+            $alias = array_search($dossier::class, \App\Services\Ged\GedAttachmentService::MODULES, true) ?: null;
+
+            return $gedAttach->lister($dossier, $alias)->each(fn ($d) => $d->setAttribute('origine_libelle', $etape.' '.$dossier->numero));
+        })
+        ->reject(fn ($d) => $gedDocuments->contains('id', $d->id))
+        ->unique('id');
+    $gedDocuments = $gedDocuments->concat($gedAmont);
+@endphp
 
 <div class="card border-0 shadow-sm mt-3">
     <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
@@ -17,6 +30,7 @@
                     <a href="{{ route('ged.documents.show', $doc) }}" class="fw-semibold">{{ $doc->titre }}</a>
                     <div class="text-muted font-monospace">{{ $doc->reference }}</div>
                     <span class="badge bg-secondary-subtle text-secondary">{{ $doc->statut?->libelle() }}</span>
+                    @if ($doc->origine_libelle)<span class="badge bg-info-subtle text-info-emphasis"><i class="bi bi-arrow-return-right"></i> {{ $doc->origine_libelle }}</span>@endif
                     <span class="text-muted"> · {{ $doc->createur?->name }} · {{ $doc->date_depot?->format('d/m/Y') }}</span>
                 </div>
                 <div class="btn-group btn-group-sm">

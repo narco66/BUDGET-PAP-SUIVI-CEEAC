@@ -238,15 +238,13 @@ class RbmAuditService
             ];
         }
 
-        $activitesProtegees = 0;
-        Activite::whereHas('sousProduit.produit.axe.pilier', fn ($q) => $q->where('exercice_id', $exerciceId))
-            ->with('sousProduit')
-            ->lazy()
-            ->each(function (Activite $act) use (&$activitesProtegees) {
-                if ($this->referentiel->raisonsBlocage($act)) {
-                    $activitesProtegees++;
-                }
-            });
+        // Mêmes critères que RbmReferentielService::raisonsBlocage() pour une activité (tâches, lignes budgétaires,
+        // besoins — un engagement passe toujours par un besoin), comptés en une requête au lieu de trois par activité.
+        $activitesProtegees = Activite::whereHas('sousProduit.produit.axe.pilier', fn ($q) => $q->where('exercice_id', $exerciceId))
+            ->where(fn ($q) => $q->whereHas('taches')
+                ->orWhereExists(fn ($s) => $s->from('lignes_budgetaires')->whereColumn('lignes_budgetaires.activite_id', 'activites.id')->whereNull('lignes_budgetaires.deleted_at'))
+                ->orWhereExists(fn ($s) => $s->from('expressions_besoin')->whereColumn('expressions_besoin.activite_id', 'activites.id')->whereNull('expressions_besoin.deleted_at')))
+            ->count();
 
         if ($activitesProtegees) {
             $items[] = [

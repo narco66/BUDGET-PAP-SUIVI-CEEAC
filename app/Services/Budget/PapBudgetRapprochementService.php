@@ -5,6 +5,7 @@ namespace App\Services\Budget;
 use App\Models\Activite;
 use App\Models\Exercice;
 use App\Models\LigneBudgetaire;
+use App\Services\Depense\ImputationPapService;
 use App\Support\AuditLogger;
 use Illuminate\Support\Collection;
 
@@ -51,6 +52,12 @@ class PapBudgetRapprochementService
                 continue;
             }
 
+            // Enveloppe PAP « ACT-{axe} » partagée par plusieurs activités : ni lien inverse unique (règle de
+            // RbmBudgetSyncService), ni égalité de montant avec une activité — ce ne sont pas des écarts.
+            if (ImputationPapService::estEnveloppePap($ligne)) {
+                continue;
+            }
+
             if ((int) $ligne->activite_id !== (int) $activite->id) {
                 $ecarts[] = $this->ecart('LIAISON_DESYNC', $activite, $ligne, $montantPap);
             }
@@ -81,8 +88,11 @@ class PapBudgetRapprochementService
 
         $activitesAvecMontant = $activites->filter(fn (Activite $a) => (float) $a->montant_total > 0);
         $totalPap = (float) $activitesAvecMontant->sum('montant_total');
+        // Chaque ligne comptée une fois : une enveloppe d'axe partagée par plusieurs activités était additionnée
+        // autant de fois qu'elle avait d'activités rattachées (écart global faussé).
         $totalLignesLiees = (float) $activitesAvecMontant
             ->filter(fn (Activite $a) => $a->ligne_budgetaire_id && $a->ligneBudgetaire)
+            ->unique('ligne_budgetaire_id')
             ->sum(fn (Activite $a) => (float) $a->ligneBudgetaire->montant_alloue);
 
         return [
@@ -148,8 +158,8 @@ class PapBudgetRapprochementService
         $activites = $this->activitesExercice($exerciceId)->whereNotNull('ligne_budgetaire_id');
         foreach ($activites as $activite) {
             $ligne = $activite->ligneBudgetaire;
-            if (! $ligne || (int) $ligne->activite_id === (int) $activite->id) {
-                continue;
+            if (! $ligne || (int) $ligne->activite_id === (int) $activite->id || ImputationPapService::estEnveloppePap($ligne)) {
+                continue;   // une enveloppe partagée n'a pas de lien inverse : rien à synchroniser
             }
 
             if ($dryRun) {
@@ -170,7 +180,8 @@ class PapBudgetRapprochementService
                 }
 
                 $ligne = LigneBudgetaire::find($ecart['ligne_id']);
-                if (! $ligne || (float) $ligne->montant_engage > 0) {
+                // Garde-fou : le crédit d'une enveloppe d'axe n'est jamais réécrit avec le montant d'une activité.
+                if (! $ligne || (float) $ligne->montant_engage > 0 || ImputationPapService::estEnveloppePap($ligne)) {
                     $stats['montants_ignores']++;
 
                     continue;

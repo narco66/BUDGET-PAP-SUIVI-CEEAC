@@ -110,6 +110,33 @@ class AccessScopeService
         });
     }
 
+    /**
+     * Restreint une liste de dossiers de la chaîne de dépense (ENG, LIQ, ORD, PAY) au périmètre organique :
+     * le dossier est situé par la structure de son expression de besoin d'origine (même règle que la liste des EB),
+     * les dossiers sans EB ou sans structure restant visibles (transversaux).
+     */
+    public function filtrerDossiersDepense(Builder $query, User $user): Builder
+    {
+        if ($this->estGlobal($user)) {
+            return $query;
+        }
+        $chemin = match ($query->getModel()::class) {
+            \App\Models\Engagement::class => 'expressionBesoin',
+            \App\Models\Liquidation::class => 'engagement.expressionBesoin',
+            \App\Models\Ordonnancement::class => 'liquidation.engagement.expressionBesoin',
+            \App\Models\Paiement::class => 'ordonnancement.liquidation.engagement.expressionBesoin',
+            default => null,
+        };
+        if ($chemin === null) {
+            return $query;
+        }
+        $ids = $this->structuresAutorisees($user);
+
+        return $query->where(fn (Builder $q) => $q
+            ->whereHas($chemin, fn (Builder $b) => $b->whereIn('structure_id', $ids)->orWhereNull('structure_id'))
+            ->orWhereDoesntHave($chemin));
+    }
+
     /** Restreint une liste de structures (colonne `id`). */
     public function filtrerReferentielStructures(Builder $query, User $user): Builder
     {

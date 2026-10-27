@@ -62,7 +62,7 @@
         'l' => str_replace('_', ' ', $role),
     ])->values();
 @endphp
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
     let etapeIdx = {{ count($etapes) }};
     const rolesOptions = @json($rolesOptions);
     document.getElementById('add-etape')?.addEventListener('click', () => {

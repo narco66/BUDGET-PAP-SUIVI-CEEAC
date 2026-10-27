@@ -246,7 +246,7 @@ class TresorerieService
             ->whereNull('o.deleted_at')
             ->groupBy('e.id', 'e.numero', 'e.objet', 'e.beneficiaire', 'e.montant_total', 's.sigle', 's.libelle')
             ->selectRaw('e.id, e.numero, e.objet, e.beneficiaire, e.montant_total as engage,
-                         COALESCE(s.sigle, s.libelle, "—") as structure,
+                         COALESCE(s.sigle, s.libelle, \'—\') as structure,
                          COALESCE(SUM(o.montant),0) as ordonnance')
             ->get();
 

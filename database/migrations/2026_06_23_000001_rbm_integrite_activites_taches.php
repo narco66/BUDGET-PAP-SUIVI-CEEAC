@@ -87,7 +87,7 @@ return new class extends Migration
             ->select($parentCol, 'code', DB::raw('COUNT(*) as total'))
             ->whereNotNull($parentCol)
             ->groupBy($parentCol, 'code')
-            ->having('total', '>', 1)
+            ->havingRaw('COUNT(*) > 1')
             ->get();
 
         foreach ($doublons as $groupe) {

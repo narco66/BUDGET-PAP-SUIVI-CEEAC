@@ -35,17 +35,26 @@ class StrategieCoherenceService
 
         $alignement = app(StrategieAlignementService::class)->syntheseAlignement();
 
-        $scores = [
-            $this->pctOk($objectifs->count(), $objectifsSansIndicateur->count()),
-            $this->pctOk($this->countIndicateurs($planStrategiqueId), $indicateursSansCible->count()),
-            $this->pctOk($this->countRisques($planStrategiqueId), $risquesSansMitigation->count()),
-            (float) $alignement['taux_matrice'],
+        // Contrôles évaluables seulement : un contrôle sans élément à contrôler (aucun objectif, indicateur ou
+        // risque) comptait pour 100 % et affichait 75 % de cohérence sur un référentiel vide.
+        $controles = [
+            ['libelle' => "Objectifs dotés d'au moins un indicateur", 'base' => $objectifs->count(), 'anomalies' => $objectifsSansIndicateur->count()],
+            ['libelle' => "Indicateurs dotés d'une cible", 'base' => $this->countIndicateurs($planStrategiqueId), 'anomalies' => $indicateursSansCible->count()],
+            ['libelle' => "Risques dotés d'une mesure de mitigation", 'base' => $this->countRisques($planStrategiqueId), 'anomalies' => $risquesSansMitigation->count()],
+            ['libelle' => "Lignes de la matrice d'alignement complètes", 'base' => (int) ($alignement['lignes_matrice'] ?? 0), 'taux' => (float) $alignement['taux_matrice']],
         ];
+        foreach ($controles as &$c) {
+            $c['taux'] = $c['base'] === 0 ? null : ($c['taux'] ?? $this->pctOk($c['base'], $c['anomalies']));
+        }
+        unset($c);
+        $scores = collect($controles)->pluck('taux')->filter(fn ($t) => $t !== null)->values()->all();
 
         return [
             'plan_id' => $planStrategiqueId,
             'plans' => $plans,
-            'score_global' => round(collect($scores)->avg(), 1),
+            'score_global' => $scores === [] ? 0.0 : round(collect($scores)->avg(), 1),
+            'score_evaluable' => $scores !== [],
+            'controles' => $controles,
             'objectifs_total' => $objectifs->count(),
             'objectifs_sans_indicateur' => $objectifsSansIndicateur,
             'indicateurs_sans_cible' => $indicateursSansCible,

@@ -167,12 +167,25 @@ class UserService
         $rolesFinaux = array_values(array_unique($autorises));
         $this->sod->assertRolesCompatibles($rolesFinaux);
         $user->syncRoles($rolesFinaux);
+        $this->journaliserChangement('utilisateur_roles_modifies', $user, 'roles', $actuels, $rolesFinaux);
+    }
+
+    /** Trace avant/après d'une habilitation ou d'une affectation (pivots non couverts par Auditable — JNL-007). */
+    private function journaliserChangement(string $action, User $user, string $champ, array $avant, array $apres): void
+    {
+        sort($avant);
+        sort($apres);
+        if ($avant !== $apres) {
+            AuditLogger::evenement($action, $user, ['avant' => [$champ => $avant], 'apres' => [$champ => $apres]]);
+        }
     }
 
     /** Affecte des profils ; les rôles des profils sont fusionnés dans les rôles de l'utilisateur. */
     public function synchroniserProfils(User $user, array $profilIds, User $auteur): void
     {
+        $avant = $user->profils()->pluck('profils.id')->map(fn ($id) => (int) $id)->all();
         $user->profils()->sync($profilIds);
+        $this->journaliserChangement('utilisateur_profils_modifies', $user, 'profils', $avant, array_map('intval', $profilIds));
 
         if ($profilIds) {
             $rolesProfils = Profil::with('roles')->whereIn('id', $profilIds)
@@ -191,7 +204,9 @@ class UserService
         if ($principale && ! isset($pivot[$principale])) {
             $pivot[$principale] = ['principal' => true];
         }
+        $avant = $user->structures()->pluck('structures.id')->map(fn ($id) => (int) $id)->all();
         $user->structures()->sync($pivot);
+        $this->journaliserChangement('utilisateur_structures_modifiees', $user, 'structures', $avant, array_map('intval', array_keys($pivot)));
     }
 
     // --- Internes ---

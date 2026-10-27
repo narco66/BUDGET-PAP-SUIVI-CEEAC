@@ -29,6 +29,7 @@ class DepenseTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        config(['mfa.enabled' => false]);
         $this->seed(RoleSeeder::class);
         $this->seed(DepensePermissionsSeeder::class);
         $this->seed(WorkflowSeeder::class);
@@ -194,9 +195,13 @@ class DepenseTest extends TestCase
 
         $this->actingAs($this->user('administrateur'))
             ->post(route('pieces.store', ['engagement', $e->id]), [
-                'fichier' => UploadedFile::fake()->create('facture.pdf', 50, 'application/pdf'),
+                'fichier' => UploadedFile::fake()->createWithContent('facture.pdf', "%PDF-1.4
+1 0 obj<<>>endobj
+trailer<<>>
+%%EOF
+"),
                 'categorie' => 'facture',
-            ])->assertRedirect();
+            ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertDatabaseHas('pieces_justificatives', [
             'attachable_type' => Engagement::class, 'attachable_id' => $e->id, 'categorie' => 'facture',

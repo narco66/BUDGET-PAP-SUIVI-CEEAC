@@ -19,6 +19,18 @@ class StructureHierarchieService
         'commissariat' => ['departement', 'presidence', 'vice_presidence'],
     ];
 
+    /** @return list<string> types de structure reconnus */
+    public static function types(): array
+    {
+        return array_keys(self::PARENTS_AUTORISES);
+    }
+
+    /** Un parent de ce type (null : racine) est-il admis pour ce type de structure ? */
+    public static function parentAutorise(string $type, ?string $typeParent): bool
+    {
+        return in_array($typeParent, self::PARENTS_AUTORISES[$type] ?? [], true);
+    }
+
     public function valider(string $type, ?int $parentId, ?int $structureId = null): ?string
     {
         $autorises = self::PARENTS_AUTORISES[$type] ?? null;

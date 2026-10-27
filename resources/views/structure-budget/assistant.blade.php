@@ -43,7 +43,7 @@
 </form>
 @endsection
 
-@push('scripts')<script>
+@push('scripts')<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 (function () {
     const URL_ACT = "{{ route('structure-budget.assistant.activites') }}";
     const structureSel = document.getElementById('structure_id');

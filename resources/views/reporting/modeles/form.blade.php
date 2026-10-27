@@ -54,5 +54,5 @@
 @endsection
 
 @section('scripts')
-<script>document.addEventListener('alpine:init', () => {});</script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>document.addEventListener('alpine:init', () => {});</script>
 @endsection

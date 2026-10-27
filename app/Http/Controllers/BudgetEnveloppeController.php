@@ -120,7 +120,7 @@ class BudgetEnveloppeController extends Controller
         ]);
 
         $instance = $budget->workflowActif;
-        $peutAgir = auth()->user()->can('agir', $budget);
+        $peutAgir = $instance && $this->workflow->peutAgir($instance, auth()->user());
         $audit = $this->audit->executer($budget->exercice_id);
         $montantTotal = $this->enveloppe->calculerMontantTotal($budget->exercice_id);
 

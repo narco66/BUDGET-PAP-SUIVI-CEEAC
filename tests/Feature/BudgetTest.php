@@ -108,6 +108,36 @@ class BudgetTest extends TestCase
         $this->assertDatabaseHas('lignes_budgetaires', ['code' => 'LB-100', 'montant_ouvert' => 2500000]);
     }
 
+    public function test_modification_ligne_ignore_les_lignes_de_ventilation_vides(): void
+    {
+        config(['mfa.enabled' => false]);
+        $source = SourceFinancement::create(['code' => 'CEEAC-EM', 'libelle' => 'Interne', 'type' => 'interne_ceeac']);
+        $ligne = LigneBudgetaire::create(['exercice_id' => $this->exercice->id, 'rubrique_id' => $this->rubrique()->id, 'code' => 'ACT-2011', 'montant_ouvert' => 655000000]);
+        $donnees = [
+            'exercice_id' => $this->exercice->id,
+            'rubrique_id' => $ligne->rubrique_id,
+            'code' => 'ACT-2011',
+            'montant_ouvert' => '655 000 000',
+            'source_principale_idx' => '0',
+            'sources' => [
+                ['source_financement_id' => $source->id, 'montant' => '655000000', 'est_principale' => '1'],
+                ['source_financement_id' => '', 'montant' => '', 'est_principale' => '0'],
+                ['source_financement_id' => '', 'montant' => '0', 'est_principale' => '0'],
+            ],
+        ];
+
+        $this->actingAs($this->user('administrateur'))
+            ->put(route('budget.update', $ligne), $donnees)
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('ligne_source_financement', ['ligne_budgetaire_id' => $ligne->id, 'source_financement_id' => $source->id]);
+
+        // Ligne incomplète (montant sans source) : message traduit, pas la clé brute.
+        $donnees['sources'][1] = ['source_financement_id' => '', 'montant' => '1000', 'est_principale' => '0'];
+        $this->actingAs($this->user('administrateur'))
+            ->put(route('budget.update', $ligne), $donnees)
+            ->assertSessionHasErrors(['sources.1.source_financement_id' => 'Le champ source de financement (ventilation) est obligatoire quand sources est renseigné.']);
+    }
+
     public function test_controle_des_credits_disponible(): void
     {
         $ligne = LigneBudgetaire::create([

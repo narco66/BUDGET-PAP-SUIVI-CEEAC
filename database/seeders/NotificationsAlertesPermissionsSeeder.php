@@ -48,8 +48,10 @@ class NotificationsAlertesPermissionsSeeder extends Seeder
             'president', 'secretaire_general', 'commissaire', 'directeur',
             'chef_service', 'gestionnaire_budgetaire', 'controleur_financier',
             'comptable', 'auditeur', 'point_focal',
+            // Destinataires de notifications (paiements, consultations) : doivent pouvoir les lire.
+            'agent_comptable', 'vice_president', 'lecteur',
         ] as $roleName) {
-            Role::findByName($roleName, 'web')?->givePermissionTo([
+            Role::where('name', $roleName)->where('guard_name', 'web')->first()?->givePermissionTo([
                 'notifications.view', 'notifications.manage', 'alertes.view',
             ]);
         }

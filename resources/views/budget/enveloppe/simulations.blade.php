@@ -163,7 +163,7 @@
 @endif
 
 @push('scripts')
-<script>
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 document.getElementById('sim-type')?.addEventListener('change', function () {
     const t = this.value;
     document.getElementById('field-taux').classList.toggle('d-none', t === 'enveloppe_plafond');

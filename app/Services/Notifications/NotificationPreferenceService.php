@@ -24,17 +24,18 @@ class NotificationPreferenceService
 
     /** @return list<string> */
 
-    public function canauxEffectifs(User $user, string $typeCode, string $criticite, array $canauxDemandes = ['database']): array
+    public function canauxEffectifs(User $user, string $typeCode, string $criticite, array $canauxDemandes = ['database'], ?string $nature = null): array
 
     {
 
         $prefs = $user->preferences_notifications ?? [];
 
-
+        // Notification institutionnelle obligatoire (§ 19) : le canal in-app ne peut pas être désactivé.
+        $obligatoire = $this->estObligatoire($criticite, $nature);
 
         if (($prefs['actif'] ?? true) === false) {
 
-            return [];
+            return $obligatoire ? ['database'] : [];
 
         }
 
@@ -56,8 +57,18 @@ class NotificationPreferenceService
 
 
 
+        if ($obligatoire && ! in_array('database', $effectifs, true)) {
+            $effectifs[] = 'database';
+        }
+
         return $effectifs ?: (in_array('database', $canauxType, true) ? ['database'] : []);
 
+    }
+
+    public function estObligatoire(string $criticite, ?string $nature = null): bool
+    {
+        return in_array($criticite, (array) config('notifications.obligatoires.criticites', ['critique', 'urgence']), true)
+            || ($nature !== null && in_array($nature, (array) config('notifications.obligatoires.natures', ['action']), true));
     }
 
 

@@ -91,7 +91,7 @@ class TomproService
     /** @return array<string, mixed> */
     public function synthese(?int $exerciceId = null): array
     {
-        $paiementsQuery = Paiement::query()->where('statut', 'valide');
+        $paiementsQuery = Paiement::query()->regles();   // instrument rejeté : non réglé
         $encQuery = Encaissement::query()->whereIn('statut', Encaissement::STATUTS_VERROUILLES);
 
         if ($exerciceId) {

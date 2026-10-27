@@ -1,6 +1,7 @@
 @php
     $fmt = fn ($n) => number_format((float) $n, 0, ',', ' ');
     $barClass = fn ($t) => $t >= 75 ? 'bg-success' : ($t >= 50 ? 'bg-warning' : 'bg-danger');
+    $lienActivite = $lienActivite ?? false;
 @endphp
 
 <div class="table-responsive">
@@ -18,9 +19,17 @@
         </thead>
         <tbody>
             @forelse($activites as $a)
-            <tr class="{{ ($a['en_retard'] || $a['surconsommation']) ? 'table-warning' : '' }}">
-                <td><code>{{ $a['code'] }}</code></td>
-                <td>{{ Str::limit($a['intitule'], 50) }}</td>
+            <tr class="{{ ($a['en_retard'] || $a['surconsommation']) ? 'table-warning' : '' }}"
+                data-activite data-texte="{{ Str::lower($a['code'].' '.$a['intitule']) }}"
+                data-etat="{{ trim(($a['en_retard'] ? 'retard ' : '').($a['surconsommation'] ? 'surconso' : '')) }}">
+                <td>
+                    @if($lienActivite && ! empty($a['activite_id']))
+                    <a href="{{ route('reporting.cockpit.activite', $a['activite_id']) }}" class="text-decoration-none"><code>{{ $a['code'] }}</code></a>
+                    @else
+                    <code>{{ $a['code'] }}</code>
+                    @endif
+                </td>
+                <td title="{{ $a['intitule'] }}">{{ Str::limit($a['intitule'], 50) }}</td>
                 <td>
                     <div class="d-flex align-items-center gap-1">
                         <div class="progress flex-grow-1" style="height:6px"><div class="progress-bar {{ $barClass($a['taux_physique']) }}" style="width:{{ min($a['taux_physique'], 100) }}%"></div></div>

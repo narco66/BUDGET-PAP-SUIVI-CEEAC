@@ -85,7 +85,7 @@
 </div>
 @endsection
 
-@push('scripts')<script>
+@push('scripts')<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
 (function () {
     const NIVEAUX = @json($niveaux);
     const CHAPITRES = @json($chapitres);

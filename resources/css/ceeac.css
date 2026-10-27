@@ -116,17 +116,160 @@ body {
     letter-spacing: 0.02em;
 }
 
-@media (max-width: 767.98px) {
-    body > .d-flex {
-        flex-direction: column;
+/* ------------------------------------------------------------------------------------------------
+ * Harmonisation de la palette (charte CEEAC) : le bleu Bootstrap par défaut (#0d6efd) cédait la place au
+ * bleu institutionnel déjà porté par la barre supérieure ; contrastes WCAG 2.2 AA (≥ 4,5:1) sur fonds blancs
+ * et gris de page.
+ * ---------------------------------------------------------------------------------------------- */
+:root {
+    --bs-primary: #0a4a8f;
+    --bs-primary-rgb: 10, 74, 143;
+    --bs-primary-text-emphasis: #062c55;
+    --bs-primary-bg-subtle: #dde8f5;
+    --bs-primary-border-subtle: #a9c3e0;
+    --bs-link-color: #0a4a8f;
+    --bs-link-color-rgb: 10, 74, 143;
+    --bs-link-hover-color: #073564;
+    --bs-link-hover-color-rgb: 7, 53, 100;
+    --bs-secondary-color: rgba(52, 58, 64, 0.85);   /* texte atténué : 5,5:1 sur #f4f6f9 (au lieu de 4,3:1) */
+    --bs-focus-ring-color: rgba(10, 74, 143, 0.35);
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--ceeac);
+    --bs-btn-border-color: var(--ceeac);
+    --bs-btn-hover-bg: var(--ceeac-dark);
+    --bs-btn-hover-border-color: var(--ceeac-dark);
+    --bs-btn-active-bg: var(--ceeac-dark);
+    --bs-btn-active-border-color: var(--ceeac-dark);
+    --bs-btn-disabled-bg: var(--ceeac);
+    --bs-btn-disabled-border-color: var(--ceeac);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--ceeac);
+    --bs-btn-border-color: var(--ceeac);
+    --bs-btn-hover-bg: var(--ceeac);
+    --bs-btn-hover-border-color: var(--ceeac);
+    --bs-btn-active-bg: var(--ceeac-dark);
+    --bs-btn-active-border-color: var(--ceeac-dark);
+    --bs-btn-disabled-color: var(--ceeac);
+    --bs-btn-disabled-border-color: var(--ceeac);
+}
+
+/* Textes d'état lisibles sur fond clair (jaune et cyan purs : 1,6:1 et 2:1). */
+.contenu-principal .text-warning { color: #8a6100 !important; }
+.contenu-principal .text-info { color: #055160 !important; }
+.contenu-principal .text-success { color: #146c43 !important; }
+.contenu-principal .text-danger { color: #b02a37 !important; }
+.contenu-principal .text-secondary { color: #565e64 !important; }
+
+/* Badges sur fond clair : texte foncé (le blanc sur jaune ou cyan était illisible). */
+.badge.bg-warning,
+.badge.bg-info,
+.badge.bg-light {
+    color: #212529 !important;
+}
+
+/* Menu latéral sombre : texte secondaire éclairci (2,6:1 auparavant). */
+.sidebar .text-secondary { color: #a9bdd3 !important; }
+
+/* ------------------------------------------------------------------------------------------------
+ * Ergonomie et accessibilité communes à toutes les vues.
+ * ---------------------------------------------------------------------------------------------- */
+.lien-evitement {
+    position: absolute;
+    left: -9999px;
+    top: 0.5rem;
+    z-index: 2000;
+    padding: 0.5rem 1rem;
+    background: #fff;
+    color: var(--ceeac);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+}
+
+.lien-evitement:focus { left: 0.75rem; }
+
+.contenu-principal :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ceeac);
+    outline-offset: 2px;
+}
+
+/* Montants et nombres alignés (chiffres à chasse fixe) dans tous les tableaux. */
+.table td, .table th { font-variant-numeric: tabular-nums; }
+
+/* offcanvas-lg rend son fond transparent au-delà de 992 px : le menu garde son fond institutionnel partout. */
+.sidebar.offcanvas-lg {
+    background-color: var(--ceeac-dark) !important;
+}
+
+.btn-menu-mobile {
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 991.98px) {
+    /* Menu latéral escamotable (offcanvas-lg) sous 992 px : il ne s'empile plus au-dessus du contenu et
+       ne réduit plus la zone utile des tablettes. */
+    .sidebar.offcanvas-lg {
+        --bs-offcanvas-width: 290px;
+        background: var(--ceeac-dark);
+        height: 100vh;
+        position: fixed;
     }
 
-    .sidebar {
-        flex: 0 0 auto;
-        height: auto;
-        max-height: 60vh;
-        min-width: 100%;
-        position: relative;
-        width: 100%;
+    .topbar { flex-wrap: wrap; gap: 0.5rem; }
+    .topbar h5 { font-size: 1rem; }
+    main.p-4 { padding: 1rem !important; }
+
+    /* Barres de filtres, d'actions et groupes de boutons : passage à la ligne au lieu du débordement. */
+    .contenu-principal form.d-flex,
+    .contenu-principal .d-flex.gap-1,
+    .contenu-principal .d-flex.gap-2,
+    .contenu-principal .d-flex.gap-3,
+    .contenu-principal .btn-group,
+    .contenu-principal .nav-tabs,
+    .contenu-principal .nav-pills {
+        flex-wrap: wrap;
+    }
+
+    .contenu-principal form.d-flex > .form-select,
+    .contenu-principal form.d-flex > .form-control {
+        max-width: 100% !important;
+        flex: 1 1 140px;
     }
 }
+
+/* Harmonisations légères communes à toutes les listes. */
+.table code,
+.list-group code {
+    color: var(--ceeac);            /* références de dossier : bleu institutionnel plutôt que le rose par défaut */
+    font-size: 0.82em;
+}
+
+.badge::first-letter {
+    text-transform: uppercase;      /* statuts « valide », « soumis »… affichés « Valide », « Soumis » */
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-pills .nav-link.active {
+    background-color: #1c64b4;      /* nuance du bleu institutionnel (au lieu du bleu Bootstrap vif) */
+    color: #fff;
+}
+
+/* Titre de la barre supérieure : tronqué au lieu de déborder (noms de structure longs sur mobile). */
+.min-w-0 { min-width: 0; }
+.topbar > .d-flex:first-child { min-width: 0; flex: 1 1 auto; }
+
+/* Boutons « outline » : texte foncé conforme (≥ 4,5:1) ; bordures et survol inchangés. */
+.btn-outline-secondary { --bs-btn-color: #565e64; --bs-btn-border-color: #8c959d; }
+.btn-outline-info { --bs-btn-color: #055160; --bs-btn-border-color: #3dd5f3; }
+.btn-outline-warning { --bs-btn-color: #6b4b00; --bs-btn-border-color: #e0a800; }
+.btn-outline-success { --bs-btn-color: #146c43; }
+.btn-outline-danger { --bs-btn-color: #b02a37; }
+
+/* Code en ligne (aide, identifiants techniques) : rose assombri, 5,9:1 (au lieu de 4,3:1). */
+.contenu-principal code { color: #a3245e; }
+.contenu-principal .table code,
+.contenu-principal .list-group code { color: var(--ceeac); }

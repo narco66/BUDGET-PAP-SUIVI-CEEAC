@@ -28,6 +28,8 @@ class BudgetPreparationController extends Controller
 
         $structureId = $request->integer('structure') ?: null;
         $preparations = $this->preparation->preparations($budget, $structureId);
+        // Toutes les préparations appartiennent à ce budget : on évite de le recharger pour chaque ligne (estModifiable()).
+        $preparations->each(fn ($p) => $p->setRelation('budget', $budget));
         $synthese = $this->preparation->synthese($budget);
         $consolidation = $this->consolidation->syntheseGlobale($budget);
         $parStructure = $this->consolidation->parStructure($budget);

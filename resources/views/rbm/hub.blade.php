@@ -143,7 +143,9 @@
                 <h2 class="h6"><i class="bi bi-folder2-open text-primary me-2"></i>Documents GED</h2>
                 <p class="small text-muted">Pièces et exports RBM indexés dans la gestion documentaire.</p>
                 <a href="{{ route('ged.recherche', ['module_source' => 'RBM']) }}" class="btn btn-sm btn-outline-primary">Rechercher docs RBM</a>
+                @can('create', \App\Models\Ged\GedDocument::class)
                 <a href="{{ route('ged.documents.create', ['module_source' => 'RBM']) }}" class="btn btn-sm btn-primary ms-1">Déposer</a>
+                @endcan
             </div>
         </div>
     </div>

@@ -28,9 +28,16 @@ class AdministrationTechniqueController extends Controller
 
         $controles = $sante->controles();
 
+        // Volumétrie des modules : comptages regroupés en une seule requête (hasTable est très peu coûteux ;
+        // Schema::getTables() calcule la taille de chaque table et coûtait ~185 ms).
+        $presentes = array_filter(self::MODULES, fn ($table) => Schema::hasTable($table));
+        $comptes = $presentes === [] ? [] : (array) DB::selectOne('select '.implode(', ', array_map(
+            fn ($table, $i) => '(select count(*) from '.DB::getQueryGrammar()->wrapTable($table).") as c{$i}",
+            $presentes, array_keys(array_values($presentes)))));
         $supervision = [];
+        $i = 0;
         foreach (self::MODULES as $module => $table) {
-            $supervision[$module] = Schema::hasTable($table) ? DB::table($table)->count() : null;
+            $supervision[$module] = isset($presentes[$module]) ? (int) $comptes['c'.$i++] : null;
         }
 
         return view('administration-technique.cockpit', [

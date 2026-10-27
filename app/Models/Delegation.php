@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Delegation extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'structure_id', 'delegue_par', 'delegue_a',
         'date_debut', 'date_fin', 'motif', 'actif',

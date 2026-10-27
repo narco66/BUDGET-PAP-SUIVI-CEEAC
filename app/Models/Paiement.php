@@ -30,6 +30,16 @@ class Paiement extends Model implements PilotableParWorkflow, ConcernantStructur
         'compteurs_appliques' => 'boolean',
     ];
 
+    /**
+     * Paiements réellement réglés : validés et dont l'instrument n'a pas été rejeté par la banque
+     * (le rejet annule les compteurs « payé » ; il ne doit pas non plus être compté dans les états).
+     */
+    public function scopeRegles($query)
+    {
+        return $query->where('statut', 'valide')
+            ->where(fn ($q) => $q->whereNull('etat_execution')->orWhere('etat_execution', '!=', 'instrument_rejete'));
+    }
+
     public function colonneCompteur(): string
     {
         return 'montant_paye';

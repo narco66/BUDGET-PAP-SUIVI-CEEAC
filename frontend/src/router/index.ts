@@ -149,6 +149,7 @@ const router = createRouter({
         { path: 'interoperabilite/apps/:id', name: 'interop-app-detail', component: () => import('@/views/InteropAppShowView.vue') },
         { path: 'interoperabilite/journal', name: 'interop-journal', component: () => import('@/views/InteropJournalView.vue') },
         { path: 'interoperabilite/monitoring', name: 'interop-monitoring', component: () => import('@/views/InteropMonitoringView.vue') },
+        { path: 'interoperabilite/docs', name: 'interop-docs', component: () => import('@/views/InteropDocsView.vue') },
         { path: 'interoperabilite/webhooks', name: 'interop-webhooks', component: () => import('@/views/InteropWebhooksView.vue') },
         { path: 'interoperabilite/webhooks/nouveau', name: 'interop-webhook-nouveau', component: () => import('@/views/InteropWebhookFormView.vue') },
         { path: 'interoperabilite/webhooks/:id/edit', name: 'interop-webhook-edit', component: () => import('@/views/InteropWebhookFormView.vue') },

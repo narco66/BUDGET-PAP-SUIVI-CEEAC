@@ -313,8 +313,9 @@
 
 @push('scripts')
 @vite('resources/js/charts.js')
-<script>
-(function () {
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
+// Après exécution des modules Vite (ApexCharts) : un module est différé, ce script ne l'est pas.
+document.addEventListener('DOMContentLoaded', function () {
     const nf = new Intl.NumberFormat('fr-FR');
     const xaf = v => nf.format(Math.round(v));
     // Format compact pour les axes : 1 250 000 000 -> « 1,3 Md »
@@ -410,6 +411,6 @@
         legend: { position: 'top' },
         tooltip: { ...base.tooltip, x: { formatter: (_, o) => pilier[o.dataPointIndex]?.label ?? '' } },
     });
-})();
+});
 </script>
 @endpush

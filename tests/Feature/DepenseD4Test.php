@@ -134,6 +134,23 @@ class DepenseD4Test extends TestCase
         $this->assertEqualsWithDelta(200.0, (float) $ecritures->sum('montant'), 0.05);
     }
 
+    /** Régression : la numérotation lisait une colonne `numero` inexistante (masqué par SQLite, échec MySQL/PostgreSQL). */
+    public function test_numerotation_ecritures_sur_numero_piece(): void
+    {
+        $annee = $this->exercice->annee;
+        EcritureComptable::create([
+            'exercice_id' => $this->exercice->id, 'journal' => 'BQ', 'numero_piece' => "EC-{$annee}-0001",
+            'date_ecriture' => now(), 'compte_debit' => '401', 'compte_credit' => '521', 'montant' => 10, 'devise' => 'XAF',
+            'libelle' => 'Écriture existante', 'statut' => 'brouillon',
+        ]);
+
+        $this->assertSame("EC-{$annee}-0002", \App\Support\Numero::suivant('ecritures_comptables', 'EC', $annee, 'numero_piece'));
+        $this->assertStringContainsString(
+            "'numero_piece')",
+            file_get_contents(app_path('Services/Depense/EcritureComptableService.php'))
+        );
+    }
+
     public function test_tompro_inclut_ecritures_syscohada(): void
     {
         [$activite, $ligne] = $this->activiteEtLigne($this->exercice, 'LB-D4-TP', 5000);

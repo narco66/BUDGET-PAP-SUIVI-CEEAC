@@ -80,13 +80,15 @@ class StructureBudgetCoherenceService
             ->join('piliers as p', 'ax.pilier_id', '=', 'p.id')
             ->where('p.exercice_id', $exerciceId)
             ->where('a.montant_total', '>', 0)
-            ->selectRaw('a.id, a.code, a.intitule, a.montant_total montant_pap')
+            // Somme des lignes de l'exercice par activité, jointe en une requête (au lieu d'une somme par activité).
+            ->leftJoinSub(
+                DB::table('lignes_budgetaires')->where('exercice_id', $exerciceId)->whereNull('deleted_at')
+                    ->selectRaw('activite_id, SUM(montant_ouvert) somme')->groupBy('activite_id'),
+                'lb', 'lb.activite_id', '=', 'a.id')
+            ->selectRaw('a.id, a.code, a.intitule, a.montant_total montant_pap, COALESCE(lb.somme, 0) somme_lignes')
             ->get()
-            ->map(function ($a) use ($exerciceId) {
-                $somme = (float) LigneBudgetaire::where('exercice_id', $exerciceId)
-                    ->where('activite_id', $a->id)
-                    ->whereNull('deleted_at')
-                    ->sum('montant_ouvert');
+            ->map(function ($a) {
+                $somme = (float) $a->somme_lignes;
                 $ecart = $somme - (float) $a->montant_pap;
 
                 return (object) [
@@ -160,6 +162,8 @@ class StructureBudgetCoherenceService
             ->join('axes as ax', 'pr.axe_id', '=', 'ax.id')
             ->join('piliers as p', 'ax.pilier_id', '=', 'p.id')
             ->where('p.exercice_id', $exerciceId)
+            // Enveloppe PAP « ACT-{axe} » : partagée par plusieurs activités, sans activité unique — pas une anomalie.
+            ->where('lb.code', 'not like', 'ACT-%')
             ->where(function ($q) {
                 $q->whereNull('lb.activite_id')->orWhereColumn('lb.activite_id', '!=', 'a.id');
             })

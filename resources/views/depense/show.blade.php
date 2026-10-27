@@ -11,6 +11,7 @@ $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
         <div class="card border-0 shadow-sm"><div class="card-body">
             <div class="d-flex justify-content-between">
                 <h5 class="fw-bold"><i class="bi {{ $config['icone'] }} me-1"></i>{{ $item->numero }} <span class="badge bg-{{ $c[$item->statut] ?? 'secondary' }}">{{ str_replace('_',' ',$item->statut) }}</span></h5>
+                <a href="{{ route('depense.tracabilite.show', [$type, $item->id]) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Traçabilité</a>
                 <a href="{{ route('depense.pdf', [$type, $item->id]) }}" target="_blank" class="btn btn-sm btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
             </div>
             <dl class="row mb-0 mt-2">
@@ -82,7 +83,7 @@ $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
         <div class="mt-3">@include('partials._pieces', ['attachable' => $item, 'type' => $type])</div>
         @include('partials._ged_documents', ['attachable' => $item, 'type' => $type])
     </div>
-    <div class="col-md-5">@include('partials._timeline', ['instance' => $instance, 'etC' => $etC])</div>
+    <div class="col-md-5">@include('partials._timeline', ['instance' => $instance, 'etC' => $etC, 'objet' => $item])</div>
 </div>
 <div class="mt-3"><a href="{{ route('depense.index', $type) }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Retour</a></div>
 @endsection

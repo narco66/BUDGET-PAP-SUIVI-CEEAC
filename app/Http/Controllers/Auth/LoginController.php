@@ -7,6 +7,7 @@ use App\Models\LoginLog;
 use App\Services\AdministrationTechnique\ProtectionConnexionService;
 use App\Services\Auth\MfaService;
 use App\Support\AuditLogger;
+use App\Support\JournalSecurite;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,5 +93,9 @@ class LoginController extends Controller
             'user_agent' => substr((string) $request->userAgent(), 0, 500),
             'created_at' => now(),
         ]);
+
+        if (! $succes) {
+            JournalSecurite::echecConnexion((string) $request->input('email'), (string) $motif);
+        }
     }
 }

@@ -219,6 +219,7 @@ class ChaineDepenseAvalConformiteTest extends TestCase
 
     public function test_liquidation_partielle_reemploie_le_brouillon_auto(): void
     {
+        config(['chaine_depense.automatisation.demarrage_liquidation' => false]);   // parcours manuel du brouillon de liquidation
         $gestionnaire = $this->user('gestionnaire_budgetaire');
         [$activite, $ligne] = $this->activiteEtLigne($this->exercice, 'LB-AVAL-LP', 10_000);
         $besoin = $this->besoinValide($this->exercice, $activite, $ligne, $gestionnaire, 900, 'EB-AVAL-LP');

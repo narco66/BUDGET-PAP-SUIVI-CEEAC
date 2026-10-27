@@ -47,6 +47,7 @@ class EtapeDepenseApiController extends Controller
         $query = $config['model']::with([$config['parent_type'], 'workflowActif', 'createur'])->latest();
 
         $this->filtrerExercice($query, $type, $request->integer('exercice'));
+        app(\App\Services\AccessScopeService::class)->filtrerDossiersDepense($query, $request->user());
         $query->when($request->filled('statut'), fn ($q) => $q->where('statut', $request->statut));
         $query->when($request->filled('q'), function ($q) use ($request) {
             $terme = '%'.$request->string('q').'%';
@@ -248,37 +249,8 @@ class EtapeDepenseApiController extends Controller
         $resultat = $this->idempotence->executer($request, $type.'.decision.'.$item->id, function () use ($request, $config, $item, $instance, $data, $type) {
             $this->assertVersion($request, $item);
             try {
-                if ($item instanceof Paiement && $data['decision'] === 'valider') {
-                    app(\App\Services\Depense\RibControleService::class)
-                        ->assertValidationIndependante($item, $request->user(), $instance);
-                }
-                $this->workflow->traiterDecision(
-                    $instance,
-                    $request->user(),
-                    $data['decision'],
-                    $data['observation'] ?? null,
-                    $data['categorie_rejet'] ?? null,
-                );
-
-                if ($data['decision'] === 'valider') {
-                    $item->update(['valide_par' => $request->user()->id]);
-                    $this->webhooks->declencher("{$type}.valide", [
-                        'numero' => $item->numero,
-                        'montant' => (float) $item->montant,
-                    ]);
-                    if ($item instanceof Paiement) {
-                        app(\App\Services\Notifications\DepenseNotificationService::class)
-                            ->notifierPaiementValide($item->fresh());
-                    }
-                } elseif ($item instanceof Paiement) {
-                    $item->rejets()->create([
-                        'type' => 'workflow',
-                        'motif' => \Illuminate\Support\Str::limit($data['observation'] ?? 'Rejet', 255, ''),
-                        'observation' => $data['observation'] ?? null,
-                        'rejete_par' => $request->user()->id,
-                        'rejete_le' => now(),
-                    ]);
-                }
+                // Contrôles préalables (RIB), moteur et effets métier : service partagé par tous les points d'entrée.
+                app(\App\Services\Workflow\DecisionMetierService::class)->decider($item, $request->user(), $data);
             } catch (RuntimeException $e) {
                 return ['status' => 422, 'body' => ['message' => $e->getMessage(), 'code' => 'credits_ou_transition']];
             }

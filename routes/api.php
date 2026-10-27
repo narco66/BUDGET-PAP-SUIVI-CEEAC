@@ -282,6 +282,10 @@ Route::prefix('v1')->group(function () {
             Route::post('campagnes-suivi', [CampagneSuiviApiController::class, 'store'])->name('api.campagnes-suivi.store');
             Route::post('campagnes-suivi/{campagne}/cloturer', [CampagneSuiviApiController::class, 'cloturer'])->name('api.campagnes-suivi.cloturer');
             Route::post('campagnes-suivi/{campagne}/activites/{activite}/collecte', [CampagneSuiviApiController::class, 'enregistrerCollecte'])->name('api.campagnes-suivi.collecte');
+            Route::post('collectes/{collecte}/verifier', [CampagneSuiviApiController::class, 'verifierCollecte'])->name('api.collectes.verifier');
+            Route::post('collectes/{collecte}/valider', [CampagneSuiviApiController::class, 'validerCollecte'])->name('api.collectes.valider');
+            Route::post('collectes/{collecte}/rejeter', [CampagneSuiviApiController::class, 'rejeterCollecte'])->name('api.collectes.rejeter');
+            Route::post('collectes/{collecte}/justificatifs', [CampagneSuiviApiController::class, 'attacherJustificatif'])->name('api.collectes.justificatifs');
             Route::delete('campagnes-suivi/{campagne}', [CampagneSuiviApiController::class, 'destroy'])->name('api.campagnes-suivi.destroy');
             Route::post('recommandations', [RecommandationApiController::class, 'store'])->name('api.recommandations.store');
             Route::put('recommandations/{recommandation}', [RecommandationApiController::class, 'update'])->name('api.recommandations.update');
@@ -387,6 +391,42 @@ Route::prefix('v1')->group(function () {
                 Route::post('instances/{instance}/decisions', [WorkflowApiController::class, 'decision'])->name('decision');
             });
 
+            // Module « Journalisation, Traçabilité et Horodatage » (référentiel § 12.3) — aucune écriture d'événement.
+            Route::prefix('audit')->name('api.audit.')->controller(\App\Http\Controllers\Api\V1\AuditApiController::class)->group(function () {
+                Route::get('events', 'events')->name('events');
+                Route::get('events/{journal}', 'event')->whereNumber('journal')->name('event');
+                Route::get('dashboard', 'dashboard')->name('dashboard');
+                Route::get('subjects/{type}/{id}', 'subject')->where('type', '[A-Za-z]+')->whereNumber('id')->name('subject');
+                Route::get('users/{user}/events', 'userEvents')->whereNumber('user')->name('user-events');
+                Route::get('security', 'security')->name('security');
+                Route::get('alerts', 'alerts')->name('alerts');
+                Route::post('alerts/{alerte}/decisions', 'alertDecision')->whereNumber('alerte')->name('alert-decision');
+                Route::post('integrity-checks', 'runIntegrityCheck')->name('integrity-checks.store');
+                Route::get('integrity-checks/{controle}', 'integrityCheck')->whereNumber('controle')->name('integrity-checks.show');
+                Route::post('exports', 'createExport')->name('exports.store');
+                Route::get('exports/{export}', 'export')->whereNumber('export')->name('exports.show');
+            });
+
+            // Module « Mes Tâches » (référentiel § 16).
+            Route::prefix('tasks')->name('api.taches.')->controller(\App\Http\Controllers\Api\V1\TachesApiController::class)->group(function () {
+                Route::get('stats', 'stats')->name('stats');
+                Route::get('supervision', 'supervision')->name('supervision');
+                Route::get('/', 'index')->name('index');
+                // Vues françaises + alias du référentiel (§ 16 : my, unit, delegated, history).
+                Route::get('{vue}', 'index')->whereIn('vue', ['mes', 'unite', 'deleguees', 'traitees', 'dossiers', 'my', 'unit', 'delegated', 'history'])->name('vue');
+                Route::get('{tache}', 'show')->whereNumber('tache')->name('show');
+                Route::get('{tache}/actions', 'actionsDisponibles')->whereNumber('tache')->name('actions');
+                Route::get('{tache}/history', 'historique')->whereNumber('tache')->name('history');
+                Route::post('{tache}/claim', 'prendreEnCharge')->whereNumber('tache')->name('claim');
+                Route::post('{tache}/release', 'liberer')->whereNumber('tache')->name('release');
+                Route::post('{tache}/reassign', 'reaffecter')->whereNumber('tache')->name('reassign');
+                Route::post('{tache}/suspend', 'suspendre')->whereNumber('tache')->name('suspend');
+                Route::post('{tache}/resume', 'reprendre')->whereNumber('tache')->name('resume');
+                Route::post('{tache}/priority', 'prioriser')->whereNumber('tache')->name('priority');
+                Route::post('{tache}/comments', 'commenter')->whereNumber('tache')->name('comments');
+                Route::post('{tache}/decisions', 'decider')->whereNumber('tache')->name('decisions');
+            });
+
             Route::prefix('notifications')->name('api.notifications.')->group(function () {
                 Route::get('/', [NotificationsApiController::class, 'index'])->name('index');
                 Route::get('hub', [NotificationsApiController::class, 'hub'])->name('hub');
@@ -399,14 +439,27 @@ Route::prefix('v1')->group(function () {
                 Route::put('templates/{template}', [NotificationsApiController::class, 'updateTemplate'])->name('templates.update');
                 Route::get('alertes', [NotificationsApiController::class, 'alertes'])->name('alertes');
                 Route::post('alertes/{alerte}/resolve', [NotificationsApiController::class, 'resolveAlerte'])->name('alertes.resolve');
-                Route::post('{id}/read', [NotificationsApiController::class, 'markRead'])->name('read');
-                Route::post('{id}/archiver', [NotificationsApiController::class, 'archiver'])->name('archiver');
+                Route::post('{id}/read', [NotificationsApiController::class, 'markRead'])->name('read')->whereUuid('id');
+                Route::post('{id}/archiver', [NotificationsApiController::class, 'archiver'])->name('archiver')->whereUuid('id');
+                // Référentiel Notifications § 14.2 (formes PATCH conservées à côté des routes existantes).
+                Route::get('summary', [NotificationsApiController::class, 'summary'])->name('summary');
+                Route::patch('read-all', [NotificationsApiController::class, 'toutLu'])->name('read-all');
+                Route::get('{id}', [NotificationsApiController::class, 'show'])->name('show')->whereUuid('id');
+                Route::get('{id}/destination', [NotificationsApiController::class, 'destination'])->name('destination')->whereUuid('id');
+                Route::patch('{id}/read', [NotificationsApiController::class, 'markRead'])->name('read.patch')->whereUuid('id');
+                Route::match(['post', 'patch'], '{id}/unread', [NotificationsApiController::class, 'markUnread'])->name('unread.mark')->whereUuid('id');
+                Route::patch('{id}/archive', [NotificationsApiController::class, 'archiver'])->name('archive')->whereUuid('id');
             });
 
             Route::prefix('interoperabilite')->name('api.interoperabilite.')->group(function () {
                 Route::get('hub', [InteropApiController::class, 'hub'])->name('hub');
                 Route::get('journal', [InteropApiController::class, 'journal'])->name('journal');
                 Route::get('monitoring', [InteropApiController::class, 'monitoring'])->name('monitoring');
+                Route::get('docs', [InteropApiController::class, 'docs'])->name('docs');
+                Route::get('exports/inventaire/{format}', [InteropApiController::class, 'exportInventaire'])
+                    ->where('format', 'csv|xlsx')->name('exports.inventaire');
+                Route::get('exports/securite/{format}', [InteropApiController::class, 'exportSecurite'])
+                    ->where('format', 'csv|pdf')->name('exports.securite');
                 Route::get('options', [InteropApiController::class, 'options'])->name('options');
                 Route::get('apps', [InteropApiController::class, 'apps'])->name('apps');
                 Route::post('apps', [InteropApiController::class, 'storeApp'])->name('apps.store');

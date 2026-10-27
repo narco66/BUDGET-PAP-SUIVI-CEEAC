@@ -10,7 +10,7 @@ class WorkflowInstanceEtape extends Model
     protected $table = 'workflow_instance_etapes';
 
     protected $fillable = [
-        'instance_id', 'workflow_etape_id', 'ordre', 'role',
+        'instance_id', 'workflow_etape_id', 'ordre', 'role', 'libelle',
         'statut', 'acteur_id', 'decision_le', 'observation', 'categorie_rejet',
         'echeance_le', 'derniere_relance_le', 'ip', 'user_agent', 'hash_visa',
     ];
@@ -29,5 +29,17 @@ class WorkflowInstanceEtape extends Model
     public function acteur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'acteur_id');
+    }
+
+    /** Définition de l'étape dans le circuit (libellé, délai). */
+    public function etapeDefinition(): BelongsTo
+    {
+        return $this->belongsTo(WorkflowEtape::class, 'workflow_etape_id');
+    }
+
+    /** Tâches « Mes Tâches » nées de cette étape (une par passage à l'état « à traiter »). */
+    public function taches(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WorkflowTache::class, 'workflow_instance_etape_id');
     }
 }

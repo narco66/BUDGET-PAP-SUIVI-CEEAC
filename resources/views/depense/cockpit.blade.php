@@ -7,7 +7,7 @@
     $pct = fn ($v) => $alloue > 0 ? round((float) $v / $alloue * 100, 1) : 0;
 @endphp
 
-@push('styles')<style>.cd-mt{font-variant-numeric:tabular-nums}.cd-step{border-left:4px solid #0a4a8f}</style>@endpush
+@push('styles')<style>.cd-mt{font-variant-numeric:tabular-nums}.cd-step{border-left:4px solid #0a4a8f !important}</style>@endpush
 
 @section('contenu')
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">

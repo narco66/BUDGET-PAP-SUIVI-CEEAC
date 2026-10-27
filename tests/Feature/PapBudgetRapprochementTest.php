@@ -43,8 +43,8 @@ class PapBudgetRapprochementTest extends TestCase
 
     public function test_detecte_liaison_possible_par_code(): void
     {
-        $activite = $this->creerActivite('ACT-001', 100_000_000);
-        $this->creerLigne('ACT-001', 100_000_000);
+        $activite = $this->creerActivite('2011001', 100_000_000);
+        $this->creerLigne('2011001', 100_000_000);
 
         $analyse = app(PapBudgetRapprochementService::class)->analyser($this->exercice->id);
 
@@ -55,8 +55,8 @@ class PapBudgetRapprochementTest extends TestCase
 
     public function test_rapprochement_lie_par_code(): void
     {
-        $activite = $this->creerActivite('ACT-002', 50_000_000);
-        $ligne = $this->creerLigne('ACT-002', 50_000_000);
+        $activite = $this->creerActivite('2011002', 50_000_000);
+        $ligne = $this->creerLigne('2011002', 50_000_000);
 
         $stats = app(PapBudgetRapprochementService::class)->rapprocher($this->exercice->id);
 
@@ -70,8 +70,8 @@ class PapBudgetRapprochementTest extends TestCase
 
     public function test_aligne_montant_ouvert_sur_pap(): void
     {
-        $activite = $this->creerActivite('ACT-003', 80_000_000);
-        $ligne = $this->creerLigne('ACT-003', 60_000_000);
+        $activite = $this->creerActivite('2011003', 80_000_000);
+        $ligne = $this->creerLigne('2011003', 60_000_000);
         $activite->update(['ligne_budgetaire_id' => $ligne->id]);
         $ligne->update(['activite_id' => $activite->id]);
 
@@ -85,8 +85,8 @@ class PapBudgetRapprochementTest extends TestCase
 
     public function test_commande_rapprocher_pap(): void
     {
-        $this->creerActivite('ACT-CMD', 25_000_000);
-        $this->creerLigne('ACT-CMD', 25_000_000);
+        $this->creerActivite('2011004', 25_000_000);
+        $this->creerLigne('2011004', 25_000_000);
 
         $this->artisan('budget:rapprocher-pap', ['--exercice' => 2026, '--dry-run' => true])
             ->assertSuccessful();
@@ -95,10 +95,34 @@ class PapBudgetRapprochementTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_enveloppe_axe_partagee_ni_signalee_ni_reecrite(): void
+    {
+        // Enveloppe PAP « ACT-{axe} » partagée par deux activités : pas de lien inverse unique, pas d'égalité de
+        // montant attendue — aucune anomalie, et l'alignement des montants ne réécrit jamais son crédit.
+        $enveloppe = $this->creerLigne('ACT-A1', 900_000_000);
+        $a1 = $this->creerActivite('2011101', 300_000_000);
+        $a2 = Activite::create(['sous_produit_id' => $a1->sous_produit_id, 'produit_id' => $a1->produit_id, 'code' => '2011102',
+            'intitule' => 'Activité 2011102', 'montant_ceeac' => 200_000_000, 'montant_ptf' => 0, 'montant_total' => 200_000_000]);
+        $a1->update(['ligne_budgetaire_id' => $enveloppe->id]);
+        $a2->update(['ligne_budgetaire_id' => $enveloppe->id]);
+
+        $service = app(PapBudgetRapprochementService::class);
+        $analyse = $service->analyser($this->exercice->id);
+        $this->assertArrayNotHasKey('LIAISON_DESYNC', $analyse['ecarts_par_type']);
+        $this->assertArrayNotHasKey('MONTANT_ECART', $analyse['ecarts_par_type']);
+        $this->assertEquals(900_000_000, $analyse['synthese']['total_montant_lignes_liees'], 'Enveloppe comptée une seule fois.');
+
+        $stats = $service->rapprocher($this->exercice->id, ['aligner_montants' => true]);
+        $this->assertSame(0, $stats['montants_alignes']);
+        $this->assertSame(0, $stats['liaisons_sync']);
+        $this->assertEquals(900_000_000, (float) $enveloppe->fresh()->montant_ouvert, 'Crédit de l\'enveloppe inchangé.');
+        $this->assertSame($enveloppe->id, $a1->fresh()->ligne_budgetaire_id);
+    }
+
     public function test_ui_rapprochement(): void
     {
-        $this->creerActivite('ACT-UI', 10_000_000);
-        $this->creerLigne('ACT-UI', 10_000_000);
+        $this->creerActivite('2011005', 10_000_000);
+        $this->creerLigne('2011005', 10_000_000);
 
         $this->actingAs($this->admin)
             ->get(route('budget.import.form', ['exercice' => $this->exercice->id]))

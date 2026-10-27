@@ -13,6 +13,7 @@ $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
                 <h5 class="fw-bold">{{ $engagement->numero }} <span class="badge bg-{{ $c[$engagement->statut] ?? 'secondary' }}">{{ str_replace('_',' ',$engagement->statut) }}</span></h5>
                 <div class="btn-group btn-group-sm">
                     <a href="{{ route('depense.dossier.engagement', $engagement) }}" class="btn btn-outline-primary"><i class="bi bi-folder2-open me-1"></i>Dossier</a>
+                    <a href="{{ route('depense.tracabilite.show', ['engagement', $engagement->id]) }}" class="btn btn-outline-primary"><i class="bi bi-diagram-3 me-1"></i>Traçabilité</a>
                     <a href="{{ route('engagements.pdf', $engagement) }}" target="_blank" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf me-1"></i>Fiche</a>
                     <a href="{{ route('engagements.certificat', $engagement) }}" target="_blank" class="btn btn-outline-danger"><i class="bi bi-patch-check me-1"></i>Certificat</a>
                 </div>
@@ -76,7 +77,7 @@ $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
     </div>
 
     <div class="col-md-5">
-        @include('partials._timeline', ['instance' => $instance, 'etC' => $etC])
+        @include('partials._timeline', ['instance' => $instance, 'etC' => $etC, 'objet' => $engagement])
     </div>
 </div>
 <div class="mt-3"><a href="{{ route('engagements.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i>Retour</a></div>

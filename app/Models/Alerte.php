@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Alerte extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'reference', 'module', 'code', 'criticite', 'titre', 'message',
         'exercice_id', 'structure_id', 'objet_type', 'objet_id', 'statut',

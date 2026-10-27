@@ -19,4 +19,9 @@ return [
         'delai_defaut_jours' => (int) env('WORKFLOW_DELAI_DEFAUT_JOURS', 5),
         'intervalle_jours' => (int) env('WORKFLOW_RELANCE_INTERVALLE_JOURS', 3),
     ],
+
+    /** « Mes Tâches » : échéance des actions hors circuit (soumettre, corriger, préparer, solder). */
+    'taches' => [
+        'delai_preparation_jours' => (int) env('WORKFLOW_DELAI_PREPARATION_JOURS', 3),
+    ],
 ];

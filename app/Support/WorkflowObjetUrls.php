@@ -37,6 +37,7 @@ final class WorkflowObjetUrls
             Liquidation::class => route('depense.show', ['liquidation', $objet->getKey()]),
             Ordonnancement::class => route('depense.show', ['ordonnancement', $objet->getKey()]),
             Paiement::class => route('depense.show', ['paiement', $objet->getKey()]),
+            \App\Models\ImportLot::class => route('imports.show', $objet),
             default => null,
         };
     }

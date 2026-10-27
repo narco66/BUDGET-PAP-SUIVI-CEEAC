@@ -157,8 +157,16 @@ class SanteService
             ];
         }
 
-        $health = app(RedisHealthService::class)->verifier();
         $requis = app(RedisHealthService::class)->estUtilise();
+        // Redis non utilisé (cache et file sur un autre pilote) : pas de tentative de connexion, qui coûtait
+        // jusqu'au délai d'expiration (~2 s) à chaque affichage du cockpit.
+        if (! $requis && (config('session.driver') !== 'redis')) {
+            return [
+                'cle' => 'redis', 'libelle' => 'Redis', 'statut' => 'ok',
+                'valeur' => 'non utilisé', 'detail' => 'Cache : '.config('cache.default').' · file : '.config('queue.default'),
+            ];
+        }
+        $health = app(RedisHealthService::class)->verifier();
 
         if ($health['ok']) {
             return [
@@ -251,14 +259,22 @@ class SanteService
 
     // ---- Internes ---------------------------------------------------------------------------
 
+    /** @var array<string, bool> existence des tables déjà vérifiée par cette instance */
+    private array $tables = [];
+
+    private function tableExiste(string $table): bool
+    {
+        return $this->tables[$table] ??= Schema::hasTable($table);
+    }
+
     private function compter(string $table): int
     {
-        return Schema::hasTable($table) ? (int) DB::table($table)->count() : 0;
+        return $this->tableExiste($table) ? (int) DB::table($table)->count() : 0;
     }
 
     private function echecsConnexion24h(): int
     {
-        if (! Schema::hasTable('login_logs')) {
+        if (! $this->tableExiste('login_logs')) {
             return 0;
         }
 

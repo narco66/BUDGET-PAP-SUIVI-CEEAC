@@ -86,7 +86,29 @@ class PlanificationStrategiquePhaseP4Test extends TestCase
             ->get(route('strategie.dashboard.decisionnel'))
             ->assertOk()
             ->assertSee('Tableau de pilotage décisionnel')
-            ->assertSee('Score pilotage');
+            ->assertSee('Score de pilotage')
+            ->assertSee('Composantes du score de pilotage')
+            ->assertSee('Points d\'attention', false);
+    }
+
+    public function test_score_ignore_les_composantes_sans_base_et_coherence_non_evaluable_si_vide(): void
+    {
+        // Référentiel stratégique vide : la cohérence n'est pas « 75 % » mais non évaluable.
+        \App\Models\Strategie\PlanStrategique::query()->delete();
+        \App\Models\Strategie\ObjectifStrategique::query()->delete();
+        $coherence = app(\App\Services\Strategie\StrategieCoherenceService::class)->rapport();
+        if (\App\Models\Strategie\IndicateurStrategique::query()->count() === 0 && \App\Models\Strategie\RisqueStrategique::query()->count() === 0
+            && app(\App\Services\Strategie\StrategieAlignementService::class)->syntheseAlignement()['lignes_matrice'] === 0) {
+            $this->assertFalse($coherence['score_evaluable']);
+        }
+        foreach ($coherence['controles'] as $c) {
+            $this->assertSame($c['base'] === 0, $c['taux'] === null, 'Un contrôle sans base n\'a pas de taux.');
+        }
+
+        $tableau = app(StrategiePilotageService::class)->tableauDecisionnel(Exercice::firstWhere('annee', 2026)->id);
+        $evaluables = collect($tableau['score_pilotage_detail'])->pluck('taux')->filter(fn ($t) => $t !== null);
+        $this->assertEqualsWithDelta($evaluables->isEmpty() ? 0.0 : round($evaluables->avg(), 1), $tableau['score_pilotage'], 0.05);
+        $this->assertCount(5, $tableau['score_pilotage_detail'], 'Le taux de la matrice n\'est compté qu\'une fois.');
     }
 
     public function test_service_pilotage_retourne_score(): void

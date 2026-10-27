@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SuiviFinancierPermissionsSeeder::class,
             RecettesPermissionsSeeder::class,
             BudgetPermissionsSeeder::class,
+            StrategiePermissionsSeeder::class,
             AuditControleConformiteSeeder::class,
             AdministrationTechniqueSeeder::class,
             ProfilSeeder::class,
@@ -25,11 +26,16 @@ class DatabaseSeeder extends Seeder
             SourceFinancementSeeder::class,
             EtatMembreSeeder::class,
             RecetteSeeder::class,
-            GestionRecettesSeeder::class,
+            // La nomenclature doit précéder la reprise des recettes : la ventilation (rubrique_id) en dépend.
             NomenclatureBudgetaireSeeder::class,
+            GestionRecettesSeeder::class,
             Pap2026Seeder::class,
             Budget2026Seeder::class,
             WorkflowSeeder::class,
+            WorkflowPermissionsSeeder::class,
+            ImportPermissionsSeeder::class,
+            ImportWorkflowSeeder::class,
+            NotificationsAlertesSeeder::class,
         ]);
 
         // Compte administrateur système initial

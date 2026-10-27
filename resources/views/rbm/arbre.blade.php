@@ -19,6 +19,12 @@ use App\Support\RbmStatutFiltre;
 $ex = $exercice->id;
 $fmt = fn ($n) => number_format((float)$n, 0, ',', ' ');
 $statutFiltre = $statutFiltre ?? 'actif';
+// Droits identiques pour tous les nœuds : évalués une fois (chaque contrôle coûtait ~1 ms × 580 nœuds).
+$droitsRbm = [
+    'indicateurs' => auth()->user()->can('indicateur.voir'),
+    'historique' => auth()->user()->canAny(['rbm.consulter_journal', 'audit.voir']),
+    'ged' => auth()->user()->can('ged.voir'),
+];
 @endphp
 
 @section('contenu')
@@ -104,4 +110,26 @@ $statutFiltre = $statutFiltre ?? 'actif';
     <p class="text-muted mb-0">Aucun pilier défini pour l'exercice {{ $exercice->annee }}. Commencez par ajouter un pilier.</p>
 @endforelse
 </div></div>
+
+{{-- Formulaire unique des actions de nœud (archiver, supprimer, restaurer). --}}
+<form id="rbm-action-form" method="POST" class="d-none">
+    @csrf
+    <input type="hidden" name="_method" value="POST">
+    <input type="hidden" name="exercice" value="{{ $ex }}">
+</form>
 @endsection
+
+@push('scripts')
+<script @if(!empty($cspNonce)) nonce="{{ $cspNonce }}" @endif>
+document.addEventListener('click', function (e) {
+    var bouton = e.target.closest('[data-rbm-action]');
+    if (!bouton) { return; }
+    if (bouton.dataset.rbmConfirmer && !confirm(bouton.dataset.rbmConfirmer)) { return; }
+    var form = document.getElementById('rbm-action-form');
+    form.action = bouton.dataset.rbmAction;
+    form.querySelector('[name=_method]').value = bouton.dataset.rbmMethode || 'POST';
+    bouton.disabled = true;
+    form.submit();
+});
+</script>
+@endpush

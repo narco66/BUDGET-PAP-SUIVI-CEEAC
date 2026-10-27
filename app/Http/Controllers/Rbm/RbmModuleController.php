@@ -33,9 +33,47 @@ class RbmModuleController extends Controller
     {
         abort_unless($request->user()->can('rbm.voir'), 403);
 
-        $lignes = $this->service->matriceRbm($exercice);
+        $toutes = $this->service->matriceRbm($exercice);
 
-        return view('rbm.matrice', compact('exercice', 'lignes'));
+        // Filtres (la matrice d'un exercice tient en mémoire : quelques centaines d'activités).
+        $filtres = [
+            'q' => trim((string) $request->query('q', '')),
+            'pilier' => (string) $request->query('pilier', ''),
+            'structure' => (string) $request->query('structure', ''),
+            'couverture' => (string) $request->query('couverture', ''),
+        ];
+        $terme = mb_strtolower($filtres['q']);
+        $lignes = $toutes->filter(fn ($l) => ($terme === '' || str_contains(mb_strtolower($l['activite'].' '.$l['intitule'].' '.$l['sous_produit'].' '.$l['produit']), $terme))
+            && ($filtres['pilier'] === '' || $l['pilier'] === $filtres['pilier'])
+            && ($filtres['structure'] === '' || $l['structure'] === $filtres['structure'])
+            && match ($filtres['couverture']) {
+                'sans_tache' => $l['nb_taches'] === 0,
+                'sans_iov' => $l['nb_indicateurs'] === 0,
+                'sans_montant' => $l['montant'] <= 0,
+                default => true,
+            })->values();
+
+        $indicateurs = [
+            'activites' => $lignes->count(),
+            'montant' => $lignes->sum('montant'),
+            'ceeac' => $lignes->sum('montant_ceeac'),
+            'ptf' => $lignes->sum('montant_ptf'),
+            'taches' => $lignes->sum('nb_taches'),
+            'sans_tache' => $lignes->where('nb_taches', 0)->count(),
+            'sans_iov' => $lignes->where('nb_indicateurs', 0)->count(),
+            'couverture_iov' => $lignes->count() ? (int) round($lignes->where('nb_indicateurs', '>', 0)->count() / $lignes->count() * 100) : 0,
+        ];
+
+        return view('rbm.matrice', [
+            'exercice' => $exercice,
+            'lignes' => $lignes,
+            'parPilier' => $lignes->groupBy('pilier'),
+            'indicateurs' => $indicateurs,
+            'filtres' => $filtres,
+            'piliers' => $toutes->unique('pilier')->mapWithKeys(fn ($l) => [$l['pilier'] => $l['pilier_intitule']]),
+            'structures' => $toutes->whereNotNull('structure')->unique('structure')->sortBy('structure')->mapWithKeys(fn ($l) => [$l['structure'] => $l['structure_libelle']]),
+            'total' => $toutes->count(),
+        ]);
     }
 
     public function cadreLogique(Request $request, Exercice $exercice): View

@@ -140,8 +140,14 @@ class EncaissementController extends Controller
         return view('encaissements.show', [
             'encaissement' => $encaissement,
             'instance' => $encaissement->workflowActif,
-            'peutAgir' => auth()->user()->can('agir', $encaissement),
+            // Évalué sur le circuit lui-même : le contournement administrateur de la Gate afficherait
+            // le panneau de décision sans instance en cours.
+            'peutAgir' => $encaissement->workflowActif !== null
+                && $this->workflow->peutAgir($encaissement->workflowActif, auth()->user()),
             'etC' => ['en_attente' => 'secondary', 'valide' => 'success', 'rejete' => 'danger', 'renvoye' => 'warning'],
+            'blocages' => in_array($encaissement->statut, ['saisi', 'rejete'], true)
+                ? $this->service->blocagesSoumission($encaissement)
+                : [],
         ]);
     }
 
@@ -168,7 +174,7 @@ class EncaissementController extends Controller
 
         $instance = $encaissement->workflowActif;
         if (! $instance) {
-            return back()->with('erreur', 'Aucun circuit actif.');
+            return back()->with('erreur', 'Cet encaissement n\'est pas en cours de validation : soumettez-le d\'abord au circuit (bouton « Soumettre »).');
         }
 
         try {

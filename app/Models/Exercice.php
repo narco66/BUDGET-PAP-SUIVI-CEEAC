@@ -31,6 +31,12 @@ class Exercice extends Model
         'taux_change_usd' => 'decimal:6',
     ];
 
+    /** Exercice de référence de l'interface : l'exercice actif, à défaut le plus récent (mémorisé pour la requête). */
+    public static function courant(): ?self
+    {
+        return once(fn () => static::query()->where('est_actif', true)->first() ?? static::query()->orderByDesc('annee')->first());
+    }
+
     public function scopeActif($q)
     {
         return $q->where('est_actif', true);

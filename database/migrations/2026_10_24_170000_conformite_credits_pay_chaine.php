@@ -15,8 +15,26 @@ return new class extends Migration
             }
         });
 
-        if (Schema::getConnection()->getDriverName() === 'mysql') {
-            DB::statement("ALTER TABLE engagements MODIFY statut ENUM('brouillon','soumis','vise','rejete','annule','en_attente_arbitrage') NOT NULL DEFAULT 'brouillon'");
+        $this->elargirStatutEngagement([
+            'brouillon', 'soumis', 'vise', 'rejete', 'annule', 'en_attente_arbitrage',
+        ]);
+    }
+
+    /** @param list<string> $valeurs */
+    private function elargirStatutEngagement(array $valeurs): void
+    {
+        $driver = Schema::getConnection()->getDriverName();
+        $liste = implode(',', array_map(fn (string $v) => "'{$v}'", $valeurs));
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE engagements MODIFY statut ENUM({$liste}) NOT NULL DEFAULT 'brouillon'");
+
+            return;
+        }
+
+        if ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE engagements DROP CONSTRAINT IF EXISTS engagements_statut_check');
+            DB::statement("ALTER TABLE engagements ADD CONSTRAINT engagements_statut_check CHECK (statut::text = ANY (ARRAY[{$liste}]::text[]))");
         }
     }
 

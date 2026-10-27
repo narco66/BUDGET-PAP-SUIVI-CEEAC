@@ -33,7 +33,12 @@ class CockpitLiveService
                     'taux_execution' => $global['taux_execution'],
                     'taux_engagement' => $global['taux_engagement'],
                     'reste_a_payer' => $global['reste_a_payer'] ?? max($global['ordonnance'] - $global['paye'], 0),
+                    'alloue' => $global['alloue'] ?? $global['ouvert'],
+                    'liquide' => $global['liquide'],
+                    'ordonnance' => $global['ordonnance'],
+                    'disponible' => $global['disponible'] ?? null,
                 ],
+                'chaine' => $cockpit['chaine'] ?? [],
                 'pap' => $cockpit['pap'],
                 'series' => [
                     'categories' => $cockpit['parCategorie']->map(fn ($r) => [

@@ -95,7 +95,7 @@ class CampagneSuiviController extends Controller
             ->leftJoin('lignes_budgetaires as lb', 'a.ligne_budgetaire_id', '=', 'lb.id')
             ->where('c.campagne_id', $campagneId)->where('c.statut', 'validee')
             ->groupBy('s.id', 's.libelle')
-            ->selectRaw('COALESCE(s.libelle, "(non rattachée)") libelle, COUNT(*) n,
+            ->selectRaw('COALESCE(s.libelle, \'(non rattachée)\') libelle, COUNT(*) n,
                          ROUND(AVG(c.taux_physique),1) phys,
                          ROUND(AVG(CASE
                             WHEN a.ligne_budgetaire_id IS NOT NULL AND a.montant_total > 0

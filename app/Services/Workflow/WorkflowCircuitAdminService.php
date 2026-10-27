@@ -8,11 +8,15 @@ use App\Models\WorkflowEtape;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class WorkflowCircuitAdminService
 {
+    public function __construct(private readonly WorkflowVersionService $versions) {}
+
     /** @return Collection<int, Workflow> */
     public function lister(): Collection
     {
@@ -40,23 +44,102 @@ class WorkflowCircuitAdminService
         ];
     }
 
+    /**
+     * Création ou modification = publication d'une nouvelle version (référentiel § 7) : la définition est d'abord
+     * validée (§ 7.2), puis enregistrée et figée en version ; les dossiers en cours restent sur leur version.
+     */
     public function creer(Request $request): Workflow
     {
-        $workflow = Workflow::create($this->valider($request));
-        $this->syncEtapes($workflow, $request->input('etapes', []));
-        AuditLogger::enregistrer('workflow_circuit_cree', $workflow, null, $workflow->toArray());
+        $attributs = $this->valider($request);
+        $etapes = $this->validerEtapes($request->input('etapes', []));
 
-        return $workflow->load('etapes')->loadCount('instances');
+        return DB::transaction(function () use ($attributs, $etapes, $request) {
+            $workflow = Workflow::create($attributs);
+            $this->syncEtapes($workflow, $etapes);
+            AuditLogger::enregistrer('workflow_circuit_cree', $workflow, null, $workflow->toArray());
+            $this->versions->publier($workflow->fresh(), $request->user(), 'Version initiale');
+
+            return $workflow->load('etapes')->loadCount('instances');
+        });
     }
 
     public function modifier(Request $request, Workflow $workflow): Workflow
     {
-        $avant = $workflow->toArray();
-        $workflow->update($this->valider($request, $workflow));
-        $this->syncEtapes($workflow, $request->input('etapes', []));
-        AuditLogger::enregistrer('workflow_circuit_modifie', $workflow, $avant, $workflow->fresh()->toArray());
+        $attributs = $this->valider($request, $workflow);
+        $etapes = $this->validerEtapes($request->input('etapes', []), $workflow);
 
-        return $workflow->fresh(['etapes'])->loadCount('instances');
+        return DB::transaction(function () use ($attributs, $etapes, $request, $workflow) {
+            $avant = $workflow->toArray();
+            $workflow->update($attributs);
+            $this->syncEtapes($workflow, $etapes);
+            AuditLogger::enregistrer('workflow_circuit_modifie', $workflow, $avant, $workflow->fresh()->toArray());
+            $this->versions->publier($workflow->fresh(), $request->user());
+
+            return $workflow->fresh(['etapes'])->loadCount('instances');
+        });
+    }
+
+    /**
+     * Validations bloquantes avant publication (§ 7.2) et conservation de l'historique (P07) :
+     * au moins une étape, ordres uniques et positifs, rôle connu, délai positif, et aucune étape
+     * déjà utilisée par des dossiers ne peut disparaître (ses décisions passées y sont rattachées).
+     *
+     * @param  list<array<string, mixed>>  $etapes
+     * @return list<array<string, mixed>>
+     *
+     * @throws ValidationException
+     */
+    public function validerEtapes(array $etapes, ?Workflow $workflow = null): array
+    {
+        $etapes = array_values(array_filter($etapes, fn ($e) => is_array($e) && ! (blank($e['role'] ?? null) && blank($e['libelle'] ?? null))));
+        $erreurs = [];
+        if ($etapes === []) {
+            $erreurs[] = 'Le circuit doit comporter au moins une étape.';
+        }
+        $roles = Role::query()->pluck('name')->all();
+        $ordres = [];
+        foreach ($etapes as $i => $e) {
+            $n = $i + 1;
+            $ordre = (int) ($e['ordre'] ?? $n);
+            if ($ordre < 1) {
+                $erreurs[] = "Étape {$n} : l'ordre doit être un entier positif.";
+            }
+            if (in_array($ordre, $ordres, true)) {
+                $erreurs[] = "Étape {$n} : l'ordre {$ordre} est déjà utilisé (étape inaccessible ou double traitement).";
+            }
+            $ordres[] = $ordre;
+            if (blank($e['libelle'] ?? null)) {
+                $erreurs[] = "Étape {$n} : le libellé est obligatoire.";
+            }
+            if (! in_array($e['role'] ?? null, $roles, true)) {
+                $erreurs[] = "Étape {$n} : le rôle « ".($e['role'] ?? '')." » n'existe pas.";
+            }
+            if (isset($e['delai_jours']) && $e['delai_jours'] !== '' && (int) $e['delai_jours'] < 0) {
+                $erreurs[] = "Étape {$n} : le délai ne peut pas être négatif.";
+            }
+        }
+        if ($workflow) {
+            $conservees = collect($etapes)->pluck('id')->filter()->map(fn ($id) => (int) $id)->all();
+            $retirees = $workflow->etapes()->whereNotIn('id', $conservees)->get();
+            foreach ($retirees as $etape) {
+                $usages = \App\Models\WorkflowInstanceEtape::query()->where('workflow_etape_id', $etape->id)->count();
+                if ($usages > 0) {
+                    $erreurs[] = "L'étape « {$etape->libelle} » est rattachée à {$usages} décision(s) de dossiers : elle ne peut pas être retirée. Désactivez le circuit et créez-en un nouveau si la procédure change.";
+                }
+            }
+            if ($workflow->transitions()->exists()) {
+                $inconnues = $workflow->transitions()->get()->filter(fn ($t) => ! in_array((int) $t->etape_source_ordre, $ordres, true)
+                    || ($t->etape_cible_ordre !== null && ! in_array((int) $t->etape_cible_ordre, $ordres, true)));
+                if ($inconnues->isNotEmpty()) {
+                    $erreurs[] = 'Des transitions conditionnelles visent une étape absente du circuit : publication impossible.';
+                }
+            }
+        }
+        if ($erreurs) {
+            throw ValidationException::withMessages(['etapes' => $erreurs]);
+        }
+
+        return $etapes;
     }
 
     public function basculer(Workflow $workflow): Workflow
